@@ -54,6 +54,8 @@ module.exports = {
         devDependencies: ['cypress.config.js'],
       },
     ],
+    'import/prefer-default-export': 'off',
+    'react/jsx-props-no-spreading': 'off',
   },
   overrides: [
     {
