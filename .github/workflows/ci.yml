@@ -13,6 +13,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    environment:
+      name: Preview
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -22,9 +24,13 @@ jobs:
       - run: yarn lint
       - run: yarn check-types
       - run: yarn test
-      - run: yarn build
   cypress-run:
     runs-on: ubuntu-latest
+    environment:
+      name: Preview
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
