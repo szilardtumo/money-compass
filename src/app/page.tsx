@@ -1,9 +1,30 @@
-import { Button } from '@/components/ui/button';
+import { Metadata } from 'next';
 
-export default function Home() {
+import AuthForm from './_components/auth-form';
+
+export const metadata: Metadata = {
+  title: 'Authentication',
+  description: 'Authentication forms built using the components.',
+};
+
+export default function AuthenticationPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <Button>ShadCN Button</Button>
-    </main>
+    <div className="container relative hidden h-[800px] flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+      <div className="relative hidden h-full min-h-screen flex-col bg-muted p-10 text-white lg:flex dark:border-r">
+        <div className="absolute inset-0 bg-zinc-900" />
+        <div className="relative z-20 flex items-center text-lg font-medium">
+          {/* TODO: Add logo */}
+          Money Compass
+        </div>
+      </div>
+      <div className="lg:p-8">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+          <h1 className="text-2xl text-center font-semibold tracking-tight">
+            Log in or Create an account
+          </h1>
+          <AuthForm />
+        </div>
+      </div>
+    </div>
   );
 }

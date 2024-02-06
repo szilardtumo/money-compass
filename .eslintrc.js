@@ -14,7 +14,7 @@ module.exports = {
       typescript: {},
     },
   },
-  ignorePatterns: ['node_modules/*'],
+  ignorePatterns: ['node_modules/*', 'src/lib/database.types.ts'],
   extends: [
     'airbnb',
     'next/core-web-vitals',
@@ -56,6 +56,7 @@ module.exports = {
     ],
     'import/prefer-default-export': 'off',
     'react/jsx-props-no-spreading': 'off',
+    'react/require-default-props': 'off',
   },
   overrides: [
     {
