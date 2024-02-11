@@ -14,7 +14,7 @@ module.exports = {
       typescript: {},
     },
   },
-  ignorePatterns: ['node_modules/*', 'src/lib/database.types.ts'],
+  ignorePatterns: ['node_modules/*', 'src/lib/db/database.types.ts'],
   extends: [
     'airbnb',
     'next/core-web-vitals',

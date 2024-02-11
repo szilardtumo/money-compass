@@ -1,4 +1,4 @@
-import { CubeIcon } from '@radix-ui/react-icons';
+import { CubeIcon, IdCardIcon } from '@radix-ui/react-icons';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -28,23 +28,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full min-h-screen items-stretch">
       <ResizablePanel defaultSize={20} minSize={10} maxSize={30}>
-        <div className="flex h-[52px] items-center justify-center px-2">
+        <div className="flex h-14 items-center justify-center px-2">
           <AccountDropdown user={user} />
         </div>
         <Separator />
         <nav className="flex flex-col gap-1 p-2">
-          <NavItem href="#">
-            <CubeIcon className="mr-2" /> Nav 1
+          <NavItem href="/dashboard">
+            <CubeIcon className="mr-2" /> Dashboard
           </NavItem>
-          <NavItem href="#">
-            <CubeIcon className="mr-2" /> Nav 2
+          <NavItem href="/dashboard/accounts">
+            <IdCardIcon className="mr-2" /> Accounts
           </NavItem>
         </nav>
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={80} className="p-2">
-        {children}
-      </ResizablePanel>
+      <ResizablePanel defaultSize={80}>{children}</ResizablePanel>
     </ResizablePanelGroup>
   );
 }

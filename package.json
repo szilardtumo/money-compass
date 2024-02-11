@@ -16,7 +16,7 @@
     "test:watch-cov": "jest --watch --coverage",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "supa:gen-types": "npx supabase gen types typescript --project-id lgtnunvhxmklyelpqxyw > src/lib/database.types.ts"
+    "supa:gen-types": "npx supabase gen types typescript --project-id lgtnunvhxmklyelpqxyw > src/lib/db/database.types.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.0.4",

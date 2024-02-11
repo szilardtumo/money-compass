@@ -12,31 +12,28 @@ export type Database = {
       accounts: {
         Row: {
           created_at: string
-          currency: string
           id: string
           name: string
-          value: number
+          user_id: string
         }
         Insert: {
           created_at?: string
-          currency: string
           id?: string
           name?: string
-          value?: number
+          user_id: string
         }
         Update: {
           created_at?: string
-          currency?: string
           id?: string
           name?: string
-          value?: number
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "accounts_currency_fkey"
-            columns: ["currency"]
+            foreignKeyName: "accounts_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "currencies"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           }
         ]
@@ -59,6 +56,119 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_rates: {
+        Row: {
+          from: string
+          rate: number
+          to: string
+        }
+        Insert: {
+          from: string
+          rate: number
+          to: string
+        }
+        Update: {
+          from?: string
+          rate?: number
+          to?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_rates_from_fkey"
+            columns: ["from"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchange_rates_to_fkey"
+            columns: ["to"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      subaccounts: {
+        Row: {
+          account_id: string
+          created_at: string
+          currency: string
+          id: string
+          value: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          currency: string
+          id?: string
+          value?: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subaccounts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subaccounts_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          completed_date: string
+          description: string
+          external_ref: string | null
+          id: string
+          started_date: string
+          subaccount_id: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Insert: {
+          amount: number
+          completed_date: string
+          description?: string
+          external_ref?: string | null
+          id?: string
+          started_date: string
+          subaccount_id?: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Update: {
+          amount?: number
+          completed_date?: string
+          description?: string
+          external_ref?: string | null
+          id?: string
+          started_date?: string
+          subaccount_id?: string | null
+          type?: Database["public"]["Enums"]["transaction_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_subaccount_id_fkey"
+            columns: ["subaccount_id"]
+            isOneToOne: false
+            referencedRelation: "subaccounts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -67,7 +177,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      transaction_type:
+        | "card_payment"
+        | "transfer"
+        | "exchange"
+        | "topup"
+        | "correction"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
