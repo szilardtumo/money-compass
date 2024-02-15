@@ -9,7 +9,7 @@ import {
 
 export function NoAccountsPlaceholder() {
   return (
-    <PlaceholderArea>
+    <PlaceholderArea className="h-72">
       <IdCardIcon className="w-10 h-10 text-muted-foreground" />
       <PlaceholderAreaTitle>No accounts added</PlaceholderAreaTitle>
       <PlaceholderAreaDescription>

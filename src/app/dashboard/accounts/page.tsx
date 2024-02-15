@@ -1,13 +1,11 @@
 import { NetWorthChart } from '@/components/charts/net-worth-chart';
 import { Separator } from '@/components/ui/separator';
-import { mainCurrency } from '@/lib/constants';
-import { getAccounts } from '@/lib/db/accounts';
+import { getSimpleAccounts } from '@/lib/db/accounts';
 
-import { AccountCard } from './_components/account-card';
-import { NoAccountsPlaceholder } from './_components/no-accounts-placeholder';
+import { AccountsSection } from './_components/accounts-section';
 
 export default async function AccountsPage() {
-  const accounts = await getAccounts(mainCurrency);
+  const accounts = await getSimpleAccounts();
 
   return (
     <main>
@@ -15,22 +13,10 @@ export default async function AccountsPage() {
         <h1 className="text-xl font-bold">Accounts</h1>
       </div>
       <Separator />
-      <div className="m-4">
+      <div className="m-4 flex flex-col gap-4">
         <NetWorthChart netWorth={1234} />
-        {accounts?.length ? (
-          <div>
-            {accounts.map((account) => (
-              <AccountCard
-                key={account.id}
-                name={account.name}
-                value={account.totalValue}
-                currency={mainCurrency}
-              />
-            ))}
-          </div>
-        ) : (
-          <NoAccountsPlaceholder />
-        )}
+
+        <AccountsSection accounts={accounts} />
       </div>
     </main>
   );
