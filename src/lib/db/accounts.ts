@@ -1,6 +1,7 @@
 'use server';
 
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
 import { Account, CreateSimpleAccountParams, SimpleAccount } from '@/lib/types/accounts.types';
@@ -90,5 +91,6 @@ export async function createSimpleAccount(
     };
   }
 
+  revalidatePath('/dashboard/accounts');
   return { success: true };
 }
