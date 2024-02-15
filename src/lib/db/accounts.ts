@@ -3,7 +3,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
-import { Account, SimpleAccount } from '@/lib/types/accounts.types';
+import { Account, CreateSimpleAccountParams, SimpleAccount } from '@/lib/types/accounts.types';
 import { ActionResponse } from '@/lib/types/transport.types';
 
 import { getCurrencyMapper } from './currencies';
@@ -58,13 +58,36 @@ export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
     }));
 }
 
-export async function createSimpleAccount(data: { name: string }): Promise<ActionResponse> {
+/**
+ * Creates a new account with a single subaccount.
+ *
+ * @param params The parameters to create the account.
+ * @returns
+ */
+export async function createSimpleAccount(
+  params: CreateSimpleAccountParams,
+): Promise<ActionResponse> {
   const supabase = createServerComponentClient<Database>({ cookies });
 
-  const { error } = await supabase.from('accounts').insert({ name: data.name });
+  const { data: account, error: accountError } = await supabase
+    .from('accounts')
+    .insert({ name: params.name })
+    .select('id')
+    .single();
 
-  if (error) {
-    return { success: false, error: { message: error.message } };
+  if (accountError || !account) {
+    return { success: false, error: { code: accountError.code, message: accountError.message } };
+  }
+
+  const { error: subaccountError } = await supabase
+    .from('subaccounts')
+    .insert({ currency: params.currency, account_id: account.id, value: 0 });
+
+  if (subaccountError) {
+    return {
+      success: false,
+      error: { code: subaccountError.code, message: subaccountError.message },
+    };
   }
 
   return { success: true };

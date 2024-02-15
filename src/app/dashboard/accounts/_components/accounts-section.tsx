@@ -1,15 +1,19 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getCurrencies } from '@/lib/db/currencies';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 
+import { CreateAccountDialog } from './create-account-dialog';
 import { NoAccountsPlaceholder } from './no-accounts-placeholder';
 
 interface AccountsSectionProps {
   accounts: SimpleAccount[];
 }
 
-export function AccountsSection({ accounts }: AccountsSectionProps) {
+export async function AccountsSection({ accounts }: AccountsSectionProps) {
+  const currencies = await getCurrencies();
+
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between space-y-0">
@@ -17,8 +21,9 @@ export function AccountsSection({ accounts }: AccountsSectionProps) {
           <CardTitle>Accounts</CardTitle>
           <CardDescription>All accounts you have.</CardDescription>
         </div>
+        <CreateAccountDialog currencies={currencies} />
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {accounts.map((account) => (
           <div key={account.id} className="flex items-center">
             <Avatar className="h-9 w-9">

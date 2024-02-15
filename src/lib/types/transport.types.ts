@@ -8,8 +8,14 @@ type ActionResponseSuccess<T> = T extends undefined
 type ActionResponseError = {
   success: false;
   error: {
+    code: string;
     message: string;
   };
 };
 
 export type ActionResponse<T = undefined> = ActionResponseSuccess<T> | ActionResponseError;
+
+export enum ActionErrorCode {
+  UniqueViolation = '23505',
+  ForeignKeyViolation = '23503',
+}

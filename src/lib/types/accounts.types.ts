@@ -17,3 +17,8 @@ export interface SimpleAccount {
   value: number;
   currency: string;
 }
+
+export interface CreateSimpleAccountParams {
+  name: string;
+  currency: string;
+}
