@@ -1,14 +1,12 @@
 'use server';
 
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
+import { revalidateTag } from 'next/cache';
 
 import { Account, CreateSimpleAccountParams, SimpleAccount } from '@/lib/types/accounts.types';
 import { ActionResponse } from '@/lib/types/transport.types';
+import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 import { getCurrencyMapper } from './currencies';
-import { Database } from './database.types';
 
 /**
  * Returns the list of accounts with all of their subaccounts.
@@ -18,7 +16,7 @@ import { Database } from './database.types';
  * @returns
  */
 export async function getAccounts(mainCurrency: string): Promise<Account[]> {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['accounts'] } });
 
   const [{ data: accounts }, currencyMapper] = await Promise.all([
     supabase.from('accounts').select(`id, name, subaccounts(id, currency, value)`),
@@ -43,7 +41,9 @@ export async function getAccounts(mainCurrency: string): Promise<Account[]> {
  * @returns
  */
 export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  const supabase = createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['accounts'] },
+  });
 
   const { data: accounts } = await supabase
     .from('accounts')
@@ -68,7 +68,7 @@ export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
 export async function createSimpleAccount(
   params: CreateSimpleAccountParams,
 ): Promise<ActionResponse> {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  const supabase = createServerSupabaseClient();
 
   const { data: account, error: accountError } = await supabase
     .from('accounts')
@@ -91,6 +91,6 @@ export async function createSimpleAccount(
     };
   }
 
-  revalidatePath('/dashboard/accounts');
+  revalidateTag('accounts');
   return { success: true };
 }

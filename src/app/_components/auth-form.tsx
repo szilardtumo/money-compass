@@ -1,11 +1,12 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 
+import { createBrowserSupabaseClient } from '@/lib/utils/supabase/client';
+
 export default function AuthForm() {
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserSupabaseClient();
 
   let redirectUrl = '/api/auth/callback';
   if (typeof window !== 'undefined') {
@@ -18,6 +19,7 @@ export default function AuthForm() {
       appearance={{ theme: ThemeSupa }}
       supabaseClient={supabase}
       providers={['google']}
+      queryParams={{ prompt: 'select_account' }}
       redirectTo={redirectUrl}
     />
   );

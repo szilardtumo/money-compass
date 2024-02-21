@@ -1,7 +1,7 @@
 'use client';
 
 import { CaretDownIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
-import { User, createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 
@@ -22,6 +22,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { createBrowserSupabaseClient } from '@/lib/utils/supabase/client';
 
 interface AccountDropdownProps {
   user: User;
@@ -32,7 +33,7 @@ export function AccountDropdown({ user }: AccountDropdownProps) {
   const { theme, setTheme, systemTheme } = useTheme();
 
   const handleLogout = async () => {
-    const supabase = createClientComponentClient();
+    const supabase = createBrowserSupabaseClient();
     await supabase.auth.signOut();
     router.refresh();
   };

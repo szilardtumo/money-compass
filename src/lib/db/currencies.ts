@@ -1,11 +1,8 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-
-import { Database } from '@/lib/db/database.types';
 import { Currency, CurrencyMapper } from '@/lib/types/currencies.types';
+import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 export async function getCurrencies(): Promise<Currency[]> {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['currencies'] } });
 
   const { data } = await supabase.from('currencies').select();
 
@@ -13,7 +10,7 @@ export async function getCurrencies(): Promise<Currency[]> {
 }
 
 export async function getCurrencyMapper(toCurrency: string): Promise<CurrencyMapper> {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['currencies'] } });
 
   const { data } = await supabase
     .from('exchange_rates')

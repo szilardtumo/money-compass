@@ -1,10 +1,9 @@
 import { CubeIcon, IdCardIcon } from '@radix-ui/react-icons';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Separator } from '@/components/ui/separator';
+import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 import { AccountDropdown } from './_components/account-dropdown';
 import { NavItem } from './_components/nav-item';
@@ -15,7 +14,7 @@ export const metadata = {
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createServerSupabaseClient();
 
   const {
     data: { user },
