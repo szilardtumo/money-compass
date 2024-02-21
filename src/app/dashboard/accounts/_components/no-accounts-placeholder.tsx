@@ -1,6 +1,5 @@
 import { IdCardIcon } from '@radix-ui/react-icons';
 
-import { Button } from '@/components/ui/button';
 import {
   PlaceholderArea,
   PlaceholderAreaDescription,
@@ -15,7 +14,6 @@ export function NoAccountsPlaceholder() {
       <PlaceholderAreaDescription>
         You have not added any accounts. Add one below.
       </PlaceholderAreaDescription>
-      <Button>Add account</Button>
     </PlaceholderArea>
   );
 }
