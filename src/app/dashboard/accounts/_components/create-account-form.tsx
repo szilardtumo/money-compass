@@ -100,11 +100,7 @@ export function CreateAccountForm({ currencies, onSuccess }: CreateAccountFormPr
                 <Combobox
                   options={currencyOptions}
                   value={field.value}
-                  onValueChange={(value) => {
-                    form.setValue(field.name, value as FormFields['currency'], {
-                      shouldValidate: true,
-                    });
-                  }}
+                  onValueChange={field.onChange}
                 />
               </FormControl>
               <FormMessage />

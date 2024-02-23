@@ -21,10 +21,10 @@ interface CreateAccountDialogProps {
 }
 
 export function CreateAccountDialog({ currencies }: CreateAccountDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setIsOpen] = useState(false);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button size="sm">
           <PlusIcon className="mr-1 w-3 h-3" /> Add
@@ -35,7 +35,7 @@ export function CreateAccountDialog({ currencies }: CreateAccountDialogProps) {
           <DialogTitle>Add account</DialogTitle>
           <DialogDescription>Add a new account to keep track of your finances.</DialogDescription>
         </DialogHeader>
-        <CreateAccountForm currencies={currencies} onSuccess={() => setOpen(false)} />
+        <CreateAccountForm currencies={currencies} onSuccess={() => setIsOpen(false)} />
       </DialogContent>
     </Dialog>
   );
