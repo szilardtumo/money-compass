@@ -13,12 +13,8 @@ export interface Account {
 
 export interface SimpleAccount {
   id: string;
+  subaccountId: string;
   name: string;
   value: number;
-  currency: string;
-}
-
-export interface CreateSimpleAccountParams {
-  name: string;
   currency: string;
 }

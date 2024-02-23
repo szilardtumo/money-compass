@@ -2,7 +2,7 @@
 
 import { revalidateTag } from 'next/cache';
 
-import { Account, CreateSimpleAccountParams, SimpleAccount } from '@/lib/types/accounts.types';
+import { Account, SimpleAccount } from '@/lib/types/accounts.types';
 import { ActionResponse } from '@/lib/types/transport.types';
 import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
@@ -53,10 +53,16 @@ export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
     .filter((account) => account.subaccounts.length === 1)
     .map((account) => ({
       id: account.id,
+      subaccountId: account.subaccounts[0].id,
       name: account.name,
       value: account.subaccounts[0].value,
       currency: account.subaccounts[0].currency,
     }));
+}
+
+interface CreateSimpleAccountParams {
+  name: string;
+  currency: string;
 }
 
 /**
