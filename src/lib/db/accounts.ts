@@ -94,3 +94,16 @@ export async function createSimpleAccount(
   revalidateTag('accounts');
   return { success: true };
 }
+
+export async function deleteAccount(accountId: string): Promise<ActionResponse> {
+  const supabase = createServerSupabaseClient();
+
+  const { error } = await supabase.from('accounts').delete().eq('id', accountId);
+
+  if (error) {
+    return { success: false, error: { code: error.code, message: error.message } };
+  }
+
+  revalidateTag('accounts');
+  return { success: true };
+}
