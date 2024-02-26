@@ -43,6 +43,7 @@ export async function createSimpleAccount(
   }
 
   revalidateTag('accounts');
+  revalidateTag('subaccounts');
   return { success: true };
 }
 
@@ -56,5 +57,6 @@ export async function deleteAccount(accountId: string): Promise<ActionResponse> 
   }
 
   revalidateTag('accounts');
+  revalidateTag('subaccounts');
   return { success: true };
 }

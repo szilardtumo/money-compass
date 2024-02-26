@@ -6,7 +6,9 @@ import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 import { getCurrencyMapper } from './currencies.queries';
 
 export async function getSubaccountBalances(): Promise<Record<string, number>> {
-  const supabase = createServerSupabaseClient();
+  const supabase = createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['subaccounts', 'transactions'] },
+  });
 
   const { data, error } = await supabase.from('balances').select('subaccount_id, balance');
 
@@ -23,7 +25,9 @@ export async function getSubaccountBalances(): Promise<Record<string, number>> {
 }
 
 export async function getSubaccountBalance(subaccountId: string): Promise<number> {
-  const supabase = createServerSupabaseClient();
+  const supabase = createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['subaccounts', 'transactions'] },
+  });
 
   const { data, error } = await supabase
     .from('balances')
