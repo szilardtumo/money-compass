@@ -15,7 +15,7 @@ import { cn } from '@/lib/cn';
 export interface ComboboxProps extends React.HTMLAttributes<HTMLButtonElement> {
   options: readonly { label: string; value: string }[];
   value: string | undefined;
-  onValueChange?: (value: string | undefined) => void;
+  onValueChange?: (value: string | null) => void;
   placeholder?: string;
   notFoundMessage?: string;
 }
@@ -60,7 +60,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    onValueChange?.(currentValue === value ? undefined : currentValue);
+                    onValueChange?.(currentValue === value ? null : currentValue);
                     setOpen(false);
                   }}
                 >

@@ -9,6 +9,7 @@ import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Form,
   FormControl,
@@ -18,7 +19,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
 import { createTransaction } from '@/lib/db/transactions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
@@ -57,6 +57,12 @@ export function CreateTransactionForm({
     resolver: zodResolver(formSchema),
     defaultValues: { amount: 0, ...defaultValues },
   });
+
+  const selectedAccountId = form.watch('account');
+  const selectedAccountCurrency = useMemo(
+    () => accounts.find((account) => account.id === selectedAccountId)?.currency,
+    [accounts, selectedAccountId],
+  );
 
   async function onSubmit(values: FormFields) {
     const subaccountId = accounts.find((account) => account.id === values.account)?.subaccountId;
@@ -134,7 +140,7 @@ export function CreateTransactionForm({
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
-                <Input type="number" {...field} />
+                <CurrencyInput currency={selectedAccountCurrency} {...field} />
               </FormControl>
               <FormDescription>
                 The transaction value. Positive value means income, negative means expense.
