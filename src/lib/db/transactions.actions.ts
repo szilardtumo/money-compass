@@ -37,6 +37,10 @@ export async function createTransaction(params: CreateTransactionParams): Promis
     revalidateTag('transactions');
     return { success: true };
   } catch (error) {
-    return { success: false, error: error as PostgrestError };
+    const postgrestError = error as PostgrestError;
+    return {
+      success: false,
+      error: { code: postgrestError.code, message: postgrestError.message },
+    };
   }
 }

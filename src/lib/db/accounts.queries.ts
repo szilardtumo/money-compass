@@ -39,7 +39,7 @@ export async function getSubaccountBalance(subaccountId: string): Promise<number
     throw error;
   }
 
-  return data!.balance ?? 0;
+  return data?.balance ?? 0;
 }
 
 /**

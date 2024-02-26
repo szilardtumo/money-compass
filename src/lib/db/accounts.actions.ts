@@ -33,7 +33,7 @@ export async function createSimpleAccount(
 
   const { error: subaccountError } = await supabase
     .from('subaccounts')
-    .insert({ currency: params.currency, account_id: account.id, value: 0 });
+    .insert({ currency: params.currency, account_id: account.id });
 
   if (subaccountError) {
     return {
