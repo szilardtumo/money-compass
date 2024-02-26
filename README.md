@@ -7,6 +7,7 @@ Check out the live demo [here](https://money-compass-seven.vercel.app/)!
 This project uses:
 
 - **[Next.js](https://nextjs.org/)** (with **App Directory** and **Server Actions**) - React framework for creating high-quality web applications
+- **[Supabase](https://supabase.io/)** - An open-source alternative to Firebase
 - **[Tailwind CSS](https://tailwindcss.com/)** - A utility-first CSS framework for rapid UI development
 - **[ShadCN](https://ui.shadcn.com/)** - A collection of beautiful, free, and open-source components for Tailwind CSS
 - **[ESlint](https://eslint.org/)** and **[Prettier](https://prettier.io/)** - For clean, consistent, and error-free code
@@ -52,6 +53,20 @@ The following scripts are available in `package.json`:
 - `cy:open`: Opens the Cypress Test Runner
 - `cy:run`: Runs the Cypress tests
 - `supa:gen-types`: Generates TypeScript types for the Supabase database schema
+
+## Supabase
+
+This project uses [Supabase](https://supabase.io/) for authentication and database. 
+
+### Database migrations
+
+To pull the latest schema from the remote Supabase database, run:
+
+```bash
+npx supabase db pull
+npx supabase migration squash
+npx supabase migration repair --status reverted '<old_migration_name>'
+```
 
 ## Testing
 
