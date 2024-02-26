@@ -1,6 +1,6 @@
 import { NetWorthChart } from '@/components/charts/net-worth-chart';
 import { Separator } from '@/components/ui/separator';
-import { getSimpleAccounts } from '@/lib/db/accounts';
+import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 
 import { AccountsSection } from './_components/accounts-section';
 

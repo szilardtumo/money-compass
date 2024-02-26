@@ -1,11 +1,11 @@
 interface Subaccount {
   id: string;
   currency: string;
-  value: number;
+  balance: number;
 }
 
 export interface Account {
-  totalValue: number;
+  totalBalance: number;
   id: string;
   name: string;
   subaccounts: Subaccount[];
@@ -15,6 +15,6 @@ export interface SimpleAccount {
   id: string;
   subaccountId: string;
   name: string;
-  value: number;
+  balance: number;
   currency: string;
 }

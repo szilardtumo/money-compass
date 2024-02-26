@@ -4,7 +4,7 @@ import { TrashIcon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 
 import { DropdownMenuItem, DropdownMenuShortcut } from '@/components/ui/dropdown-menu';
-import { deleteAccount } from '@/lib/db/accounts';
+import { deleteAccount } from '@/lib/db/accounts.actions';
 import { createToastPromise } from '@/lib/utils/toasts';
 
 interface DeleteAccountMenuItemProps {

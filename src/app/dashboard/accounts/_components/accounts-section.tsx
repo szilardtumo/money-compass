@@ -1,7 +1,7 @@
 import { AccountActionsDropdown } from '@/app/dashboard/accounts/_components/account-actions-dropdown';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCurrencies } from '@/lib/db/currencies';
+import { getCurrencies } from '@/lib/db/currencies.queries';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 
@@ -35,7 +35,7 @@ export async function AccountsSection({ accounts }: AccountsSectionProps) {
               <p className="text-sm text-muted-foreground uppercase">{account.currency}</p>
             </div>
             <div className="ml-auto font-bold">
-              {formatCurrency(account.value, account.currency)}
+              {formatCurrency(account.balance, account.currency)}
             </div>
             <AccountActionsDropdown account={account} />
           </div>

@@ -66,6 +66,9 @@ module.exports = {
         project: ['./tsconfig.json', 'cypress/tsconfig.json'],
       },
       extends: ['airbnb-typescript', 'prettier', 'plugin:import/typescript'],
+      rules: {
+        '@typescript-eslint/no-throw-literal': 'off',
+      },
     },
   ],
 };

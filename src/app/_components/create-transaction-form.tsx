@@ -20,7 +20,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Selectbox } from '@/components/ui/selectbox';
-import { createTransaction } from '@/lib/db/transactions';
+import { createTransaction } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Enums } from '@/lib/types/database.types';
 import { createToastPromise } from '@/lib/utils/toasts';

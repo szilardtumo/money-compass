@@ -74,14 +74,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "exchange_rates_from_fkey"
+            foreignKeyName: "public_exchange_rates_from_fkey"
             columns: ["from"]
             isOneToOne: false
             referencedRelation: "currencies"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "exchange_rates_to_fkey"
+            foreignKeyName: "public_exchange_rates_to_fkey"
             columns: ["to"]
             isOneToOne: false
             referencedRelation: "currencies"
@@ -95,35 +95,32 @@ export type Database = {
           created_at: string
           currency: string
           id: string
-          value: number
         }
         Insert: {
           account_id: string
           created_at?: string
           currency: string
           id?: string
-          value?: number
         }
         Update: {
           account_id?: string
           created_at?: string
           currency?: string
           id?: string
-          value?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "public_subaccounts_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subaccounts_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "subaccounts_currency_fkey"
-            columns: ["currency"]
-            isOneToOne: false
-            referencedRelation: "currencies"
             referencedColumns: ["id"]
           }
         ]
@@ -131,6 +128,7 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          balance: number
           completed_date: string
           description: string
           external_ref: string | null
@@ -141,6 +139,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          balance: number
           completed_date: string
           description?: string
           external_ref?: string | null
@@ -151,6 +150,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          balance?: number
           completed_date?: string
           description?: string
           external_ref?: string | null
@@ -171,7 +171,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      balances: {
+        Row: {
+          balance: number | null
+          subaccount_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_subaccount_id_fkey"
+            columns: ["subaccount_id"]
+            isOneToOne: false
+            referencedRelation: "subaccounts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Functions: {
       [_ in never]: never

@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { createSimpleAccount } from '@/lib/db/accounts';
+import { createSimpleAccount } from '@/lib/db/accounts.actions';
 import { Currency } from '@/lib/types/currencies.types';
 import { ActionErrorCode } from '@/lib/types/transport.types';
 import { createToastPromise } from '@/lib/utils/toasts';

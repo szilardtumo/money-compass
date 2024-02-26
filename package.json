@@ -16,7 +16,7 @@
     "test:watch-cov": "jest --watch --coverage",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "supa:gen-types": "npx supabase gen types typescript --project-id lgtnunvhxmklyelpqxyw > src/lib/types/database.types.ts"
+    "supa:gen-types": "npx --yes supabase gen types typescript --project-id lgtnunvhxmklyelpqxyw > src/lib/types/database.types.ts"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
