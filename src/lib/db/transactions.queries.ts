@@ -45,7 +45,7 @@ export async function getTransactionHistory(
 
   // If there is only one data point, duplicate it so that the chart renders a horizontal line
   if (parsedData.length === 1) {
-    return [parsedData[0], parsedData[0]];
+    return [parsedData[0], { ...parsedData[0], date: new Date().toISOString() }];
   }
 
   return parsedData;
