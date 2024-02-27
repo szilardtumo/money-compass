@@ -3,46 +3,20 @@
 import { AreaChart } from '@tremor/react';
 
 import { mainCurrency } from '@/lib/constants';
-import { formatCurrency } from '@/lib/utils/formatters';
+import { TransactionHistory } from '@/lib/types/transactions.types';
+import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
 
 import { Card, CardContent, CardDescription, CardHeader, CardMetric, CardTitle } from '../ui/card';
 
-const data = [
-  {
-    date: 'August 2023',
-    'Net Worth': 2100.2,
-  },
-  {
-    date: 'September 2023',
-    'Net Worth': 2943.0,
-  },
-  {
-    date: 'October 2023',
-    'Net Worth': 4889.5,
-  },
-  {
-    date: 'December 2023',
-    'Net Worth': 3909.8,
-  },
-  {
-    date: 'January 2024',
-    'Net Worth': 5778.7,
-  },
-  {
-    date: 'February 2024',
-    'Net Worth': 5900.9,
-  },
-  {
-    date: 'March 2024',
-    'Net Worth': 4129.4,
-  },
-];
-
 interface NetWorthChartProps {
-  netWorth: number;
+  data: TransactionHistory[];
 }
 
-export function NetWorthChart({ netWorth }: NetWorthChartProps) {
+export function NetWorthChart({ data }: NetWorthChartProps) {
+  const netWorth = data[data.length - 1]?.balances.total ?? 0;
+  const previousNetWorth = data[data.length - 2]?.balances.total;
+  const difference = netWorth - previousNetWorth;
+
   return (
     <Card>
       <CardHeader>
@@ -50,14 +24,19 @@ export function NetWorthChart({ netWorth }: NetWorthChartProps) {
       </CardHeader>
       <CardContent>
         <CardMetric>{formatCurrency(netWorth, mainCurrency)}</CardMetric>
-        <CardDescription>
-          <span className="text-emerald-700 dark:text-emerald-500">+$430.90 (4.1%)</span>{' '}
-          <span className="font-normal">Past 24 hours</span>
-        </CardDescription>
+        {Number.isFinite(difference) && (
+          <CardDescription>
+            <span className={difference >= 0 ? 'text-success' : 'text-destructive'}>
+              {difference >= 0 && '+'}
+              {formatCurrency(difference, mainCurrency)} (
+              {formatPercent(difference / previousNetWorth)})
+            </span>
+          </CardDescription>
+        )}
         <AreaChart
           data={data}
           index="date"
-          categories={['Net Worth']}
+          categories={['balances.total']}
           curveType="monotone"
           yAxisWidth={55}
           showLegend={false}

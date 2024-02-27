@@ -134,7 +134,7 @@ export type Database = {
           external_ref: string | null
           id: string
           started_date: string
-          subaccount_id: string | null
+          subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
         }
         Insert: {
@@ -145,7 +145,7 @@ export type Database = {
           external_ref?: string | null
           id?: string
           started_date: string
-          subaccount_id?: string | null
+          subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
         }
         Update: {
@@ -156,12 +156,12 @@ export type Database = {
           external_ref?: string | null
           id?: string
           started_date?: string
-          subaccount_id?: string | null
+          subaccount_id?: string
           type?: Database["public"]["Enums"]["transaction_type"]
         }
         Relationships: [
           {
-            foreignKeyName: "transactions_subaccount_id_fkey"
+            foreignKeyName: "public_transactions_subaccount_id_fkey"
             columns: ["subaccount_id"]
             isOneToOne: false
             referencedRelation: "subaccounts"
@@ -178,7 +178,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "transactions_subaccount_id_fkey"
+            foreignKeyName: "public_transactions_subaccount_id_fkey"
             columns: ["subaccount_id"]
             isOneToOne: false
             referencedRelation: "subaccounts"
@@ -188,7 +188,17 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      query_transaction_history: {
+        Args: {
+          date_range: string
+          bucket_interval: string
+        }
+        Returns: {
+          subaccount_id: string
+          interval_start: string
+          last_balance: number
+        }[]
+      }
     }
     Enums: {
       transaction_type:

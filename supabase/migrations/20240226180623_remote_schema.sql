@@ -25,6 +25,24 @@ CREATE TYPE "public"."transaction_type" AS ENUM (
 
 ALTER TYPE "public"."transaction_type" OWNER TO "postgres";
 
+CREATE OR REPLACE FUNCTION "public"."query_transaction_history"("date_range" "text", "bucket_interval" "text") RETURNS TABLE("subaccount_id" "uuid", "interval_start" timestamp with time zone, "last_balance" numeric)
+    LANGUAGE "plpgsql"
+    AS $$
+begin
+  return query 
+    select
+      transactions.subaccount_id,
+      time_bucket(bucket_interval::interval, started_date) AS interval_start,
+      last(balance, started_date) as last_balance
+    from transactions
+    where started_date >= now() - date_range::interval
+    group by transactions.subaccount_id, interval_start
+    order by interval_start desc;
+end;
+$$;
+
+ALTER FUNCTION "public"."query_transaction_history"("date_range" "text", "bucket_interval" "text") OWNER TO "postgres";
+
 SET default_tablespace = '';
 
 SET default_table_access_method = "heap";
@@ -105,7 +123,11 @@ ALTER TABLE ONLY "public"."subaccounts"
     ADD CONSTRAINT "subaccounts_pkey" PRIMARY KEY ("id");
 
 ALTER TABLE ONLY "public"."transactions"
-    ADD CONSTRAINT "transactions_pkey" PRIMARY KEY ("id");
+    ADD CONSTRAINT "transactions_pkey" PRIMARY KEY ("id", "started_date");
+
+CREATE INDEX "transactions_started_date_idx" ON "public"."transactions" USING "btree" ("started_date" DESC);
+
+CREATE OR REPLACE TRIGGER "ts_insert_blocker" BEFORE INSERT ON "public"."transactions" FOR EACH ROW EXECUTE FUNCTION "_timescaledb_internal"."insert_blocker"();
 
 ALTER TABLE ONLY "public"."accounts"
     ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
@@ -162,6 +184,10 @@ GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
+
+GRANT ALL ON FUNCTION "public"."query_transaction_history"("date_range" "text", "bucket_interval" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."query_transaction_history"("date_range" "text", "bucket_interval" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."query_transaction_history"("date_range" "text", "bucket_interval" "text") TO "service_role";
 
 GRANT ALL ON TABLE "public"."accounts" TO "anon";
 GRANT ALL ON TABLE "public"."accounts" TO "authenticated";

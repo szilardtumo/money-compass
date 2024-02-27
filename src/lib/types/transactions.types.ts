@@ -6,3 +6,8 @@ export interface Transaction {
   balance: number;
   startedDate: string;
 }
+
+export interface TransactionHistory {
+  date: string;
+  balances: Record<string, number>;
+}

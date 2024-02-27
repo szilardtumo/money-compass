@@ -21,3 +21,12 @@ export function getCurrencySymbol(currency: string) {
     .replace(/\d/g, '')
     .trim();
 }
+
+export function formatPercent(value: number, options: Intl.NumberFormatOptions = {}) {
+  return Intl.NumberFormat('en-US', {
+    style: 'percent',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    ...options,
+  }).format(value);
+}

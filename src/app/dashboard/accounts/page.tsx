@@ -1,11 +1,15 @@
 import { NetWorthChart } from '@/components/charts/net-worth-chart';
 import { Separator } from '@/components/ui/separator';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
+import { getTransactionHistory } from '@/lib/db/transactions.queries';
 
 import { AccountsSection } from './_components/accounts-section';
 
 export default async function AccountsPage() {
-  const accounts = await getSimpleAccounts();
+  const [accounts, transactionHistory] = await Promise.all([
+    getSimpleAccounts(),
+    getTransactionHistory('12 month', '1 month'),
+  ]);
 
   return (
     <main>
@@ -14,7 +18,7 @@ export default async function AccountsPage() {
       </div>
       <Separator />
       <div className="m-4 flex flex-col gap-4">
-        <NetWorthChart netWorth={1234} />
+        <NetWorthChart data={transactionHistory} />
 
         <AccountsSection accounts={accounts} />
       </div>
