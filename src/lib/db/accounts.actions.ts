@@ -2,6 +2,8 @@
 
 import { revalidateTag } from 'next/cache';
 
+import { getSubaccountBalances } from '@/lib/db/accounts.queries';
+import { createTransactions } from '@/lib/db/transactions.actions';
 import { ActionResponse } from '@/lib/types/transport.types';
 import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
@@ -59,4 +61,20 @@ export async function deleteAccount(accountId: string): Promise<ActionResponse> 
   revalidateTag('accounts');
   revalidateTag('subaccounts');
   return { success: true };
+}
+
+export async function updateAccountBalances(
+  balances: Record<string, number>,
+): Promise<ActionResponse> {
+  const subaccountBalances = await getSubaccountBalances();
+
+  const transactions: Parameters<typeof createTransactions>[0] = Object.entries(balances).map(
+    ([subaccountId, balance]) => ({
+      subaccountId,
+      amount: balance - (subaccountBalances[subaccountId] ?? 0),
+      type: 'correction',
+    }),
+  );
+
+  return createTransactions(transactions);
 }
