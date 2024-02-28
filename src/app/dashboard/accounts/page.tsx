@@ -1,4 +1,4 @@
-import { QuickActionsSection } from '@/app/dashboard/accounts/quick-actions-section';
+import { QuickActionsSection } from '@/app/dashboard/accounts/_components/quick-actions-section';
 import { NetWorthChart } from '@/components/charts/net-worth-chart';
 import { Separator } from '@/components/ui/separator';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
