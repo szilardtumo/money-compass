@@ -19,3 +19,10 @@ export enum ActionErrorCode {
   UniqueViolation = '23505',
   ForeignKeyViolation = '23503',
 }
+
+export interface Paginated<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}

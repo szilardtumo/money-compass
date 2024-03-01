@@ -5,6 +5,7 @@ export interface Transaction {
   amount: number;
   balance: number;
   startedDate: string;
+  description: string;
 }
 
 export interface TransactionHistory {
