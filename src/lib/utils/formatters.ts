@@ -30,3 +30,17 @@ export function formatPercent(value: number, options: Intl.NumberFormatOptions =
     ...options,
   }).format(value);
 }
+
+export function formatDate(date: string | Date, options: Intl.DateTimeFormatOptions = {}) {
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    ...options,
+  }).format(new Date(date));
+}
+
+export function formatTime(date: string | Date, options: Intl.DateTimeFormatOptions = {}) {
+  return new Intl.DateTimeFormat('en-US', {
+    timeStyle: 'short',
+    ...options,
+  }).format(new Date(date));
+}

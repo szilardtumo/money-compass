@@ -1,3 +1,5 @@
+import { SimpleAccount } from '@/lib/types/accounts.types';
+
 export interface Transaction {
   id: string;
   subaccountId: string;
@@ -6,6 +8,10 @@ export interface Transaction {
   balance: number;
   startedDate: string;
   description: string;
+}
+
+export interface TransactionWithAccount extends Transaction {
+  account: SimpleAccount;
 }
 
 export interface TransactionHistory {

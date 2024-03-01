@@ -1,4 +1,5 @@
 import { QuickActionsSection } from '@/app/dashboard/accounts/_components/quick-actions-section';
+import { TransactionsSection } from '@/app/dashboard/accounts/_components/transactions-section';
 import { NetWorthChart } from '@/components/charts/net-worth-chart';
 import { Separator } from '@/components/ui/separator';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
@@ -24,6 +25,8 @@ export default async function AccountsPage() {
         <QuickActionsSection />
 
         <AccountsSection accounts={accounts} />
+
+        <TransactionsSection />
       </div>
     </main>
   );
