@@ -12,6 +12,7 @@ export interface CreateTransactionParams {
   subaccountId: string;
   type: Enums<'transaction_type'>;
   amount: number;
+  description: string;
 }
 
 export async function createTransaction(params: CreateTransactionParams): Promise<ActionResponse> {
@@ -26,6 +27,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
       amount: params.amount,
       balance: subaccountBalance + params.amount,
       subaccount_id: params.subaccountId,
+      description: params.description,
       started_date: now,
       completed_date: now,
     });
@@ -60,6 +62,7 @@ export async function createTransactions(
         amount: transaction.amount,
         balance: (subaccountBalances[transaction.subaccountId] ?? 0) + transaction.amount,
         subaccount_id: transaction.subaccountId,
+        description: transaction.description,
         started_date: now,
         completed_date: now,
       })),

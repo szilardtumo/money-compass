@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
 import { createTransaction } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
@@ -44,6 +45,7 @@ const formSchema = z.object({
   account: z.string({ required_error: 'An account must be selected.' }),
   type: z.string({ required_error: 'A transaction type must be selected.' }),
   amount: z.number(),
+  description: z.string(),
 });
 
 type FormFields = z.infer<typeof formSchema>;
@@ -75,6 +77,7 @@ export function CreateTransactionForm({
       amount: values.amount,
       type: values.type as Enums<'transaction_type'>,
       subaccountId: subaccountId!,
+      description: values.description,
     });
 
     toast.promise(createToastPromise(promise), {
@@ -145,6 +148,20 @@ export function CreateTransactionForm({
               <FormDescription>
                 The transaction value. Positive value means income, negative means expense.
               </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormDescription>This will be seen in the transaction history.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

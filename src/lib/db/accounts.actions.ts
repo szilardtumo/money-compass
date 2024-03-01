@@ -68,13 +68,14 @@ export async function updateAccountBalances(
 ): Promise<ActionResponse> {
   const subaccountBalances = await getSubaccountBalances();
 
-  const transactions: Parameters<typeof createTransactions>[0] = Object.entries(balances).map(
-    ([subaccountId, balance]) => ({
+  const transactions: Parameters<typeof createTransactions>[0] = Object.entries(balances)
+    .map(([subaccountId, balance]) => ({
       subaccountId,
       amount: balance - (subaccountBalances[subaccountId] ?? 0),
-      type: 'correction',
-    }),
-  );
+      type: 'correction' as const,
+      description: 'Manual balance correction',
+    }))
+    .filter((transaction) => transaction.amount !== 0);
 
   return createTransactions(transactions);
 }
