@@ -1,4 +1,6 @@
-import { Card, CardContent, CardHeader, CardMetric, CardTitle } from '@/components/ui/card';
+import { Metric } from '@tremor/react';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils/formatters';
 
 interface AccountCardProps {
@@ -14,7 +16,7 @@ export function AccountCard({ name, value, currency }: AccountCardProps) {
         <CardTitle>{name}</CardTitle>
       </CardHeader>
       <CardContent>
-        <CardMetric>{formatCurrency(value, currency)}</CardMetric>
+        <Metric>{formatCurrency(value, currency)}</Metric>
       </CardContent>
     </Card>
   );
