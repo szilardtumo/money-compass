@@ -1,1 +1,1 @@
-export const mainCurrency = 'EUR';
+export const mainCurrency = 'eur';

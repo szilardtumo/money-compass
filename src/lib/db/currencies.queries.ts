@@ -24,7 +24,10 @@ export async function getCurrencyMapper(toCurrency: string): Promise<CurrencyMap
     .eq('to', toCurrency)
     .then((response) => ({
       ...response,
-      data: Object.fromEntries(response.data?.map((item) => [item.from, item.rate]) ?? []),
+      data: {
+        ...Object.fromEntries(response.data?.map((item) => [item.from, item.rate]) ?? []),
+        [toCurrency]: 1,
+      },
     }));
 
   if (error) {
