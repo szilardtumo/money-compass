@@ -4,12 +4,14 @@ import { revalidateTag } from 'next/cache';
 
 import { getSubaccountBalances } from '@/lib/db/accounts.queries';
 import { createTransactions } from '@/lib/db/transactions.actions';
+import { Enums } from '@/lib/types/database.types';
 import { ActionResponse } from '@/lib/types/transport.types';
 import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 interface CreateSimpleAccountParams {
   name: string;
   currency: string;
+  category: Enums<'account_category'>;
 }
 
 /**
@@ -25,7 +27,7 @@ export async function createSimpleAccount(
 
   const { data: account, error: accountError } = await supabase
     .from('accounts')
-    .insert({ name: params.name })
+    .insert({ name: params.name, category: params.category })
     .select('id')
     .single();
 

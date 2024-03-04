@@ -18,7 +18,7 @@ import { mainCurrency } from '@/lib/constants';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { chartColors } from '@/lib/utils/charts';
-import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
+import { capitalize, formatCurrency, formatPercent } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/groupBy';
 
 interface AccountCategoryDistributionChartProps {
@@ -31,8 +31,7 @@ export function AccountCategoryDistributionChart({
   currencyMapper,
 }: AccountCategoryDistributionChartProps) {
   const data = useMemo(() => {
-    // TODO: replace with: (account) => account.category
-    const groups = groupBy(accounts, () => 'Checking');
+    const groups = groupBy(accounts, (account) => capitalize(account.category));
 
     return Object.entries(groups).map(([category, items]) => ({
       id: category,

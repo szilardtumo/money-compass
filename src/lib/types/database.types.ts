@@ -11,18 +11,21 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          category: Database["public"]["Enums"]["account_category"]
           created_at: string
           id: string
           name: string
           user_id: string
         }
         Insert: {
+          category: Database["public"]["Enums"]["account_category"]
           created_at?: string
           id?: string
           name?: string
           user_id?: string
         }
         Update: {
+          category?: Database["public"]["Enums"]["account_category"]
           created_at?: string
           id?: string
           name?: string
@@ -201,6 +204,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_category: "checking" | "investment"
       transaction_type:
         | "card_payment"
         | "transfer"

@@ -53,7 +53,7 @@ export async function getAccounts(mainCurrency: string): Promise<Account[]> {
   const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['accounts'] } });
 
   const [{ data: accounts, error }, currencyMapper, subaccontBalances] = await Promise.all([
-    supabase.from('accounts').select(`id, name, subaccounts(id, currency)`),
+    supabase.from('accounts').select(`id, name, category, subaccounts(id, currency)`),
     getCurrencyMapper(mainCurrency),
     getSubaccountBalances(),
   ]);
@@ -65,6 +65,7 @@ export async function getAccounts(mainCurrency: string): Promise<Account[]> {
   return (accounts ?? []).map((account) => ({
     id: account.id,
     name: account.name,
+    category: account.category,
     subaccounts: account.subaccounts.map((subaccount) => ({
       id: subaccount.id,
       currency: subaccount.currency,
@@ -91,7 +92,7 @@ export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
   });
 
   const [{ data: accounts, error }, subaccountBalances] = await Promise.all([
-    supabase.from('accounts').select(`id, name, subaccounts(id, currency)`),
+    supabase.from('accounts').select(`id, name, category, subaccounts(id, currency)`),
     getSubaccountBalances(),
   ]);
 
@@ -107,5 +108,6 @@ export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
       name: account.name,
       balance: subaccountBalances[account.subaccounts[0].id] ?? 0,
       currency: account.subaccounts[0].currency,
+      category: account.category,
     }));
 }

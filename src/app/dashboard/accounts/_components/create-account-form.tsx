@@ -19,8 +19,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Selectbox } from '@/components/ui/selectbox';
 import { createSimpleAccount } from '@/lib/db/accounts.actions';
 import { Currency } from '@/lib/types/currencies.types';
+import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode } from '@/lib/types/transport.types';
 import { createToastPromise } from '@/lib/utils/toasts';
 
@@ -29,12 +31,18 @@ interface CreateAccountFormProps {
   onSuccess?: () => void;
 }
 
+const accountCategoryOptions = [
+  { label: 'Checking', value: 'checking' },
+  { label: 'Investment', value: 'investment' },
+] satisfies { label: string; value: Enums<'account_category'> }[];
+
 const formSchema = z.object({
   name: z
     .string()
     .min(2, { message: 'Account name must be at least 2 characters.' })
     .max(50, { message: 'Account name must be at most 50 characters.' }),
   currency: z.string({ required_error: 'A currency must be selected.' }),
+  category: z.string({ required_error: 'An account category must be selected.' }),
 });
 
 type FormFields = z.infer<typeof formSchema>;
@@ -49,7 +57,11 @@ export function CreateAccountForm({ currencies, onSuccess }: CreateAccountFormPr
   });
 
   async function onSubmit(values: FormFields) {
-    const promise = createSimpleAccount(values);
+    const promise = createSimpleAccount({
+      name: values.name,
+      currency: values.currency,
+      category: values.category as Enums<'account_category'>,
+    });
 
     toast.promise(createToastPromise(promise), {
       loading: 'Creating account...',
@@ -86,6 +98,23 @@ export function CreateAccountForm({ currencies, onSuccess }: CreateAccountFormPr
                 <Input placeholder="ex. Revolut" {...field} />
               </FormControl>
               <FormDescription>This will be displayed throughout the app.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <FormControl>
+                <Selectbox
+                  options={accountCategoryOptions}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

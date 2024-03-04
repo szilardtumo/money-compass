@@ -15,7 +15,7 @@ export function TransactionsListItem({ transaction }: TransactionsListItemProps)
           {transaction.description || 'No description'}
         </p>
         <p className="text-sm text-muted-foreground">
-          {formatTime(transaction.startedDate)} &bull; {transaction.account.name}
+          {formatTime(transaction.startedDate)} • {transaction.account.name}
         </p>
       </div>
       <div className="ml-auto font-medium">

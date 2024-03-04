@@ -44,3 +44,7 @@ export function formatTime(date: string | Date, options: Intl.DateTimeFormatOpti
     ...options,
   }).format(new Date(date));
 }
+
+export function capitalize(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}

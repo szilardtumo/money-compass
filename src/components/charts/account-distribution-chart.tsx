@@ -37,7 +37,7 @@ export function AccountDistributionChart({
         balance: account.balance,
         currency: account.currency,
         balanceInMainCurrency: account.balance * currencyMapper[account.currency],
-        category: 'Checking',
+        category: account.category,
       })),
     [accounts, currencyMapper],
   );
@@ -69,6 +69,7 @@ export function AccountDistributionChart({
         <TableHeader>
           <TableRow>
             <TableHead>Account</TableHead>
+            <TableHead>Category</TableHead>
             <TableHead>Share</TableHead>
             <TableHead className="text-right">Balance (in original currency)</TableHead>
             <TableHead className="text-right">Balance</TableHead>
@@ -87,6 +88,11 @@ export function AccountDistributionChart({
                 {item.name}
               </TableCell>
               <TableCell>
+                <Badge variant="secondary" className="ml-1 capitalize">
+                  {item.category}
+                </Badge>
+              </TableCell>
+              <TableCell>
                 <Badge>{formatPercent(item.balanceInMainCurrency / totalBalance)}</Badge>
               </TableCell>
               <TableCell className="text-right">
@@ -101,7 +107,7 @@ export function AccountDistributionChart({
         <TableFooter>
           <TableRow>
             <TableCell>Total</TableCell>
-            <TableCell colSpan={3} className="text-right">
+            <TableCell colSpan={4} className="text-right">
               {formatCurrency(totalBalance, mainCurrency)}
             </TableCell>
           </TableRow>

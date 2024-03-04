@@ -8,6 +8,7 @@ export interface Account {
   totalBalance: number;
   id: string;
   name: string;
+  category: string;
   subaccounts: Subaccount[];
 }
 
@@ -17,4 +18,5 @@ export interface SimpleAccount {
   name: string;
   balance: number;
   currency: string;
+  category: string;
 }
