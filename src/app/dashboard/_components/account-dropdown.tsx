@@ -1,7 +1,8 @@
 'use client';
 
-import { CaretDownIcon } from '@radix-ui/react-icons';
-import { User, createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { CaretDownIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
+import { User } from '@supabase/supabase-js';
+import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,9 +12,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { createBrowserSupabaseClient } from '@/lib/utils/supabase/client';
 
 interface AccountDropdownProps {
   user: User;
@@ -21,9 +30,10 @@ interface AccountDropdownProps {
 
 export function AccountDropdown({ user }: AccountDropdownProps) {
   const router = useRouter();
+  const { theme, setTheme, systemTheme } = useTheme();
 
   const handleLogout = async () => {
-    const supabase = createClientComponentClient();
+    const supabase = createBrowserSupabaseClient();
     await supabase.auth.signOut();
     router.refresh();
   };
@@ -53,6 +63,33 @@ export function AccountDropdown({ user }: AccountDropdownProps) {
       <DropdownMenuContent className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>App Theme</DropdownMenuSubTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+                <DropdownMenuRadioItem value="system">
+                  System
+                  <DropdownMenuShortcut>
+                    {systemTheme === 'dark' ? <MoonIcon /> : <SunIcon />}
+                  </DropdownMenuShortcut>
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="dark">
+                  Dark
+                  <DropdownMenuShortcut>
+                    <MoonIcon />
+                  </DropdownMenuShortcut>
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="light">
+                  Light
+                  <DropdownMenuShortcut>
+                    <SunIcon />
+                  </DropdownMenuShortcut>
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuPortal>
+        </DropdownMenuSub>
         <DropdownMenuItem onSelect={handleLogout}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

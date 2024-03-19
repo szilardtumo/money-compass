@@ -1,7 +1,9 @@
-import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import './globals.css';
 
+import { GlobalProviders } from '@/app/_components/global-providers';
+import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/cn';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -15,7 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
-        {children}
+        <GlobalProviders>
+          <Toaster />
+          {children}
+        </GlobalProviders>
       </body>
     </html>
   );

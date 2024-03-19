@@ -1,13 +1,12 @@
-import { CubeIcon } from '@radix-ui/react-icons';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Separator } from '@/components/ui/separator';
+import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 import { AccountDropdown } from './_components/account-dropdown';
-import { NavItem } from './_components/nav-item';
+import { GlobalDialogs } from './_components/global-dialogs';
+import { Navbar } from './_components/navbar';
 
 export const metadata = {
   title: 'Next.js',
@@ -15,36 +14,30 @@ export const metadata = {
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createServerSupabaseClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/');
+    redirect('/auth');
   }
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="h-full min-h-screen items-stretch">
-      <ResizablePanel defaultSize={20} minSize={10} maxSize={30}>
-        <div className="flex h-[52px] items-center justify-center px-2">
-          <AccountDropdown user={user} />
-        </div>
-        <Separator />
-        <nav className="flex flex-col gap-1 p-2">
-          <NavItem href="#">
-            <CubeIcon className="mr-2" /> Nav 1
-          </NavItem>
-          <NavItem href="#">
-            <CubeIcon className="mr-2" /> Nav 2
-          </NavItem>
-        </nav>
-      </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={80} className="p-2">
-        {children}
-      </ResizablePanel>
-    </ResizablePanelGroup>
+    <>
+      <GlobalDialogs />
+      <ResizablePanelGroup direction="horizontal" className="h-full min-h-screen items-stretch">
+        <ResizablePanel defaultSize={20} minSize={10} maxSize={30}>
+          <div className="flex h-14 items-center justify-center px-2">
+            <AccountDropdown user={user} />
+          </div>
+          <Separator />
+          <Navbar />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={80}>{children}</ResizablePanel>
+      </ResizablePanelGroup>
+    </>
   );
 }

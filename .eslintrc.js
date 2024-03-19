@@ -14,7 +14,7 @@ module.exports = {
       typescript: {},
     },
   },
-  ignorePatterns: ['node_modules/*', 'src/lib/database.types.ts'],
+  ignorePatterns: ['node_modules/*', 'src/lib/types/database.types.ts'],
   extends: [
     'airbnb',
     'next/core-web-vitals',
@@ -66,6 +66,9 @@ module.exports = {
         project: ['./tsconfig.json', 'cypress/tsconfig.json'],
       },
       extends: ['airbnb-typescript', 'prettier', 'plugin:import/typescript'],
+      rules: {
+        '@typescript-eslint/no-throw-literal': 'off',
+      },
     },
   ],
 };
