@@ -3,7 +3,6 @@
 import { UpdateIcon } from '@radix-ui/react-icons';
 import { useState } from 'react';
 
-import { UpdateBalancesForm } from '@/app/dashboard/accounts/_components/update-balances-form';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,6 +13,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { SimpleAccount } from '@/lib/types/accounts.types';
+
+import { UpdateBalancesForm } from './update-balances-form';
 
 interface UpdateBalancesDialogProps {
   accounts: SimpleAccount[];

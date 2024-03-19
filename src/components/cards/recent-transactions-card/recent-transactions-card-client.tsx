@@ -3,7 +3,6 @@
 import { MixerVerticalIcon } from '@radix-ui/react-icons';
 import { useMemo, useState } from 'react';
 
-import { TransactionsListItem } from '@/app/dashboard/accounts/_components/transactions-list-item';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -20,17 +19,19 @@ import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.ty
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/groupBy';
 
-interface TransactionsListProps {
+import { TransactionItem } from './transaction-item';
+
+interface RecentTransactionsCardClientProps {
   transactions: Transaction[];
   accounts: SimpleAccount[];
   currencyMapper: CurrencyMapper;
 }
 
-export function TransactionsList({
+export function RecentTransactionsCardClient({
   transactions,
   accounts,
   currencyMapper,
-}: TransactionsListProps) {
+}: RecentTransactionsCardClientProps) {
   const [selectedsubAccountIds, setSelectedSubaccountIds] = useState<string[]>(() =>
     accounts.map((account) => account.subaccountId),
   );
@@ -99,7 +100,7 @@ export function TransactionsList({
             </div>
             <div className="mt-3 space-y-3">
               {group.transactions.map((item) => (
-                <TransactionsListItem key={item.id} transaction={item} />
+                <TransactionItem key={item.id} transaction={item} />
               ))}
             </div>
           </div>

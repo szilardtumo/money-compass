@@ -1,15 +1,18 @@
 'use client';
 
-import { useCreateTransactionDialog } from '@/app/_components/create-transaction-dialog-provider';
-import { CreateTransactionForm } from '@/app/_components/create-transaction-form';
+import { useCreateTransactionDialog } from '@/components/providers/create-transaction-dialog-provider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 
-interface CreateTransactionDialogProps {
+import { CreateTransactionForm } from './create-transaction-form';
+
+interface CreateTransactionDialogClientProps {
   accounts: SimpleAccount[];
 }
 
-export async function CreateTransactionDialog({ accounts }: CreateTransactionDialogProps) {
+export async function CreateTransactionDialogClient({
+  accounts,
+}: CreateTransactionDialogClientProps) {
   const { isOpen, internal } = useCreateTransactionDialog();
 
   return (

@@ -1,18 +1,18 @@
-import { AccountActionsDropdown } from '@/app/dashboard/accounts/_components/account-actions-dropdown';
 import { AccountAvatar } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCurrencies } from '@/lib/db/currencies.queries';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 
+import { AccountActionsDropdown } from './account-actions-dropdown';
 import { CreateAccountDialog } from './create-account-dialog';
 import { NoAccountsPlaceholder } from './no-accounts-placeholder';
 
-interface AccountsSectionProps {
+interface AccountsCardProps {
   accounts: SimpleAccount[];
 }
 
-export async function AccountsSection({ accounts }: AccountsSectionProps) {
+export async function AccountsCard({ accounts }: AccountsCardProps) {
   const currencies = await getCurrencies();
 
   return (

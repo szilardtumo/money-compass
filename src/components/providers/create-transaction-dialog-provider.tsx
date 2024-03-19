@@ -2,7 +2,7 @@
 
 import React, { ComponentProps, createContext, useMemo, useState } from 'react';
 
-import type { CreateTransactionForm } from '@/app/_components/create-transaction-form';
+import type { CreateTransactionForm } from '@/components/dialogs/create-transaction-dialog/create-transaction-form';
 
 type DefaultValues = ComponentProps<typeof CreateTransactionForm>['defaultValues'];
 

@@ -1,11 +1,9 @@
-import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import './globals.css';
 
-import { ClientCodeProvider } from '@/app/_components/client-code-provider';
-import { ThemeProvider } from '@/app/_components/theme-provider';
+import { GlobalProviders } from '@/app/_components/global-providers';
 import { Toaster } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -19,17 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
-        <ClientCodeProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <TooltipProvider>{children}</TooltipProvider>
-            <Toaster />
-          </ThemeProvider>
-        </ClientCodeProvider>
+        <GlobalProviders>
+          <Toaster />
+          {children}
+        </GlobalProviders>
       </body>
     </html>
   );

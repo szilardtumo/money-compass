@@ -1,7 +1,5 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 
-import { AddTransactionMenuItem } from '@/app/dashboard/accounts/_components/add-transaction-menu-item';
-import { DeleteAccountMenuItem } from '@/app/dashboard/accounts/_components/delete-account-menu-item';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,6 +10,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SimpleAccount } from '@/lib/types/accounts.types';
+
+import { AddTransactionMenuItem } from './add-transaction-menu-item';
+import { DeleteAccountMenuItem } from './delete-account-menu-item';
 
 interface AccountActionsDropdownProps {
   account: SimpleAccount;

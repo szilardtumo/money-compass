@@ -2,11 +2,11 @@ import { Avatar } from '@/components/ui/avatar';
 import { TransactionWithAccount } from '@/lib/types/transactions.types';
 import { formatCurrency, formatTime } from '@/lib/utils/formatters';
 
-interface TransactionsListItemProps {
+interface TransactionItemProps {
   transaction: TransactionWithAccount;
 }
 
-export function TransactionsListItem({ transaction }: TransactionsListItemProps) {
+export function TransactionItem({ transaction }: TransactionItemProps) {
   return (
     <div className="flex items-start">
       <Avatar className="h-9 w-9 border" />

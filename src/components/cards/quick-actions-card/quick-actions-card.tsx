@@ -1,8 +1,9 @@
-import { UpdateBalancesDialog } from '@/app/dashboard/accounts/_components/update-balances-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 
-export async function QuickActionsSection() {
+import { UpdateBalancesDialog } from './update-balances-dialog';
+
+export async function QuickActionsCard() {
   const accounts = await getSimpleAccounts();
 
   return (

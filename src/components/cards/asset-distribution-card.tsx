@@ -4,11 +4,10 @@ import { TabsContent } from '@radix-ui/react-tabs';
 
 import { AccountCategoryDistributionChart } from '@/components/charts/account-category-distribution-chart';
 import { AccountDistributionChart } from '@/components/charts/account-distribution-chart';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
-
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 interface AssetDistributionCardProps {
   accounts: SimpleAccount[];
