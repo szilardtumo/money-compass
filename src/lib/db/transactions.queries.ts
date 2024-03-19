@@ -1,10 +1,12 @@
 'use server';
 
+import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 import { Enums } from '@/lib/types/database.types';
 import { TimeInterval } from '@/lib/types/time.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
 import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
+import { generateTimeBuckets } from '@/lib/utils/timeBuckets';
 
 export interface CreateTransactionParams {
   subaccountId: string;
@@ -51,36 +53,48 @@ export async function getTransactionHistory(
 ): Promise<TransactionHistory[]> {
   const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['transactions'] } });
 
-  const { data, error } = await supabase.rpc('query_transaction_history', {
-    date_range: dateRange,
-    bucket_interval: interval,
-  });
+  const [accounts, { data: buckets, error }] = await Promise.all([
+    getSimpleAccounts(),
+    supabase.rpc('query_transaction_history', {
+      date_range: dateRange,
+      bucket_interval: interval,
+    }),
+  ]);
 
   if (error) {
     throw error;
   }
 
-  const dateMap = data.reduce((acc, current) => {
-    const currentAccounts = acc.get(current.interval_start) ?? {};
+  // FIXME: We consider that the account has a balance of 0 at the beginning of the date range, but that's not always true
+  // We need to fetch the balance at the beginning of the date range and use that as the starting balance
+  let currentBalances: Record<string, number> = Object.fromEntries(
+    accounts.map((account) => [account.subaccountId, 0]),
+  );
 
-    acc.set(current.interval_start, {
-      ...currentAccounts,
-      [current.subaccount_id]: current.last_balance,
-      total: (currentAccounts.total ?? 0) + current.last_balance,
-    });
+  const dateMap = buckets!.reduce(
+    (acc, item) => {
+      const date = new Date(item.interval_start).getTime();
+      acc[date] ||= {};
+      acc[date][item.subaccount_id] = item.last_balance;
+      return acc;
+    },
+    {} as Record<number, Record<string, number>>,
+  );
 
-    return acc;
-  }, new Map());
+  // Generate time buckets for the date range and only keep the ones after the first transaction
+  // This is needed to fill in the gaps in the data, in case there are no transactions for a specific date bucket
+  const timeBuckets = generateTimeBuckets(dateRange, interval).filter(
+    (date) => date >= new Date(buckets![0].interval_start),
+  );
 
-  const parsedData = Array.from(dateMap.entries()).map(([date, balances]) => ({
-    date,
-    balances,
-  }));
+  const gapfilledData = timeBuckets.map((date) => {
+    // update the balance of the subaccounts for the current date
+    currentBalances = { ...currentBalances, ...dateMap[date.getTime()] };
+    return {
+      date: date.toISOString(),
+      accountBalances: { ...currentBalances },
+    };
+  });
 
-  // If there is only one data point, duplicate it so that the chart renders a horizontal line
-  if (parsedData.length === 1) {
-    return [parsedData[0], { ...parsedData[0], date: new Date().toISOString() }];
-  }
-
-  return parsedData;
+  return gapfilledData;
 }

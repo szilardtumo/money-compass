@@ -1,7 +1,8 @@
 import { QuickActionsSection } from '@/app/dashboard/accounts/_components/quick-actions-section';
 import { TransactionsSection } from '@/app/dashboard/accounts/_components/transactions-section';
+import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { AssetDistributionCard } from '@/components/cards/asset-distribution-card';
-import { NetWorthCard } from '@/components/cards/net-worth-card';
+import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { Separator } from '@/components/ui/separator';
 import { mainCurrency } from '@/lib/constants';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
@@ -24,7 +25,9 @@ export default async function AccountsPage() {
       </div>
       <Separator />
       <div className="m-4 flex flex-col gap-4">
-        <NetWorthCard data={transactionHistory} />
+        <NetWorthHistoryCard data={transactionHistory} accounts={accounts} />
+
+        <AccountHistoryCard data={transactionHistory} account={accounts[0]} />
 
         <AssetDistributionCard accounts={accounts} currencyMapper={currencyMapper} />
 

@@ -16,5 +16,5 @@ export interface TransactionWithAccount extends Transaction {
 
 export interface TransactionHistory {
   date: string;
-  balances: Record<string, number>;
+  accountBalances: Record<string, number>;
 }
