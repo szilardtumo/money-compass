@@ -8,10 +8,10 @@ interface AddTransactionMenuItemProps {
 }
 
 export function AddTransactionMenuItem({ accountId }: AddTransactionMenuItemProps) {
-  const { openCreateTransactionDialog } = useCreateTransactionDialog();
+  const { openDialog } = useCreateTransactionDialog();
 
   return (
-    <DropdownMenuItem onSelect={() => openCreateTransactionDialog({ account: accountId })}>
+    <DropdownMenuItem onSelect={() => openDialog({ account: accountId })}>
       Add Transaction
     </DropdownMenuItem>
   );
