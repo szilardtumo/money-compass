@@ -14,17 +14,30 @@ export interface CreateTransactionParams {
   amount: number;
 }
 
-export async function getTransactions(
-  page: number = 0,
-  pageSize: number = 20,
-): Promise<Paginated<Transaction>> {
+interface GetTransactionsParams {
+  subaccountId?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export async function getTransactions({
+  subaccountId,
+  page = 0,
+  pageSize = 20,
+}: GetTransactionsParams = {}): Promise<Paginated<Transaction>> {
   const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['transactions'] } });
 
-  const { data, count, error } = await supabase
+  let query = supabase
     .from('transactions')
     .select('*', { count: 'estimated' })
     .order('started_date', { ascending: false })
     .range(page * pageSize, (page + 1) * pageSize);
+
+  if (subaccountId) {
+    query = query.eq('subaccount_id', subaccountId);
+  }
+
+  const { data, count, error } = await query;
 
   if (error) {
     throw error;

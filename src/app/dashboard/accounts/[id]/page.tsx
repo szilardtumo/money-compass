@@ -2,9 +2,12 @@ import { notFound } from 'next/navigation';
 
 import { AccountDetailsCard } from '@/components/cards/account-details-card';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
+import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
 import { Separator } from '@/components/ui/separator';
+import { mainCurrency } from '@/lib/constants';
 import { getSimpleAccount } from '@/lib/db/accounts.queries';
-import { getTransactionHistory } from '@/lib/db/transactions.queries';
+import { getCurrencyMapper } from '@/lib/db/currencies.queries';
+import { getTransactionHistory, getTransactions } from '@/lib/db/transactions.queries';
 
 interface AccountDetailsPageProps {
   params: {
@@ -13,14 +16,17 @@ interface AccountDetailsPageProps {
 }
 
 export default async function AccountDetailsPage({ params }: AccountDetailsPageProps) {
-  const [account, transactionHistory] = await Promise.all([
+  const [account, transactionHistory, currencyMapper] = await Promise.all([
     getSimpleAccount(params.id),
     getTransactionHistory('12 month', '1 month'),
+    getCurrencyMapper(mainCurrency),
   ]);
 
   if (!account) {
     notFound();
   }
+
+  const transactions = await getTransactions({ subaccountId: account?.subaccountId });
 
   return (
     <main>
@@ -34,6 +40,11 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
           data={transactionHistory}
           account={account}
           title="Transaction history (past 12 months)"
+        />
+        <RecentTransactionsCard
+          accounts={[account]}
+          transactions={transactions.data}
+          currencyMapper={currencyMapper}
         />
       </div>
     </main>

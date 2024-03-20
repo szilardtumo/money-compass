@@ -8,12 +8,13 @@ import { Separator } from '@/components/ui/separator';
 import { mainCurrency } from '@/lib/constants';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 import { getCurrencyMapper } from '@/lib/db/currencies.queries';
-import { getTransactionHistory } from '@/lib/db/transactions.queries';
+import { getTransactionHistory, getTransactions } from '@/lib/db/transactions.queries';
 
 export default async function TestPage() {
-  const [accounts, transactionHistory, currencyMapper] = await Promise.all([
+  const [accounts, transactionHistory, transactions, currencyMapper] = await Promise.all([
     getSimpleAccounts(),
     getTransactionHistory('12 month', '1 month'),
+    getTransactions(),
     getCurrencyMapper(mainCurrency),
   ]);
 
@@ -34,7 +35,11 @@ export default async function TestPage() {
 
         <AccountsCard accounts={accounts} />
 
-        <RecentTransactionsCard />
+        <RecentTransactionsCard
+          accounts={accounts}
+          transactions={transactions.data}
+          currencyMapper={currencyMapper}
+        />
       </div>
     </main>
   );
