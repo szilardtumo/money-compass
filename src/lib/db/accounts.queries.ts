@@ -5,12 +5,18 @@ import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 import { getCurrencyMapper } from './currencies.queries';
 
-export async function getSubaccountBalances(): Promise<Record<string, number>> {
+export async function getSubaccountBalances(
+  accountIds?: string[],
+): Promise<Record<string, number>> {
   const supabase = createServerSupabaseClient({
     next: { revalidate: 60, tags: ['subaccounts', 'transactions'] },
   });
+  const query = supabase.from('balances').select('subaccount_id, balance');
+  if (accountIds) {
+    query.in('subaccount_id', accountIds);
+  }
 
-  const { data, error } = await supabase.from('balances').select('subaccount_id, balance');
+  const { data, error } = await query;
 
   if (error) {
     throw error;
@@ -110,4 +116,41 @@ export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
       currency: account.subaccounts[0].currency,
       category: account.category,
     }));
+}
+
+/**
+ * Returns the account with the specified id, if it has only one subaccount.
+ *
+ * @returns
+ */
+export async function getSimpleAccount(accountId: string): Promise<SimpleAccount | undefined> {
+  const supabase = createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['accounts', accountId] },
+  });
+
+  const [{ data: account, error }, subaccountBalances] = await Promise.all([
+    supabase
+      .from('accounts')
+      .select(`id, name, category, subaccounts(id, currency)`)
+      .eq('id', accountId)
+      .maybeSingle(),
+    getSubaccountBalances([accountId]),
+  ]);
+
+  if (error) {
+    throw error;
+  }
+
+  if (!account || account.subaccounts.length !== 1) {
+    return undefined;
+  }
+
+  return {
+    id: account.id,
+    subaccountId: account.subaccounts[0].id,
+    name: account.name,
+    balance: subaccountBalances[account.subaccounts[0].id] ?? 0,
+    currency: account.subaccounts[0].currency,
+    category: account.category,
+  };
 }
