@@ -10,9 +10,7 @@ interface CreateTransactionDialogClientProps {
   accounts: SimpleAccount[];
 }
 
-export async function CreateTransactionDialogClient({
-  accounts,
-}: CreateTransactionDialogClientProps) {
+export function CreateTransactionDialogClient({ accounts }: CreateTransactionDialogClientProps) {
   const { isOpen, internal } = useCreateTransactionDialog();
 
   return (
