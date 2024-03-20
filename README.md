@@ -56,6 +56,30 @@ The following scripts are available in `package.json`:
 - `cy:run`: Runs the Cypress tests
 - `supa:gen-types`: Generates TypeScript types for the Supabase database schema
 
+## Project structure
+
+```js
+├──app
+│  ├──api
+│  │  ├──<api_route>    // API routes
+│  │  │  └──route.ts
+│  ├──<page>            // Pages
+│  │  ├──_components    // Page-specific components
+│  │  ├──layout.tsx
+│  │  └──page.tsx
+├──components           // Reusable components
+│  ├──cards           
+│  ├──charts
+│  ├──dialogs    
+│  ├──providers        
+│  └──ui                
+├──lib                  
+│  ├──db                // Database queries and mutations
+│  ├──types             // Global types
+│  └──utils             // Utility functions
+└──middleware.ts
+```
+
 ## Supabase
 
 This project uses [Supabase](https://supabase.io/) for authentication and database. 
@@ -100,4 +124,3 @@ For other commands related to end-to-end testing, check the [Scripts Overview](#
 This project is deployed and hosted on [Vercel](https://vercel.com/). The production build is automatically deployed to Vercel when changes are pushed to the `main` branch.
 
 Preview deployments are created for pull requests. These deployments are automatically updated as new commits are added to the pull request.
-
