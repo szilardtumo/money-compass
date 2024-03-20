@@ -10,6 +10,8 @@ This project uses:
 - **[Supabase](https://supabase.io/)** - An open-source alternative to Firebase
 - **[Tailwind CSS](https://tailwindcss.com/)** - A utility-first CSS framework for rapid UI development
 - **[ShadCN](https://ui.shadcn.com/)** - A collection of beautiful, free, and open-source components for Tailwind CSS
+- **[Tremor](https://www.tremor.so/)** - React components to build charts
+- **[React Hook Form](https://react-hook-form.com/)** - Performant, flexible, and extensible forms with easy-to-use validation
 - **[ESlint](https://eslint.org/)** and **[Prettier](https://prettier.io/)** - For clean, consistent, and error-free code
 - **[TypeScript](https://www.typescriptlang.org/)** with **[ts-reset](https://github.com/total-typescript/ts-reset)** - For type safety
 - **[GitHub Actions](https://github.com/features/actions)** - Pre-configured actions for smooth workflows
