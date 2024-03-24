@@ -26,7 +26,7 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
     notFound();
   }
 
-  const transactions = await getTransactions({ subaccountId: account?.subaccountId });
+  const transactions = await getTransactions({ subaccountId: account?.subaccountId, pageSize: 5 });
 
   return (
     <main>

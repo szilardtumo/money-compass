@@ -31,7 +31,7 @@ export async function getTransactions({
     .from('transactions')
     .select('*', { count: 'estimated' })
     .order('started_date', { ascending: false })
-    .range(page * pageSize, (page + 1) * pageSize);
+    .range(page * pageSize, (page + 1) * pageSize - 1);
 
   if (subaccountId) {
     query = query.eq('subaccount_id', subaccountId);
