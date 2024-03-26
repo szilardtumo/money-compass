@@ -1,11 +1,10 @@
 import { AccountAvatar } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCurrencies } from '@/lib/db/currencies.queries';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 
 import { AccountActionsDropdown } from './account-actions-dropdown';
-import { CreateAccountDialog } from './create-account-dialog';
+import { CreateAccountButton } from './create-account-button';
 import { NoAccountsPlaceholder } from './no-accounts-placeholder';
 
 interface AccountsCardProps {
@@ -13,8 +12,6 @@ interface AccountsCardProps {
 }
 
 export async function AccountsCard({ accounts }: AccountsCardProps) {
-  const currencies = await getCurrencies();
-
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between space-y-0">
@@ -22,7 +19,7 @@ export async function AccountsCard({ accounts }: AccountsCardProps) {
           <CardTitle>Accounts</CardTitle>
           <CardDescription>All accounts you have.</CardDescription>
         </div>
-        <CreateAccountDialog currencies={currencies} />
+        <CreateAccountButton />
       </CardHeader>
       <CardContent className="space-y-4">
         {accounts.map((account) => (

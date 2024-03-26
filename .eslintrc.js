@@ -57,6 +57,7 @@ module.exports = {
     'import/prefer-default-export': 'off',
     'react/jsx-props-no-spreading': 'off',
     'react/require-default-props': 'off',
+    'no-nested-ternary': 'off',
   },
   overrides: [
     {

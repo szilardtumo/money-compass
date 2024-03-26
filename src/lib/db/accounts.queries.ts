@@ -111,3 +111,39 @@ export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
       category: account.category,
     }));
 }
+
+/**
+ * Returns the account with the specified id, if it has only one subaccount.
+ *
+ * @returns
+ */
+export async function getSimpleAccount(accountId: string): Promise<SimpleAccount | undefined> {
+  const supabase = createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['accounts', accountId] },
+  });
+
+  const { data: account, error: accountError } = await supabase
+    .from('accounts')
+    .select(`id, name, category, subaccounts(id, currency)`)
+    .eq('id', accountId)
+    .maybeSingle();
+
+  if (accountError) {
+    throw accountError;
+  }
+
+  if (!account || account.subaccounts.length !== 1) {
+    return undefined;
+  }
+
+  const subaccountBalance = await getSubaccountBalance(account.subaccounts[0].id);
+
+  return {
+    id: account.id,
+    subaccountId: account.subaccounts[0].id,
+    name: account.name,
+    balance: subaccountBalance,
+    currency: account.subaccounts[0].currency,
+    category: account.category,
+  };
+}

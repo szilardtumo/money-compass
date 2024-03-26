@@ -1,3 +1,5 @@
+type AccountCategory = 'checking' | 'investment';
+
 interface Subaccount {
   id: string;
   currency: string;
@@ -8,7 +10,7 @@ export interface Account {
   totalBalance: number;
   id: string;
   name: string;
-  category: string;
+  category: AccountCategory;
   subaccounts: Subaccount[];
 }
 
@@ -18,5 +20,5 @@ export interface SimpleAccount {
   name: string;
   balance: number;
   currency: string;
-  category: string;
+  category: AccountCategory;
 }

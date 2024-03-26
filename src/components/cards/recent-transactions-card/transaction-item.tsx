@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { Avatar } from '@/components/ui/avatar';
 import { TransactionWithAccount } from '@/lib/types/transactions.types';
 import { formatCurrency, formatTime } from '@/lib/utils/formatters';
@@ -15,7 +17,10 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
           {transaction.description || 'No description'}
         </p>
         <p className="text-sm text-muted-foreground">
-          {formatTime(transaction.startedDate)} • {transaction.account.name}
+          {formatTime(transaction.startedDate)} •{' '}
+          <Link href={`/dashboard/accounts/${transaction.account.id}`} className="hover:underline">
+            {transaction.account.name}
+          </Link>
         </p>
       </div>
       <div className="ml-auto font-medium">

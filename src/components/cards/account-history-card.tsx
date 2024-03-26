@@ -6,13 +6,18 @@ import { TransactionHistory } from '@/lib/types/transactions.types';
 interface AccountHistoryCardProps {
   data: TransactionHistory[];
   account: SimpleAccount;
+  title?: string;
 }
 
-export async function AccountHistoryCard({ data, account }: AccountHistoryCardProps) {
+export async function AccountHistoryCard({
+  data,
+  account,
+  title = `${account.name} account`,
+}: AccountHistoryCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{account.name} account</CardTitle>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <TransactionHistoryChart

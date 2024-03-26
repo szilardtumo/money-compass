@@ -20,14 +20,15 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
-import { createSimpleAccount } from '@/lib/db/accounts.actions';
+import { createSimpleAccount, updateSimpleAccount } from '@/lib/db/accounts.actions';
 import { Currency } from '@/lib/types/currencies.types';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode } from '@/lib/types/transport.types';
 import { createToastPromise } from '@/lib/utils/toasts';
 
-interface CreateAccountFormProps {
+interface UpsertAccountFormProps {
   currencies: Currency[];
+  defaultValues?: Partial<FormFields>;
   onSuccess?: () => void;
 }
 
@@ -37,39 +38,46 @@ const accountCategoryOptions = [
 ] satisfies { label: string; value: Enums<'account_category'> }[];
 
 const formSchema = z.object({
+  id: z.string().uuid().optional(),
   name: z
     .string()
     .min(2, { message: 'Account name must be at least 2 characters.' })
     .max(50, { message: 'Account name must be at most 50 characters.' }),
   currency: z.string({ required_error: 'A currency must be selected.' }),
-  category: z.string({ required_error: 'An account category must be selected.' }),
+  category: z.enum(['checking', 'investment'], {
+    required_error: 'An account category must be selected.',
+  }),
 });
 
 type FormFields = z.infer<typeof formSchema>;
 
-export function CreateAccountForm({ currencies, onSuccess }: CreateAccountFormProps) {
+export function UpsertAccountForm({
+  currencies,
+  defaultValues,
+  onSuccess,
+}: UpsertAccountFormProps) {
   const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      currency: undefined,
+      ...defaultValues,
     },
   });
 
-  async function onSubmit(values: FormFields) {
-    const promise = createSimpleAccount({
-      name: values.name,
-      currency: values.currency,
-      category: values.category as Enums<'account_category'>,
-    });
+  async function onSubmit({ id, ...values }: FormFields) {
+    const isUpdate = !!id;
+
+    const promise = isUpdate ? updateSimpleAccount(id, values) : createSimpleAccount(values);
 
     toast.promise(createToastPromise(promise), {
-      loading: 'Creating account...',
-      success: 'Account created!',
+      loading: isUpdate ? 'Updating account...' : 'Creating account...',
+      success: isUpdate ? 'Account updated!' : 'Account created!',
       error: (error) =>
-        error.code === ActionErrorCode.UniqueViolation
+        error?.code === ActionErrorCode.UniqueViolation
           ? 'An account with this name already exists.'
-          : 'Failed to create account.',
+          : isUpdate
+            ? 'Failed to update account.'
+            : 'Failed to create account.',
     });
 
     const response = await promise;
@@ -142,7 +150,7 @@ export function CreateAccountForm({ currencies, onSuccess }: CreateAccountFormPr
           disabled={form.formState.isSubmitting}
         >
           {form.formState.isSubmitting && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
-          Add
+          Submit
         </Button>
       </form>
     </Form>

@@ -18,6 +18,7 @@ export type ActionResponse<T = undefined> = ActionResponseSuccess<T> | ActionRes
 export enum ActionErrorCode {
   UniqueViolation = '23505',
   ForeignKeyViolation = '23503',
+  NotFound = '404',
 }
 
 export interface Paginated<T> {
