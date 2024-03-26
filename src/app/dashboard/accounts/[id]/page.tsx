@@ -9,6 +9,8 @@ import { getSimpleAccount } from '@/lib/db/accounts.queries';
 import { getCurrencyMapper } from '@/lib/db/currencies.queries';
 import { getTransactionHistory, getTransactions } from '@/lib/db/transactions.queries';
 
+import { AccountActionButtons } from './components/account-action-buttons';
+
 interface AccountDetailsPageProps {
   params: {
     id: string;
@@ -30,8 +32,9 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
 
   return (
     <main>
-      <div className="flex items-center px-4 h-14">
-        <h1 className="text-xl font-bold">{account.name}</h1>
+      <div className="flex items-center justify-between px-4 h-14">
+        <h1 className="text-xl font-bold mr-auto">{account.name}</h1>
+        <AccountActionButtons account={account} />
       </div>
       <Separator />
       <div className="m-4 flex flex-col gap-4">

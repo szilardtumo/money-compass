@@ -2,10 +2,10 @@
 
 import { revalidateTag } from 'next/cache';
 
-import { getSubaccountBalances } from '@/lib/db/accounts.queries';
+import { getSimpleAccount, getSubaccountBalances } from '@/lib/db/accounts.queries';
 import { createTransactions } from '@/lib/db/transactions.actions';
 import { Enums } from '@/lib/types/database.types';
-import { ActionResponse } from '@/lib/types/transport.types';
+import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 interface CreateSimpleAccountParams {
@@ -46,6 +46,65 @@ export async function createSimpleAccount(
     };
   }
 
+  revalidateTag('accounts');
+  revalidateTag('subaccounts');
+  return { success: true };
+}
+
+interface UpdateSimpleAccountParams {
+  name?: string;
+  currency?: string;
+  category?: Enums<'account_category'>;
+}
+
+export async function updateSimpleAccount(
+  id: string,
+  params: UpdateSimpleAccountParams,
+): Promise<ActionResponse> {
+  const supabase = createServerSupabaseClient();
+
+  const account = await getSimpleAccount(id);
+
+  if (!account) {
+    return {
+      success: false,
+      error: { code: ActionErrorCode.NotFound, message: 'Account not found.' },
+    };
+  }
+
+  const currencyChanged = params.currency && params.currency !== account.currency;
+
+  const [accountResult, subaccountResult] = await Promise.all([
+    supabase
+      .from('accounts')
+      .update({ name: params.name, category: params.category })
+      .eq('id', id)
+      .select(),
+    currencyChanged
+      ? supabase.rpc('update_subaccount', {
+          _id: account.subaccountId,
+          _currency: params.currency!,
+        })
+      : undefined,
+  ]);
+
+  if (accountResult.error) {
+    return {
+      success: false,
+      error: { code: accountResult.error.code, message: accountResult.error.message },
+    };
+  }
+
+  if (subaccountResult?.error) {
+    return {
+      success: false,
+      error: { code: subaccountResult.error.code, message: subaccountResult.error.message },
+    };
+  }
+
+  if (currencyChanged) {
+    revalidateTag('transactions');
+  }
   revalidateTag('accounts');
   revalidateTag('subaccounts');
   return { success: true };

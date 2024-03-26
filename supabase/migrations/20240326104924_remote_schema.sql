@@ -10,9 +10,18 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+create extension if not exists "timescaledb" with schema "extensions";
+
 CREATE SCHEMA IF NOT EXISTS "public";
 
 ALTER SCHEMA "public" OWNER TO "pg_database_owner";
+
+CREATE TYPE "public"."account_category" AS ENUM (
+    'checking',
+    'investment'
+);
+
+ALTER TYPE "public"."account_category" OWNER TO "postgres";
 
 CREATE TYPE "public"."transaction_type" AS ENUM (
     'card_payment',
@@ -37,11 +46,38 @@ begin
     from transactions
     where started_date >= now() - date_range::interval
     group by transactions.subaccount_id, interval_start
-    order by interval_start desc;
+    order by interval_start asc;
 end;
 $$;
 
 ALTER FUNCTION "public"."query_transaction_history"("date_range" "text", "bucket_interval" "text") OWNER TO "postgres";
+
+CREATE OR REPLACE FUNCTION "public"."update_subaccount"("_id" "uuid", "_currency" "text") RETURNS "void"
+    LANGUAGE "plpgsql"
+    AS $$
+declare 
+  _prev_currency text;
+  _rate numeric;
+begin
+
+ _prev_currency := (select currency from subaccounts where id = _id);
+
+if _prev_currency != _currency then
+  _rate := (select rate from exchange_rates where exchange_rates.from = _prev_currency and exchange_rates.to = _currency);
+
+  update transactions
+  set amount = amount * _rate, balance = balance * _rate
+  where subaccount_id = _id;
+
+  update subaccounts
+  set currency = _currency
+  where id = _id;
+end if;
+
+end;
+$$;
+
+ALTER FUNCTION "public"."update_subaccount"("_id" "uuid", "_currency" "text") OWNER TO "postgres";
 
 SET default_tablespace = '';
 
@@ -51,7 +87,8 @@ CREATE TABLE IF NOT EXISTS "public"."accounts" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "name" "text" DEFAULT ''::"text" NOT NULL,
-    "user_id" "uuid" DEFAULT "auth"."uid"() NOT NULL
+    "user_id" "uuid" DEFAULT "auth"."uid"() NOT NULL,
+    "category" "public"."account_category" NOT NULL
 );
 
 ALTER TABLE "public"."accounts" OWNER TO "postgres";
@@ -147,34 +184,28 @@ ALTER TABLE ONLY "public"."transactions"
 ALTER TABLE ONLY "public"."subaccounts"
     ADD CONSTRAINT "subaccounts_account_id_fkey" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
-CREATE POLICY "Allow insert based on account_id and accounts.user_id" ON "public"."subaccounts" FOR INSERT WITH CHECK (("account_id" IN ( SELECT "accounts"."id"
-   FROM "public"."accounts"
-  WHERE ("accounts"."user_id" = "auth"."uid"()))));
-
 CREATE POLICY "Enable all access for users based on accounts.user_id" ON "public"."transactions" USING (("auth"."uid"() = ( SELECT "accounts"."user_id"
    FROM ("public"."subaccounts"
      JOIN "public"."accounts" ON (("accounts"."id" = "subaccounts"."account_id")))
   WHERE ("subaccounts"."id" = "transactions"."subaccount_id"))));
 
-CREATE POLICY "Enable delete for users based on user_id" ON "public"."accounts" FOR DELETE USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Enable all for users based on accounts.user_id" ON "public"."subaccounts" USING (("account_id" IN ( SELECT "accounts"."id"
+   FROM "public"."accounts"
+  WHERE ("accounts"."user_id" = "auth"."uid"())))) WITH CHECK (("account_id" IN ( SELECT "accounts"."id"
+   FROM "public"."accounts"
+  WHERE ("accounts"."user_id" = "auth"."uid"()))));
 
-CREATE POLICY "Enable insert for users based on user_id" ON "public"."accounts" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Enable all for users based on user_id" ON "public"."accounts" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
 
 CREATE POLICY "Enable read access for all users" ON "public"."currencies" FOR SELECT USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."exchange_rates" FOR SELECT USING (true);
-
-CREATE POLICY "Enable read access for users based on user_id" ON "public"."accounts" FOR SELECT USING (("auth"."uid"() = "user_id"));
 
 ALTER TABLE "public"."accounts" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."currencies" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."exchange_rates" ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "read_user_policy" ON "public"."subaccounts" FOR SELECT USING (("auth"."uid"() = ( SELECT "accounts"."user_id"
-   FROM "public"."accounts"
-  WHERE ("accounts"."id" = "subaccounts"."account_id"))));
 
 ALTER TABLE "public"."subaccounts" ENABLE ROW LEVEL SECURITY;
 
@@ -188,6 +219,10 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 GRANT ALL ON FUNCTION "public"."query_transaction_history"("date_range" "text", "bucket_interval" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."query_transaction_history"("date_range" "text", "bucket_interval" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."query_transaction_history"("date_range" "text", "bucket_interval" "text") TO "service_role";
+
+GRANT ALL ON FUNCTION "public"."update_subaccount"("_id" "uuid", "_currency" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."update_subaccount"("_id" "uuid", "_currency" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_subaccount"("_id" "uuid", "_currency" "text") TO "service_role";
 
 GRANT ALL ON TABLE "public"."accounts" TO "anon";
 GRANT ALL ON TABLE "public"."accounts" TO "authenticated";

@@ -1,4 +1,3 @@
-/* eslint-disable no-nested-ternary */
 import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from '@radix-ui/react-icons';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
