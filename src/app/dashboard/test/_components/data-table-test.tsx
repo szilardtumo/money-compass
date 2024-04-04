@@ -1,7 +1,7 @@
 'use client';
 
 import { CubeIcon } from '@radix-ui/react-icons';
-import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table';
 import * as React from 'react';
 
 import {
@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/data-table';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/cn';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
@@ -24,33 +23,24 @@ import { formatCurrency } from '@/lib/utils/formatters';
 
 const columnHelper = createColumnHelper<TransactionWithAccount>();
 
-const columns: ColumnDef<TransactionWithAccount, any>[] = [
-  columnHelper.accessor((row) => new Date(row.startedDate).toDateString(), {
+const columns = [
+  columnHelper.accessor((row) => row.startedDate, {
     id: 'date',
-    header: () => <div>Date</div>,
+    header: 'Date',
     cell: ({ getValue }) => new Date(getValue()).toDateString(),
     enableSorting: false,
   }),
-  columnHelper.accessor('subaccountId', {
-    header: () => <div>Account</div>,
-    cell: ({ row }) => (row.getIsGrouped() ? null : row.original.account?.name),
+  columnHelper.accessor((row) => row.account.name, {
+    id: 'account',
+    header: 'Account',
+    cell: ({ getValue }) => getValue(),
     filterFn: 'arrIncludesSome',
   }),
-  {
-    accessorKey: 'amount',
-    aggregationFn: 'sum',
-    meta: {
-      align: 'right',
-    },
-    header: () => <div>Amount</div>,
-    cell: ({ row, getValue }) => (
-      <div className={cn(row.getIsGrouped() && 'text-muted-foreground')}>
-        {row.original.account
-          ? formatCurrency(getValue(), row.original.account?.currency)
-          : getValue()}
-      </div>
-    ),
-  },
+  columnHelper.accessor('amount', {
+    meta: { align: 'right' },
+    header: 'Amount',
+    cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.account.currency),
+  }),
 ];
 
 interface DataTableTestProps {
@@ -125,11 +115,11 @@ export function DataTableTest({ accounts, transactions }: DataTableTestProps) {
       </div>
       <div className="space-y-2">
         <div className="flex flex-col gap-2 sm:flex-row">
-          {enableGlobalFilter && <DataTableGlobalFilter table={table} />}
+          {enableGlobalFilter && <DataTableGlobalFilter table={table} className="sm:w-[200px]" />}
           {enableColumnFilters && (
             <>
               <DataTableFilter
-                column={table.getColumn('subaccountId')!}
+                column={table.getColumn('account')!}
                 title="Account"
                 options={accountOptions}
               />

@@ -1,10 +1,17 @@
 'use client';
 
-import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table';
 import * as React from 'react';
 
-import { DataTable } from '@/components/ui/data-table';
-import { cn } from '@/lib/cn';
+import {
+  DataTable,
+  DataTableFilter,
+  DataTableGlobalFilter,
+  DataTablePagination,
+  DataTableResetFilters,
+  DataTableRowSelectionIndicator,
+  useDataTable,
+} from '@/components/ui/data-table';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
@@ -12,30 +19,24 @@ import { formatCurrency } from '@/lib/utils/formatters';
 
 const columnHelper = createColumnHelper<TransactionWithAccount>();
 
-const columns: ColumnDef<TransactionWithAccount, any>[] = [
-  columnHelper.accessor((row) => new Date(row.startedDate).toDateString(), {
+const columns = [
+  columnHelper.accessor((row) => row.startedDate, {
     id: 'date',
-    header: () => <div>Date</div>,
-    cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
+    header: 'Date',
+    cell: ({ getValue }) => new Date(getValue()).toDateString(),
     enableSorting: false,
   }),
-  columnHelper.accessor('subaccountId', {
-    header: () => <div>Account</div>,
-    cell: ({ row }) => (row.getIsGrouped() ? null : row.original.account?.name),
+  columnHelper.accessor((row) => row.account.name, {
+    id: 'account',
+    header: 'Account',
+    cell: ({ getValue }) => getValue(),
     filterFn: 'arrIncludesSome',
   }),
-  {
-    accessorKey: 'amount',
-    aggregationFn: 'sum',
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row, getValue }) => (
-      <div className={cn('text-right', row.getIsGrouped() && 'text-muted-foreground')}>
-        {row.original.account
-          ? formatCurrency(getValue(), row.original.account?.currency)
-          : getValue()}
-      </div>
-    ),
-  },
+  columnHelper.accessor('amount', {
+    meta: { align: 'right' },
+    header: 'Amount',
+    cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.account.currency),
+  }),
 ];
 
 interface TransactionsTableClientProps {
@@ -55,48 +56,41 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     [transactions, accounts],
   );
 
+  const accountOptions = React.useMemo(
+    () =>
+      accounts.map((account) => ({
+        label: account.name,
+        value: account.subaccountId,
+      })),
+    [accounts],
+  );
+
+  const table = useDataTable({
+    columns,
+    data: transactionsWithAccount,
+    enablePagination: true,
+    enableRowSelection: true,
+    enableSorting: true,
+  });
+
   return (
-    <>
-      {/* <div className="flex items-center py-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Accounts <ChevronDownIcon className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {accounts.map((account) => {
-              return (
-                <DropdownMenuCheckboxItem
-                  key={account.subaccountId}
-                  checked={(
-                    (table.getColumn('subaccountId')?.getFilterValue() ?? []) as string[]
-                  ).includes(account.subaccountId)}
-                  onCheckedChange={(checked) =>
-                    table
-                      .getColumn('subaccountId')
-                      ?.setFilterValue((filterValue: string[] = []) =>
-                        checked
-                          ? [...filterValue, account.subaccountId]
-                          : filterValue.filter((v) => v !== account.subaccountId),
-                      )
-                  }
-                >
-                  {account.name}
-                </DropdownMenuCheckboxItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div> */}
-      <DataTable
-        columns={columns}
-        data={transactionsWithAccount}
-        enableSorting
-        enablePagination
-        enableRowSelection
-        emptyMessage="No transactions."
-      />
-    </>
+    <div className="space-y-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <DataTableGlobalFilter table={table} className="sm:w-[200px]" />
+        <DataTableFilter
+          column={table.getColumn('account')!}
+          title="Account"
+          options={accountOptions}
+        />
+        <DataTableResetFilters table={table} />
+      </div>
+
+      <DataTable table={table} emptyMessage="No transactions." enableRowSelection />
+
+      <div className="flex gap-x-4 gap-y-2 flex-col sm:flex-row sm:justify-between">
+        <DataTableRowSelectionIndicator table={table} />
+        <DataTablePagination table={table} />
+      </div>
+    </div>
   );
 }
