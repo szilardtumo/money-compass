@@ -105,15 +105,11 @@ export function CreateTransactionForm({
         <FormField
           control={form.control}
           name="account"
-          render={({ field }) => (
+          render={({ field: { onChange, ...field } }) => (
             <FormItem>
               <FormLabel>Account</FormLabel>
               <FormControl>
-                <Combobox
-                  options={accountOptions}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                />
+                <Combobox options={accountOptions} onValueChange={onChange} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -122,15 +118,11 @@ export function CreateTransactionForm({
         <FormField
           control={form.control}
           name="type"
-          render={({ field }) => (
+          render={({ field: { onChange, ...field } }) => (
             <FormItem>
               <FormLabel>Transaction type</FormLabel>
               <FormControl>
-                <Selectbox
-                  options={transactionTypeOptions}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                />
+                <Selectbox options={transactionTypeOptions} onValueChange={onChange} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

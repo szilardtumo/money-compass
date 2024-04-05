@@ -15,7 +15,7 @@ import { cn } from '@/lib/cn';
 export interface ComboboxProps extends React.HTMLAttributes<HTMLButtonElement> {
   options: readonly { label: string; value: string }[];
   value: string | undefined;
-  onValueChange?: (value: string | null) => void;
+  onValueChange?: (value: string | undefined) => void;
   placeholder?: string;
   notFoundMessage?: string;
 }
@@ -42,7 +42,10 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className={cn('flex w-full justify-between', className)}
+            className={cn(
+              'flex w-full justify-between focus:outline-none focus:ring-1 focus:ring-ring',
+              className,
+            )}
             ref={ref}
             {...props}
           >
@@ -60,7 +63,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    onValueChange?.(currentValue === value ? null : currentValue);
+                    onValueChange?.(currentValue === value ? undefined : currentValue);
                     setOpen(false);
                   }}
                 >
