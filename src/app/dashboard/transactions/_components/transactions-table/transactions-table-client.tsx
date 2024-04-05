@@ -1,8 +1,11 @@
 'use client';
 
+import { ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
 import { createColumnHelper } from '@tanstack/react-table';
-import * as React from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
 import {
   DataTable,
   DataTableFilter,
@@ -12,10 +15,12 @@ import {
   DataTableRowSelectionIndicator,
   useDataTable,
 } from '@/components/ui/data-table';
+import { deleteTransactions } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
-import { Paginated } from '@/lib/types/transport.types';
+import { ActionErrorCode, Paginated } from '@/lib/types/transport.types';
 import { formatCurrency } from '@/lib/utils/formatters';
+import { createToastPromise } from '@/lib/utils/toasts';
 
 const columnHelper = createColumnHelper<TransactionWithAccount>();
 
@@ -45,7 +50,7 @@ interface TransactionsTableClientProps {
 }
 
 export function TransactionsTableClient({ accounts, transactions }: TransactionsTableClientProps) {
-  const transactionsWithAccount = React.useMemo<TransactionWithAccount[]>(
+  const transactionsWithAccount = useMemo<TransactionWithAccount[]>(
     () =>
       transactions.data
         .map((transaction) => ({
@@ -56,7 +61,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     [transactions, accounts],
   );
 
-  const accountOptions = React.useMemo(
+  const accountOptions = useMemo(
     () =>
       accounts.map((account) => ({
         label: account.name,
@@ -73,6 +78,29 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     enableSorting: true,
   });
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const selectedRowCount = table.getSelectedRowModel().rows.length;
+
+  const deleteSelected = useCallback(async () => {
+    setIsDeleting(true);
+    const transactionIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
+    const promise = deleteTransactions(transactionIds);
+
+    toast.promise(createToastPromise(promise), {
+      loading: 'Deleting transactions...',
+      success: 'Transactions deleted!',
+      error: (error) =>
+        error?.code === ActionErrorCode.NotLatestTransactions
+          ? 'Failed to delete transactions. Only the most recent transactions can be deleted'
+          : 'Failed to delete transactions. Please try again later.',
+    });
+
+    await promise;
+    table.resetRowSelection();
+    setIsDeleting(false);
+  }, [table]);
+
   return (
     <div className="space-y-2">
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -83,6 +111,19 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
           options={accountOptions}
         />
         <DataTableResetFilters table={table} />
+        <Button
+          variant="destructive"
+          className="h-8 px-2.5 ml-auto"
+          onClick={deleteSelected}
+          disabled={selectedRowCount === 0 || isDeleting}
+        >
+          {isDeleting ? (
+            <ReloadIcon className="mr-2 animate-spin" />
+          ) : (
+            <TrashIcon className="mr-2" />
+          )}
+          Delete ({selectedRowCount})
+        </Button>
       </div>
 
       <DataTable table={table} emptyMessage="No transactions." enableRowSelection />
