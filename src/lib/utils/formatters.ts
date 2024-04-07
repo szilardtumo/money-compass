@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+
 export function formatCurrency(
   value: number,
   currency: string,
@@ -31,11 +33,8 @@ export function formatPercent(value: number, options: Intl.NumberFormatOptions =
   }).format(value);
 }
 
-export function formatDate(date: string | Date, options: Intl.DateTimeFormatOptions = {}) {
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    ...options,
-  }).format(new Date(date));
+export function formatDate(date: string | Date, pattern = 'PPP') {
+  return format(new Date(date), pattern);
 }
 
 export function formatTime(date: string | Date, options: Intl.DateTimeFormatOptions = {}) {
