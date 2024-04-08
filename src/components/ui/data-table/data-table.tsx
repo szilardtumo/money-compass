@@ -130,7 +130,7 @@ export function DataTable<TData>({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={table.getAllColumns().length}
+                colSpan={table.getAllColumns().length + (enableRowSelection ? 1 : 0)}
                 className="h-24 text-center text-muted-foreground"
               >
                 {emptyMessage}
