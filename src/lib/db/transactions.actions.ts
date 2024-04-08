@@ -3,7 +3,7 @@
 import { PostgrestError } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
 
-import { getSubaccountBalance, getSubaccountBalances } from '@/lib/db/accounts.queries';
+import { getSubaccountBalances } from '@/lib/db/accounts.queries';
 import { getTransactions } from '@/lib/db/transactions.queries';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
@@ -14,28 +14,41 @@ export interface CreateTransactionParams {
   type: Enums<'transaction_type'>;
   amount: number;
   description: string;
+  date: string;
 }
 
 export async function createTransaction(params: CreateTransactionParams): Promise<ActionResponse> {
   const supabase = createServerSupabaseClient();
 
   try {
-    const subaccountBalance = await getSubaccountBalance(params.subaccountId);
-    const now = new Date().toISOString();
+    const {
+      data: [latestTransaction],
+    } = await getTransactions({
+      pageSize: 1,
+      subaccountId: params.subaccountId,
+      toDate: params.date,
+    });
 
     const { error } = await supabase.from('transactions').insert({
       type: params.type,
       amount: params.amount,
-      balance: subaccountBalance + params.amount,
+      balance: (latestTransaction?.balance ?? 0) + params.amount,
       subaccount_id: params.subaccountId,
       description: params.description,
-      started_date: now,
-      completed_date: now,
+      started_date: params.date,
+      completed_date: params.date,
+      order: latestTransaction ? latestTransaction.order + 1 : 0,
     });
 
     if (error) {
       return { success: false, error: { code: error.code, message: error.message } };
     }
+
+    await supabase.rpc('update_transaction_balances', {
+      _subaccount_id: params.subaccountId,
+      fromdate: params.date,
+      amounttoadd: params.amount,
+    });
 
     revalidateTag('transactions');
     return { success: true };
@@ -66,6 +79,7 @@ export async function createTransactions(
         description: transaction.description,
         started_date: now,
         completed_date: now,
+        order: 0,
       })),
     );
 

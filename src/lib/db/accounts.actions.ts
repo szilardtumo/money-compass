@@ -128,6 +128,7 @@ export async function updateAccountBalances(
   balances: Record<string, number>,
 ): Promise<ActionResponse> {
   const subaccountBalances = await getSubaccountBalances();
+  const now = new Date().toISOString();
 
   const transactions: Parameters<typeof createTransactions>[0] = Object.entries(balances)
     .map(([subaccountId, balance]) => ({
@@ -135,6 +136,7 @@ export async function updateAccountBalances(
       amount: balance - (subaccountBalances[subaccountId] ?? 0),
       type: 'correction' as const,
       description: 'Manual balance correction',
+      date: now,
     }))
     .filter((transaction) => transaction.amount !== 0);
 

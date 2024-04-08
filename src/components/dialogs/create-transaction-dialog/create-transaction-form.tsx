@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ReloadIcon } from '@radix-ui/react-icons';
+import { isFuture, startOfDay } from 'date-fns';
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Form,
   FormControl,
@@ -45,7 +47,8 @@ const formSchema = z.object({
   account: z.string({ required_error: 'An account must be selected.' }),
   type: z.string({ required_error: 'A transaction type must be selected.' }),
   amount: z.number(),
-  description: z.string(),
+  description: z.string().min(1, 'Description is required.'),
+  date: z.date().max(new Date(), 'Date cannot be in the future.'),
 });
 
 type FormFields = z.infer<typeof formSchema>;
@@ -57,7 +60,7 @@ export function CreateTransactionForm({
 }: CreateTransactionFormProps) {
   const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),
-    defaultValues: { amount: 0, ...defaultValues },
+    defaultValues: { amount: 0, description: '', date: startOfDay(new Date()), ...defaultValues },
   });
 
   const selectedAccountId = form.watch('account');
@@ -78,6 +81,7 @@ export function CreateTransactionForm({
       type: values.type as Enums<'transaction_type'>,
       subaccountId: subaccountId!,
       description: values.description,
+      date: values.date.toISOString(),
     });
 
     toast.promise(createToastPromise(promise), {
@@ -154,6 +158,19 @@ export function CreateTransactionForm({
                 <Input {...field} />
               </FormControl>
               <FormDescription>This will be seen in the transaction history.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field: { onChange, ...field } }) => (
+            <FormItem>
+              <FormLabel>Date</FormLabel>
+              <FormControl>
+                <DatePicker disabled={isFuture} onValueChange={onChange} {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

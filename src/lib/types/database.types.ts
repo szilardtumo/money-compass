@@ -136,6 +136,7 @@ export type Database = {
           description: string
           external_ref: string | null
           id: string
+          order: number
           started_date: string
           subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
@@ -147,6 +148,7 @@ export type Database = {
           description?: string
           external_ref?: string | null
           id?: string
+          order: number
           started_date: string
           subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
@@ -158,6 +160,7 @@ export type Database = {
           description?: string
           external_ref?: string | null
           id?: string
+          order?: number
           started_date?: string
           subaccount_id?: string
           type?: Database["public"]["Enums"]["transaction_type"]
@@ -206,6 +209,14 @@ export type Database = {
         Args: {
           _id: string
           _currency: string
+        }
+        Returns: undefined
+      }
+      update_transaction_balances: {
+        Args: {
+          _subaccount_id: string
+          fromdate: string
+          amounttoadd: number
         }
         Returns: undefined
       }

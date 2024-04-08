@@ -10,8 +10,6 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-create extension if not exists "timescaledb" with schema "extensions";
-
 CREATE SCHEMA IF NOT EXISTS "public";
 
 ALTER SCHEMA "public" OWNER TO "pg_database_owner";
@@ -79,6 +77,20 @@ $$;
 
 ALTER FUNCTION "public"."update_subaccount"("_id" "uuid", "_currency" "text") OWNER TO "postgres";
 
+CREATE OR REPLACE FUNCTION "public"."update_transaction_balances"("_subaccount_id" "uuid", "fromdate" timestamp with time zone, "amounttoadd" numeric) RETURNS "void"
+    LANGUAGE "plpgsql"
+    AS $$
+begin
+
+update transactions
+set balance = balance + amountToAdd
+where subaccount_id = _subaccount_id and started_date > fromDate;
+
+end;
+$$;
+
+ALTER FUNCTION "public"."update_transaction_balances"("_subaccount_id" "uuid", "fromdate" timestamp with time zone, "amounttoadd" numeric) OWNER TO "postgres";
+
 SET default_tablespace = '';
 
 SET default_table_access_method = "heap";
@@ -102,7 +114,9 @@ CREATE TABLE IF NOT EXISTS "public"."transactions" (
     "description" "text" DEFAULT ''::"text" NOT NULL,
     "type" "public"."transaction_type" NOT NULL,
     "subaccount_id" "uuid" NOT NULL,
-    "balance" numeric NOT NULL
+    "balance" numeric NOT NULL,
+    "user_id" "uuid" DEFAULT "auth"."uid"() NOT NULL,
+    "order" numeric NOT NULL
 );
 
 ALTER TABLE "public"."transactions" OWNER TO "postgres";
@@ -164,8 +178,6 @@ ALTER TABLE ONLY "public"."transactions"
 
 CREATE INDEX "transactions_started_date_idx" ON "public"."transactions" USING "btree" ("started_date" DESC);
 
-CREATE OR REPLACE TRIGGER "ts_insert_blocker" BEFORE INSERT ON "public"."transactions" FOR EACH ROW EXECUTE FUNCTION "_timescaledb_internal"."insert_blocker"();
-
 ALTER TABLE ONLY "public"."accounts"
     ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
@@ -184,11 +196,6 @@ ALTER TABLE ONLY "public"."transactions"
 ALTER TABLE ONLY "public"."subaccounts"
     ADD CONSTRAINT "subaccounts_account_id_fkey" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
-CREATE POLICY "Enable all access for users based on accounts.user_id" ON "public"."transactions" USING (("auth"."uid"() = ( SELECT "accounts"."user_id"
-   FROM ("public"."subaccounts"
-     JOIN "public"."accounts" ON (("accounts"."id" = "subaccounts"."account_id")))
-  WHERE ("subaccounts"."id" = "transactions"."subaccount_id"))));
-
 CREATE POLICY "Enable all for users based on accounts.user_id" ON "public"."subaccounts" USING (("account_id" IN ( SELECT "accounts"."id"
    FROM "public"."accounts"
   WHERE ("accounts"."user_id" = "auth"."uid"())))) WITH CHECK (("account_id" IN ( SELECT "accounts"."id"
@@ -196,6 +203,8 @@ CREATE POLICY "Enable all for users based on accounts.user_id" ON "public"."suba
   WHERE ("accounts"."user_id" = "auth"."uid"()))));
 
 CREATE POLICY "Enable all for users based on user_id" ON "public"."accounts" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+CREATE POLICY "Enable all for users based on user_id" ON "public"."transactions" USING (("user_id" = "auth"."uid"()));
 
 CREATE POLICY "Enable read access for all users" ON "public"."currencies" FOR SELECT USING (true);
 
@@ -223,6 +232,10 @@ GRANT ALL ON FUNCTION "public"."query_transaction_history"("date_range" "text", 
 GRANT ALL ON FUNCTION "public"."update_subaccount"("_id" "uuid", "_currency" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."update_subaccount"("_id" "uuid", "_currency" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_subaccount"("_id" "uuid", "_currency" "text") TO "service_role";
+
+GRANT ALL ON FUNCTION "public"."update_transaction_balances"("_subaccount_id" "uuid", "fromdate" timestamp with time zone, "amounttoadd" numeric) TO "anon";
+GRANT ALL ON FUNCTION "public"."update_transaction_balances"("_subaccount_id" "uuid", "fromdate" timestamp with time zone, "amounttoadd" numeric) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_transaction_balances"("_subaccount_id" "uuid", "fromdate" timestamp with time zone, "amounttoadd" numeric) TO "service_role";
 
 GRANT ALL ON TABLE "public"."accounts" TO "anon";
 GRANT ALL ON TABLE "public"."accounts" TO "authenticated";
