@@ -17,6 +17,7 @@ import {
   DataTableRowSelectionIndicator,
   useDataTable,
 } from '@/components/ui/data-table';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { deleteTransactions } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
@@ -30,7 +31,19 @@ const columns = [
   columnHelper.accessor((row) => row.startedDate, {
     id: 'date',
     header: 'Date',
-    cell: ({ getValue }) => formatDateTime(getValue()),
+    cell: ({ getValue }) => <span className="whitespace-nowrap">{formatDateTime(getValue())}</span>,
+  }),
+  columnHelper.accessor('description', {
+    header: 'Description',
+    cell: ({ getValue }) => (
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <span className="min-w-[150px] overflow-ellipsis line-clamp-3">{getValue()}</span>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80">{getValue()}</HoverCardContent>
+      </HoverCard>
+    ),
+    enableSorting: false,
   }),
   columnHelper.accessor((row) => row.account.name, {
     id: 'account',
@@ -47,6 +60,11 @@ const columns = [
     meta: { align: 'right' },
     header: 'Amount',
     cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.account.currency),
+  }),
+  columnHelper.accessor('type', {
+    header: 'Type',
+    cell: ({ getValue }) => getValue(),
+    enableSorting: false,
   }),
 ];
 
@@ -119,7 +137,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
         <DataTableResetFilters table={table} />
         <Button
           variant="destructive"
-          className="h-8 px-2.5 ml-auto"
+          className="h-8 px-2.5 sm:ml-auto"
           onClick={deleteSelected}
           disabled={selectedRowCount === 0 || isDeleting}
         >
