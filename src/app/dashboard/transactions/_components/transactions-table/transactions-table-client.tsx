@@ -70,7 +70,7 @@ const staticColumns = [
   }),
   columnHelper.accessor('type', {
     header: 'Type',
-    cell: ({ getValue }) => getValue(),
+    cell: ({ getValue }) => <span className="capitalize">{getValue()}</span>,
     enableSorting: false,
   }),
 ];
