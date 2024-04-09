@@ -1,7 +1,7 @@
 'use client';
 
-import { ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
-import { createColumnHelper } from '@tanstack/react-table';
+import { DotsHorizontalIcon, ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
+import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
 import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -17,6 +17,13 @@ import {
   DataTableRowSelectionIndicator,
   useDataTable,
 } from '@/components/ui/data-table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { deleteTransactions } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
@@ -27,7 +34,7 @@ import { createToastPromise } from '@/lib/utils/toasts';
 
 const columnHelper = createColumnHelper<TransactionWithAccount>();
 
-const columns = [
+const staticColumns = [
   columnHelper.accessor((row) => row.startedDate, {
     id: 'date',
     header: 'Date',
@@ -94,6 +101,57 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     [accounts],
   );
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const deleteTransaction = useCallback(async (transactionId: string) => {
+    setIsDeleting(true);
+    const promise = deleteTransactions([transactionId]);
+
+    toast.promise(createToastPromise(promise), {
+      loading: 'Deleting transaction...',
+      success: 'Transaction deleted!',
+      error: (error) =>
+        error?.code === ActionErrorCode.NotLatestTransactions
+          ? 'Failed to delete transaction. Only the most recent transactions can be deleted'
+          : 'Failed to delete transaction. Please try again later.',
+    });
+
+    await promise;
+    setIsDeleting(false);
+  }, []);
+
+  const columns = useMemo(() => {
+    const actionsCell: ColumnDefTemplate<CellContext<TransactionWithAccount, any>> = ({ row }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <span className="sr-only">Open menu</span>
+              <DotsHorizontalIcon />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem disabled>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => deleteTransaction(row.original.id)}>
+              Delete
+              <DropdownMenuShortcut>
+                <TrashIcon />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    };
+
+    return [
+      ...staticColumns,
+      columnHelper.display({
+        id: 'actions',
+        cell: actionsCell,
+      }),
+    ];
+  }, [deleteTransaction]);
+
   const table = useDataTable({
     columns,
     data: transactionsWithAccount,
@@ -101,8 +159,6 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     enableRowSelection: true,
     enableSorting: true,
   });
-
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const selectedRowCount = table.getSelectedRowModel().rows.length;
 
@@ -112,7 +168,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     const promise = deleteTransactions(transactionIds);
 
     toast.promise(createToastPromise(promise), {
-      loading: 'Deleting transactions...',
+      loading: 'Deleting selected transactions...',
       success: 'Transactions deleted!',
       error: (error) =>
         error?.code === ActionErrorCode.NotLatestTransactions
