@@ -1,3 +1,4 @@
+import { DataTableTest } from '@/app/dashboard/test/_components/data-table-test';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { AccountsCard } from '@/components/cards/accounts-card';
 import { AssetDistributionCard } from '@/components/cards/asset-distribution-card';
@@ -40,6 +41,8 @@ export default async function TestPage() {
           transactions={transactions.data}
           currencyMapper={currencyMapper}
         />
+
+        <DataTableTest accounts={accounts} transactions={transactions} />
       </div>
     </main>
   );

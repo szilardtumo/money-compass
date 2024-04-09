@@ -16,12 +16,16 @@ export interface CreateTransactionParams {
 
 interface GetTransactionsParams {
   subaccountId?: string;
+  fromDate?: string;
+  toDate?: string;
   page?: number;
   pageSize?: number;
 }
 
 export async function getTransactions({
   subaccountId,
+  fromDate,
+  toDate,
   page = 0,
   pageSize = 20,
 }: GetTransactionsParams = {}): Promise<Paginated<Transaction>> {
@@ -31,10 +35,17 @@ export async function getTransactions({
     .from('transactions')
     .select('*', { count: 'estimated' })
     .order('started_date', { ascending: false })
+    .order('order', { ascending: false })
     .range(page * pageSize, (page + 1) * pageSize - 1);
 
   if (subaccountId) {
     query = query.eq('subaccount_id', subaccountId);
+  }
+  if (fromDate) {
+    query = query.gte('started_date', fromDate);
+  }
+  if (toDate) {
+    query = query.lte('started_date', toDate);
   }
 
   const { data, count, error } = await query;
@@ -52,6 +63,7 @@ export async function getTransactions({
         amount: transaction.amount,
         balance: transaction.balance,
         startedDate: transaction.started_date,
+        order: transaction.order,
         description: transaction.description,
       })) ?? [],
     page,

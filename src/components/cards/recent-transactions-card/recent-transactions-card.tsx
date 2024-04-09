@@ -1,9 +1,10 @@
 'use client';
 
 import { MixerVerticalIcon } from '@radix-ui/react-icons';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
@@ -11,7 +12,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { mainCurrency } from '@/lib/constants';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
@@ -113,16 +113,9 @@ export function RecentTransactionsCard({
       </CardContent>
       {groupedTransactions.length > 0 && (
         <CardFooter className="justify-center">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <Button variant="link" disabled>
-                  See All
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>Coming soon</TooltipContent>
-          </Tooltip>
+          <Link href="/dashboard/transactions" className={buttonVariants({ variant: 'ghost' })}>
+            See All
+          </Link>
         </CardFooter>
       )}
     </Card>

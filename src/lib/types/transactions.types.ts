@@ -7,6 +7,7 @@ export interface Transaction {
   amount: number;
   balance: number;
   startedDate: string;
+  order: number;
   description: string;
 }
 

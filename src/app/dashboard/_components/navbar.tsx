@@ -1,4 +1,4 @@
-import { CubeIcon, MixIcon } from '@radix-ui/react-icons';
+import { CounterClockwiseClockIcon, CubeIcon, MixIcon } from '@radix-ui/react-icons';
 
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Separator } from '@/components/ui/separator';
@@ -13,6 +13,9 @@ export async function Navbar() {
     <nav className="flex flex-col gap-1 p-2">
       <NavItem href="/dashboard">
         <CubeIcon className="mr-2" /> Dashboard
+      </NavItem>
+      <NavItem href="/dashboard/transactions">
+        <CounterClockwiseClockIcon className="mr-2" /> Transactions
       </NavItem>
 
       <Separator className="my-2" />
