@@ -2,9 +2,11 @@
 
 import { ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
 import { createColumnHelper } from '@tanstack/react-table';
+import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { AccountIcon } from '@/components/ui/account-avatar';
 import { Button } from '@/components/ui/button';
 import {
   DataTable,
@@ -19,7 +21,7 @@ import { deleteTransactions } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { ActionErrorCode, Paginated } from '@/lib/types/transport.types';
-import { formatCurrency } from '@/lib/utils/formatters';
+import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
 import { createToastPromise } from '@/lib/utils/toasts';
 
 const columnHelper = createColumnHelper<TransactionWithAccount>();
@@ -28,13 +30,17 @@ const columns = [
   columnHelper.accessor((row) => row.startedDate, {
     id: 'date',
     header: 'Date',
-    cell: ({ getValue }) => new Date(getValue()).toDateString(),
-    enableSorting: false,
+    cell: ({ getValue }) => formatDateTime(getValue()),
   }),
   columnHelper.accessor((row) => row.account.name, {
     id: 'account',
     header: 'Account',
-    cell: ({ getValue }) => getValue(),
+    cell: ({ getValue, row }) => (
+      <div className="flex items-center">
+        <AccountIcon category={row.original.account.category} className="w-4 h-4 mr-1" />
+        <Link href={`/dashboard/accounts/${row.original.account.id}`}>{getValue()}</Link>
+      </div>
+    ),
     filterFn: 'arrIncludesSome',
   }),
   columnHelper.accessor('amount', {
@@ -65,7 +71,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     () =>
       accounts.map((account) => ({
         label: account.name,
-        value: account.subaccountId,
+        value: account.name,
       })),
     [accounts],
   );
