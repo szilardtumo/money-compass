@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 
 import { Metric } from '@/components/ui/metric';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { mainCurrency } from '@/lib/constants';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
@@ -98,6 +99,8 @@ export function TransactionHistoryChart({
     };
   }, [parsedData, chartCategories]);
 
+  const isSm = useBreakpoint('sm');
+
   return (
     <div>
       <Metric>{formatCurrency(metric.value, currency)}</Metric>
@@ -117,6 +120,7 @@ export function TransactionHistoryChart({
         stack={!!subaccountIdsToShow}
         curveType="monotone"
         yAxisWidth={75}
+        showYAxis={isSm}
         showXAxis={false}
         showLegend={false}
         showGridLines={false}
