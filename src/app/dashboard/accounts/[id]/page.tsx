@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { AccountDetailsCard } from '@/components/cards/account-details-card';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
-import { Separator } from '@/components/ui/separator';
+import { PageHeader, PageHeaderTitle } from '@/components/ui/page-header';
 import { mainCurrency } from '@/lib/constants';
 import { getSimpleAccount } from '@/lib/db/accounts.queries';
 import { getCurrencyMapper } from '@/lib/db/currencies.queries';
@@ -32,11 +32,11 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
 
   return (
     <main>
-      <div className="flex items-center justify-between px-4 h-14">
-        <h1 className="text-xl font-bold mr-auto">{account.name}</h1>
+      <PageHeader>
+        <PageHeaderTitle>{account.name}</PageHeaderTitle>
         <AccountActionButtons account={account} />
-      </div>
-      <Separator />
+      </PageHeader>
+
       <div className="m-4 flex flex-col gap-4">
         <AccountDetailsCard account={account} />
         <AccountHistoryCard
