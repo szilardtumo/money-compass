@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { AccountDetailsCard } from '@/components/cards/account-details-card';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
-import { PageHeader, PageHeaderTitle } from '@/components/ui/page-header';
+import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
 import { mainCurrency } from '@/lib/constants';
 import { getSimpleAccount } from '@/lib/db/accounts.queries';
 import { getCurrencyMapper } from '@/lib/db/currencies.queries';
@@ -31,13 +31,13 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
   const transactions = await getTransactions({ subaccountId: account?.subaccountId, pageSize: 5 });
 
   return (
-    <main>
+    <PageLayout>
       <PageHeader>
         <PageHeaderTitle>{account.name}</PageHeaderTitle>
         <AccountActionButtons account={account} />
       </PageHeader>
 
-      <div className="m-4 flex flex-col gap-4">
+      <PageContent>
         <AccountDetailsCard account={account} />
         <AccountHistoryCard
           data={transactionHistory}
@@ -49,7 +49,7 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
           transactions={transactions.data}
           currencyMapper={currencyMapper}
         />
-      </div>
-    </main>
+      </PageContent>
+    </PageLayout>
   );
 }

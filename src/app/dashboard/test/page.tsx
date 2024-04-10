@@ -5,7 +5,7 @@ import { AssetDistributionCard } from '@/components/cards/asset-distribution-car
 import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { QuickActionsCard } from '@/components/cards/quick-actions-card/quick-actions-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
-import { PageHeader, PageHeaderTitle } from '@/components/ui/page-header';
+import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
 import { mainCurrency } from '@/lib/constants';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 import { getCurrencyMapper } from '@/lib/db/currencies.queries';
@@ -20,12 +20,12 @@ export default async function TestPage() {
   ]);
 
   return (
-    <main>
+    <PageLayout>
       <PageHeader>
         <PageHeaderTitle>Test page</PageHeaderTitle>
       </PageHeader>
 
-      <div className="m-4 flex flex-col gap-4">
+      <PageContent>
         <NetWorthHistoryCard data={transactionHistory} accounts={accounts} />
 
         <AccountHistoryCard data={transactionHistory} account={accounts[0]} />
@@ -43,7 +43,7 @@ export default async function TestPage() {
         />
 
         <DataTableTest accounts={accounts} transactions={transactions} />
-      </div>
-    </main>
+      </PageContent>
+    </PageLayout>
   );
 }

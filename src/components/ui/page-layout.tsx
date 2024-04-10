@@ -3,6 +3,13 @@ import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/cn';
 
+const PageLayout = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <main ref={ref} className={cn('flex flex-col', className)} {...props} />
+  ),
+);
+PageLayout.displayName = 'PageLayout';
+
 const PageHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <>
@@ -27,4 +34,11 @@ const PageHeaderTitle = React.forwardRef<
 ));
 PageHeaderTitle.displayName = 'PageHeaderTitle';
 
-export { PageHeader, PageHeaderTitle };
+const PageContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn('m-4 flex flex-col gap-4', className)} {...props} />
+  ),
+);
+PageContent.displayName = 'PageContent';
+
+export { PageLayout, PageHeader, PageHeaderTitle, PageContent };
