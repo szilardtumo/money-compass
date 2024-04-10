@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+
 import { DataTableTest } from '@/app/dashboard/test/_components/data-table-test';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { AccountsCard } from '@/components/cards/accounts-card';
@@ -12,6 +14,10 @@ import { getCurrencyMapper } from '@/lib/db/currencies.queries';
 import { getTransactionHistory, getTransactions } from '@/lib/db/transactions.queries';
 
 export default async function TestPage() {
+  if (process.env.NODE_ENV !== 'development') {
+    redirect('/dashboard');
+  }
+
   const [accounts, transactionHistory, transactions, currencyMapper] = await Promise.all([
     getSimpleAccounts(),
     getTransactionHistory('12 month', '1 month'),
@@ -28,7 +34,7 @@ export default async function TestPage() {
       <PageContent>
         <NetWorthHistoryCard data={transactionHistory} accounts={accounts} />
 
-        <AccountHistoryCard data={transactionHistory} account={accounts[0]} />
+        {!!accounts[0] && <AccountHistoryCard data={transactionHistory} account={accounts[0]} />}
 
         <AssetDistributionCard accounts={accounts} currencyMapper={currencyMapper} />
 

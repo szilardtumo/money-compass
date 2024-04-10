@@ -49,11 +49,15 @@ async function NavbarContent({ user }: NavbarProps) {
           ))}
         </div>
 
-        <Separator className="my-2" />
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            <Separator className="my-2" />
 
-        <NavItem href="/dashboard/test">
-          <MixIcon className="mr-2" /> Test
-        </NavItem>
+            <NavItem href="/dashboard/test">
+              <MixIcon className="mr-2" /> Test
+            </NavItem>
+          </>
+        )}
       </nav>
     </aside>
   );
