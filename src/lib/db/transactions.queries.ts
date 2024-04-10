@@ -109,7 +109,7 @@ export async function getTransactionHistory(
   // Generate time buckets for the date range and only keep the ones after the first transaction
   // This is needed to fill in the gaps in the data, in case there are no transactions for a specific date bucket
   const timeBuckets = generateTimeBuckets(dateRange, interval).filter(
-    (date) => date >= new Date(buckets![0].interval_start),
+    (date) => date >= new Date(buckets![0]?.interval_start),
   );
 
   const gapfilledData = timeBuckets.map((date) => {

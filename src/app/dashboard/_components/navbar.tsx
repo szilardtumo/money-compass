@@ -1,4 +1,5 @@
 import {
+  CardStackIcon,
   CounterClockwiseClockIcon,
   CubeIcon,
   HamburgerMenuIcon,
@@ -35,15 +36,18 @@ async function NavbarContent({ user }: NavbarProps) {
 
         <Separator className="my-2" />
 
-        <section className="pl-4 flex flex-col gap-1">
-          <h2 className="text-md font-semibold tracking-tight">Accounts</h2>
+        <NavItem href="/dashboard/accounts">
+          <CardStackIcon className="mr-2" />
+          All Accounts
+        </NavItem>
+        <div className="pl-4 flex flex-col gap-1">
           {accounts.map((account) => (
             <NavItem key={account.id} href={`/dashboard/accounts/${account.id}`}>
               <AccountIcon category={account.category} className="w-4 h-4 mr-2" />
               {account.name}
             </NavItem>
           ))}
-        </section>
+        </div>
 
         <Separator className="my-2" />
 
