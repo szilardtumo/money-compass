@@ -8,7 +8,7 @@ const PageHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
     <>
       <div
         ref={ref}
-        className={cn('flex items-center justify-between px-4 h-14', className)}
+        className={cn('flex items-center justify-between px-4 h-14 ml-12 sm:ml-0', className)}
         {...props}
       />
       <Separator />

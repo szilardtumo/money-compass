@@ -1,10 +1,8 @@
 import { redirect } from 'next/navigation';
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { Separator } from '@/components/ui/separator';
+import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
-import { AccountDropdown } from './_components/account-dropdown';
 import { GlobalDialogs } from './_components/global-dialogs';
 import { Navbar } from './_components/navbar';
 
@@ -28,14 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <>
       <GlobalDialogs />
       <ResizablePanelGroup direction="horizontal" className="h-full min-h-screen items-stretch">
-        <ResizablePanel defaultSize={20} minSize={10} maxSize={30}>
-          <div className="flex h-14 items-center justify-center px-2">
-            <AccountDropdown user={user} />
-          </div>
-          <Separator />
-          <Navbar />
-        </ResizablePanel>
-        <ResizableHandle withHandle />
+        <Navbar user={user} />
         <ResizablePanel defaultSize={80}>{children}</ResizablePanel>
       </ResizablePanelGroup>
     </>
