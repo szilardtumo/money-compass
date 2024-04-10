@@ -1,5 +1,6 @@
 import { AccountsCard } from '@/components/cards/accounts-card';
 import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
+import { QuickActionsCard } from '@/components/cards/quick-actions-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
 import { mainCurrency } from '@/lib/constants';
@@ -23,6 +24,8 @@ export default async function DashboardPage() {
 
       <PageContent>
         <NetWorthHistoryCard accounts={accounts} data={transactionHistory} />
+
+        <QuickActionsCard />
 
         <AccountsCard accounts={accounts} />
 
