@@ -27,23 +27,28 @@ async function NavbarContent({ user }: NavbarProps) {
       </div>
       <Separator />
       <nav className="flex flex-col gap-1 p-2">
-        <NavItem href="/dashboard">
-          <CubeIcon className="mr-2" /> Dashboard
+        <NavItem href="/dashboard" icon={<CubeIcon className="mr-2" />}>
+          Dashboard
         </NavItem>
-        <NavItem href="/dashboard/transactions">
-          <CounterClockwiseClockIcon className="mr-2" /> Transactions
+        <NavItem
+          href="/dashboard/transactions"
+          icon={<CounterClockwiseClockIcon className="mr-2" />}
+        >
+          Transactions
         </NavItem>
 
         <Separator className="my-2" />
 
-        <NavItem href="/dashboard/accounts">
-          <CardStackIcon className="mr-2" />
+        <NavItem href="/dashboard/accounts" icon={<CardStackIcon className="mr-2" />}>
           All Accounts
         </NavItem>
         <div className="pl-4 flex flex-col gap-1">
           {accounts.map((account) => (
-            <NavItem key={account.id} href={`/dashboard/accounts/${account.id}`}>
-              <AccountIcon category={account.category} className="w-4 h-4 mr-2" />
+            <NavItem
+              key={account.id}
+              href={`/dashboard/accounts/${account.id}`}
+              icon={<AccountIcon category={account.category} className="w-4 h-4 mr-2" />}
+            >
               {account.name}
             </NavItem>
           ))}
@@ -53,8 +58,8 @@ async function NavbarContent({ user }: NavbarProps) {
           <>
             <Separator className="my-2" />
 
-            <NavItem href="/dashboard/test">
-              <MixIcon className="mr-2" /> Test
+            <NavItem href="/dashboard/test" icon={<MixIcon className="mr-2" />}>
+              Test
             </NavItem>
           </>
         )}
