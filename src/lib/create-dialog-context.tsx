@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useMemo, useState } from 'react';
 
 import { capitalize } from '@/lib/utils/formatters';
 
@@ -34,19 +34,21 @@ export function createDialogContext<DefaultFormValues>(name: string) {
     const [isOpen, setIsOpen] = useState(false);
     const [defaultValues, setDefaultValues] = useState<DefaultFormValues>();
 
+    const openDialog = useCallback((defaultFormValues?: DefaultFormValues) => {
+      setIsOpen(true);
+      setDefaultValues(defaultFormValues);
+    }, []);
+
     const value = useMemo(() => {
       return {
         isOpen,
-        openDialog: (defaultFormValues?: DefaultFormValues) => {
-          setIsOpen(true);
-          setDefaultValues(defaultFormValues);
-        },
+        openDialog,
         internal: {
           defaultValues,
           setIsOpen,
         },
       };
-    }, [defaultValues, isOpen]);
+    }, [defaultValues, isOpen, openDialog]);
 
     return <Context.Provider value={value}>{children}</Context.Provider>;
   }

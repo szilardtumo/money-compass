@@ -26,7 +26,7 @@ export function UpdateBalancesDialog({ accounts }: UpdateBalancesDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="card">
+        <Button variant="outline" size="card" disabled={!accounts.length}>
           <UpdateIcon className="w-6 h-6" />
           Update balances
         </Button>

@@ -13,7 +13,10 @@ export function NavItem({ href, isSelected = false, children }: NavItemProps) {
   return (
     <Link
       href={href}
-      className={cn(buttonVariants({ variant: isSelected ? 'default' : 'ghost' }), 'justify-start')}
+      className={cn(
+        buttonVariants({ variant: isSelected ? 'default' : 'ghost' }),
+        'justify-start [&>*]:shrink-0',
+      )}
     >
       {children}
     </Link>

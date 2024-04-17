@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useUpdateTransactionDialog } from '@/components/providers/update-transaction-dialog-provider';
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -66,7 +67,20 @@ const staticColumns = [
   columnHelper.accessor('amount', {
     meta: { align: 'right' },
     header: 'Amount',
-    cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.account.currency),
+    cell: ({ row, getValue }) => (
+      <span className="whitespace-nowrap">
+        {formatCurrency(getValue(), row.original.account.currency)}
+      </span>
+    ),
+  }),
+  columnHelper.accessor('balance', {
+    meta: { align: 'right' },
+    header: 'Balance',
+    cell: ({ row, getValue }) => (
+      <span className="whitespace-nowrap">
+        {formatCurrency(getValue(), row.original.account.currency)}
+      </span>
+    ),
   }),
   columnHelper.accessor('type', {
     header: 'Type',
@@ -101,6 +115,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     [accounts],
   );
 
+  const { openDialog: openUpdateTransactionDialog } = useUpdateTransactionDialog();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const deleteTransaction = useCallback(async (transactionId: string) => {
@@ -131,7 +146,9 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem disabled>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openUpdateTransactionDialog(row.original)}>
+              Edit
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => deleteTransaction(row.original.id)}>
               Delete
               <DropdownMenuShortcut>
@@ -150,7 +167,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
         cell: actionsCell,
       }),
     ];
-  }, [deleteTransaction]);
+  }, [deleteTransaction, openUpdateTransactionDialog]);
 
   const table = useDataTable({
     columns,

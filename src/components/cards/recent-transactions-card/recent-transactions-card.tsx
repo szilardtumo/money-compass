@@ -1,9 +1,10 @@
 'use client';
 
-import { MixerVerticalIcon } from '@radix-ui/react-icons';
+import { MixerVerticalIcon, PlusIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
+import { useCreateTransactionDialog } from '@/components/providers/create-transaction-dialog-provider';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -32,6 +33,8 @@ export function RecentTransactionsCard({
   accounts,
   currencyMapper,
 }: RecentTransactionsCardProps) {
+  const { openDialog: openCreateTransactionDialog } = useCreateTransactionDialog();
+
   const [selectedsubAccountIds, setSelectedSubaccountIds] = useState<string[]>(() =>
     accounts.map((account) => account.subaccountId),
   );
@@ -69,6 +72,15 @@ export function RecentTransactionsCard({
     <Card>
       <CardHeader className="flex flex-row justify-between items-baseline space-y-0">
         <CardTitle>Recent transactions</CardTitle>
+        {accounts.length === 1 && (
+          <Button
+            size="sm"
+            onClick={() => openCreateTransactionDialog({ account: accounts[0].id })}
+          >
+            <PlusIcon className=" mr-1" />
+            Add <span className="sr-only sm:not-sr-only">&nbsp;transaction</span>
+          </Button>
+        )}
         {accounts.length > 1 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

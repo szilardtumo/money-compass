@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { AccountAvatar } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SimpleAccount } from '@/lib/types/accounts.types';
@@ -26,7 +28,12 @@ export async function AccountsCard({ accounts }: AccountsCardProps) {
           <div key={account.id} className="flex items-center gap-4">
             <AccountAvatar category={account.category} />
             <div className="space-y-1">
-              <p className="text-sm font-medium leading-none">{account.name}</p>
+              <Link
+                href={`/dashboard/accounts/${account.id}`}
+                className="text-sm font-medium leading-none"
+              >
+                {account.name}
+              </Link>
               <p className="text-sm text-muted-foreground">
                 <span className="uppercase">{account.currency}</span>
                 {' • '}

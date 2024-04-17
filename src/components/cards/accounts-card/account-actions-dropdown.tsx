@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -13,6 +12,7 @@ import { SimpleAccount } from '@/lib/types/accounts.types';
 
 import { AddTransactionMenuItem } from './add-transaction-menu-item';
 import { DeleteAccountMenuItem } from './delete-account-menu-item';
+import { EditAccountMenuItem } from './edit-account-menu-item';
 
 interface AccountActionsDropdownProps {
   account: SimpleAccount;
@@ -32,7 +32,7 @@ export function AccountActionsDropdown({ account }: AccountActionsDropdownProps)
         <TooltipContent>Actions</TooltipContent>
       </Tooltip>
       <DropdownMenuContent>
-        <DropdownMenuItem disabled>Edit</DropdownMenuItem>
+        <EditAccountMenuItem account={account} />
         <AddTransactionMenuItem accountId={account.id} />
         <DropdownMenuSeparator />
         <DeleteAccountMenuItem accountId={account.id} />

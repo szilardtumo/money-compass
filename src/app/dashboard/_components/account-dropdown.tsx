@@ -60,7 +60,7 @@ export function AccountDropdown({ user }: AccountDropdownProps) {
           <CaretDownIcon className="shrink-0 ml-2" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
+      <DropdownMenuContent className="w-[var(--radix-popper-anchor-width)] min-w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuSub>

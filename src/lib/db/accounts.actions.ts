@@ -121,6 +121,7 @@ export async function deleteAccount(accountId: string): Promise<ActionResponse> 
 
   revalidateTag('accounts');
   revalidateTag('subaccounts');
+  revalidateTag('transactions');
   return { success: true };
 }
 

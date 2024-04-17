@@ -12,11 +12,11 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
   return (
     <div className="flex items-start">
       <Avatar className="h-9 w-9 border" />
-      <div className="ml-4 space-y-1">
-        <p className="text-sm font-medium leading-none">
+      <div className="mx-4 space-y-1">
+        <p className="text-sm font-medium line-clamp-2">
           {transaction.description || 'No description'}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-0 text-sm text-muted-foreground">
           {formatTime(transaction.startedDate)} •{' '}
           <Link href={`/dashboard/accounts/${transaction.account.id}`} className="hover:underline">
             {transaction.account.name}

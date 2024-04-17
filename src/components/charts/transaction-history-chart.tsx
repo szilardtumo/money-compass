@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 
 import { Metric } from '@/components/ui/metric';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { mainCurrency } from '@/lib/constants';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
@@ -81,34 +82,34 @@ export function TransactionHistoryChart({
           (acc, category) => acc + parsedData[parsedData.length - 1][category],
           0,
         )
-      : NaN;
+      : 0;
     const prevValue = parsedData[parsedData.length - 2]
       ? chartCategories.reduce(
           // @ts-expect-error - TS doesn't know that parsedData[parsedData.length - 2] contains all the categories
           (acc, category) => acc + parsedData[parsedData.length - 2][category],
           0,
         )
-      : NaN;
+      : 0;
 
     return {
       value,
       prevValue,
       difference: value - prevValue,
-      change: (value - prevValue) / prevValue,
+      change: (value - prevValue) / prevValue || 0,
     };
   }, [parsedData, chartCategories]);
+
+  const isSm = useBreakpoint('sm');
 
   return (
     <div>
       <Metric>{formatCurrency(metric.value, currency)}</Metric>
-      {Number.isFinite(metric.difference) && (
-        <div className="flex gap-2 items-center">
-          <p className="text-sm text-muted-foreground">
-            {formatCurrency(metric.difference, currency, { signDisplay: 'exceptZero' })}
-          </p>
-          <PriceChangeBadge variant="default" percent={metric.change} />
-        </div>
-      )}
+      <div className="flex gap-2 items-center">
+        <p className="text-sm text-muted-foreground">
+          {formatCurrency(metric.difference, currency, { signDisplay: 'always' })}
+        </p>
+        <PriceChangeBadge variant="default" percent={metric.change} />
+      </div>
 
       <AreaChart
         data={parsedData}
@@ -117,6 +118,7 @@ export function TransactionHistoryChart({
         stack={!!subaccountIdsToShow}
         curveType="monotone"
         yAxisWidth={75}
+        showYAxis={isSm}
         showXAxis={false}
         showLegend={false}
         showGridLines={false}
