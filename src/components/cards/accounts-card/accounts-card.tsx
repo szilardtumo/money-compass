@@ -26,7 +26,7 @@ export async function AccountsCard({ accounts }: AccountsCardProps) {
       <CardContent className="space-y-4">
         {accounts.map((account) => (
           <div key={account.id} className="flex items-center gap-4">
-            <AccountAvatar category={account.category} />
+            <AccountAvatar category={account.category} className="hidden sm:flex" />
             <div className="space-y-1">
               <Link
                 href={`/dashboard/accounts/${account.id}`}
@@ -43,7 +43,7 @@ export async function AccountsCard({ accounts }: AccountsCardProps) {
             <div className="ml-auto font-bold">
               {formatCurrency(account.balance, account.currency)}
             </div>
-            <AccountActionsDropdown account={account} />
+            <AccountActionsDropdown account={account} className="hidden sm:inline-flex" />
           </div>
         ))}
         {!accounts.length && <NoAccountsPlaceholder />}

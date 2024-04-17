@@ -10,9 +10,9 @@ interface TransactionItemProps {
 
 export function TransactionItem({ transaction }: TransactionItemProps) {
   return (
-    <div className="flex items-start">
-      <Avatar className="h-9 w-9 border" />
-      <div className="mx-4 space-y-1">
+    <div className="flex items-start gap-4">
+      <Avatar className="hidden sm:flex h-9 w-9 border" />
+      <div className="space-y-1">
         <p className="text-sm font-medium line-clamp-2">
           {transaction.description || 'No description'}
         </p>
@@ -23,7 +23,7 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
           </Link>
         </p>
       </div>
-      <div className="ml-auto font-medium">
+      <div className="ml-auto font-medium whitespace-nowrap">
         {formatCurrency(transaction.amount, transaction.account.currency)}
       </div>
     </div>
