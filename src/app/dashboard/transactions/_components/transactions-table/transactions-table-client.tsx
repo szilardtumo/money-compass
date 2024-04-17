@@ -67,12 +67,20 @@ const staticColumns = [
   columnHelper.accessor('amount', {
     meta: { align: 'right' },
     header: 'Amount',
-    cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.account.currency),
+    cell: ({ row, getValue }) => (
+      <span className="whitespace-nowrap">
+        {formatCurrency(getValue(), row.original.account.currency)}
+      </span>
+    ),
   }),
   columnHelper.accessor('balance', {
     meta: { align: 'right' },
     header: 'Balance',
-    cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.account.currency),
+    cell: ({ row, getValue }) => (
+      <span className="whitespace-nowrap">
+        {formatCurrency(getValue(), row.original.account.currency)}
+      </span>
+    ),
   }),
   columnHelper.accessor('type', {
     header: 'Type',
