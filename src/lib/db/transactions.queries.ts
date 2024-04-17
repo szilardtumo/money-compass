@@ -1,7 +1,7 @@
 'use server';
 
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
-import { Enums } from '@/lib/types/database.types';
+import { Enums, Tables } from '@/lib/types/database.types';
 import { TimeInterval } from '@/lib/types/time.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
@@ -20,6 +20,19 @@ interface GetTransactionsParams {
   toDate?: string;
   page?: number;
   pageSize?: number;
+}
+
+function parseTransaction(data: Tables<'transactions'>) {
+  return {
+    id: data.id,
+    subaccountId: data.subaccount_id,
+    type: data.type,
+    amount: data.amount,
+    balance: data.balance,
+    startedDate: data.started_date,
+    order: data.order,
+    description: data.description,
+  };
 }
 
 export async function getTransactions({
@@ -55,21 +68,31 @@ export async function getTransactions({
   }
 
   return {
-    data:
-      data?.map((transaction) => ({
-        id: transaction.id,
-        subaccountId: transaction.subaccount_id,
-        type: transaction.type,
-        amount: transaction.amount,
-        balance: transaction.balance,
-        startedDate: transaction.started_date,
-        order: transaction.order,
-        description: transaction.description,
-      })) ?? [],
+    data: data?.map((transaction) => parseTransaction(transaction)) ?? [],
     page,
     pageSize,
     total: count ?? 0,
   };
+}
+
+export async function getTransactionById(id: string): Promise<Transaction | undefined> {
+  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['transactions'] } });
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return undefined;
+  }
+
+  return parseTransaction(data);
 }
 
 export async function getTransactionHistory(

@@ -4,7 +4,7 @@ import { PostgrestError } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
 
 import { getSubaccountBalances } from '@/lib/db/accounts.queries';
-import { getTransactions } from '@/lib/db/transactions.queries';
+import { getTransactionById, getTransactions } from '@/lib/db/transactions.queries';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
@@ -85,6 +85,63 @@ export async function createTransactions(
 
     if (error) {
       return { success: false, error: { code: error.code, message: error.message } };
+    }
+
+    revalidateTag('transactions');
+    return { success: true };
+  } catch (error) {
+    const postgrestError = error as PostgrestError;
+    return {
+      success: false,
+      error: { code: postgrestError.code, message: postgrestError.message },
+    };
+  }
+}
+
+interface UpdateTransactionParams {
+  type?: Enums<'transaction_type'>;
+  amount?: number;
+  description?: string;
+}
+
+export async function updateTransaction(
+  transactionId: string,
+  params: UpdateTransactionParams,
+): Promise<ActionResponse> {
+  const supabase = createServerSupabaseClient();
+
+  const transaction = await getTransactionById(transactionId);
+
+  if (!transaction) {
+    return {
+      success: false,
+      error: { code: ActionErrorCode.NotFound, message: 'Transaction not found.' },
+    };
+  }
+
+  const amountToAdd = (params.amount ?? transaction.amount) - transaction.amount;
+
+  try {
+    const { error } = await supabase
+      .from('transactions')
+      .update({
+        type: params.type,
+        amount: params.amount,
+        description: params.description,
+        balance: transaction.balance + amountToAdd,
+      })
+      .eq('id', transactionId);
+
+    if (error) {
+      return { success: false, error: { code: error.code, message: error.message } };
+    }
+
+    if (amountToAdd) {
+      await supabase.rpc('update_transaction_balances', {
+        _subaccount_id: transaction.subaccountId,
+        fromdate: transaction.startedDate,
+        amounttoadd: amountToAdd,
+      });
     }
 
     revalidateTag('transactions');
