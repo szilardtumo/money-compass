@@ -1,8 +1,7 @@
-import { AccountsCard } from '@/components/cards/accounts-card';
-import { QuickActionsCard } from '@/components/cards/quick-actions-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default function AccountsPage() {
+export default function Loading() {
   return (
     <PageLayout>
       <PageHeader>
@@ -10,8 +9,8 @@ export default function AccountsPage() {
       </PageHeader>
 
       <PageContent>
-        <QuickActionsCard />
-        <AccountsCard />
+        <Skeleton className="h-[220px] w-full" />
+        <Skeleton className="h-[400px] w-full" />
       </PageContent>
     </PageLayout>
   );

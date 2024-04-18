@@ -18,17 +18,17 @@ interface AccountDetailsPageProps {
 }
 
 export default async function AccountDetailsPage({ params }: AccountDetailsPageProps) {
-  const [account, transactionHistory, currencyMapper] = await Promise.all([
-    getSimpleAccount(params.id),
-    getTransactionHistory('12 month', '1 month'),
-    getCurrencyMapper(mainCurrency),
-  ]);
+  const account = await getSimpleAccount(params.id);
 
   if (!account) {
     notFound();
   }
 
-  const transactions = await getTransactions({ subaccountId: account?.subaccountId, pageSize: 5 });
+  const [transactions, transactionHistory, currencyMapper] = await Promise.all([
+    getTransactions({ subaccountId: account?.subaccountId, pageSize: 5 }),
+    getTransactionHistory('12 month', '1 month'),
+    getCurrencyMapper(mainCurrency),
+  ]);
 
   return (
     <PageLayout>

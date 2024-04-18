@@ -27,7 +27,7 @@ export default async function DashboardPage() {
 
         <QuickActionsCard />
 
-        <AccountsCard accounts={accounts} />
+        <AccountsCard />
 
         <RecentTransactionsCard
           accounts={accounts}

@@ -2,18 +2,16 @@ import Link from 'next/link';
 
 import { AccountAvatar } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 import { formatCurrency } from '@/lib/utils/formatters';
 
 import { AccountActionsDropdown } from './account-actions-dropdown';
 import { CreateAccountButton } from './create-account-button';
 import { NoAccountsPlaceholder } from './no-accounts-placeholder';
 
-interface AccountsCardProps {
-  accounts: SimpleAccount[];
-}
+export async function AccountsCard() {
+  const accounts = await getSimpleAccounts();
 
-export async function AccountsCard({ accounts }: AccountsCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between space-y-0">
