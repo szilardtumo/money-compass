@@ -1,7 +1,6 @@
-import Link from 'next/link';
-
 import { AccountAvatar } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { NavLink } from '@/components/ui/nav-link';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 import { formatCurrency } from '@/lib/utils/formatters';
 
@@ -26,12 +25,12 @@ export async function AccountsCard() {
           <div key={account.id} className="flex items-center gap-4">
             <AccountAvatar category={account.category} className="hidden sm:flex" />
             <div className="space-y-1">
-              <Link
+              <NavLink
                 href={`/dashboard/accounts/${account.id}`}
                 className="text-sm font-medium leading-none"
               >
                 {account.name}
-              </Link>
+              </NavLink>
               <p className="text-sm text-muted-foreground">
                 <span className="uppercase">{account.currency}</span>
                 {' • '}

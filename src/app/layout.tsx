@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { Inter } from 'next/font/google';
 import './globals.css';
 
+import { GlobalProgress } from '@/app/_components/global-progress';
 import { GlobalProviders } from '@/app/_components/global-providers';
 import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/cn';
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Analytics />
           <SpeedInsights />
           <CacheToolbar />
+          <GlobalProgress />
           <Toaster />
           {children}
         </GlobalProviders>

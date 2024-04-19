@@ -2,7 +2,6 @@
 
 import { DotsHorizontalIcon, ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
 import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
-import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -26,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { NavLink } from '@/components/ui/nav-link';
 import { deleteTransactions } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
@@ -59,7 +59,7 @@ const staticColumns = [
     cell: ({ getValue, row }) => (
       <div className="flex items-center">
         <AccountIcon category={row.original.account.category} className="w-4 h-4 mr-1" />
-        <Link href={`/dashboard/accounts/${row.original.account.id}`}>{getValue()}</Link>
+        <NavLink href={`/dashboard/accounts/${row.original.account.id}`}>{getValue()}</NavLink>
       </div>
     ),
     filterFn: 'arrIncludesSome',
