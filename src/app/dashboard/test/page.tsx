@@ -40,7 +40,7 @@ export default async function TestPage() {
 
         <QuickActionsCard />
 
-        <AccountsCard accounts={accounts} />
+        <AccountsCard />
 
         <RecentTransactionsCard
           accounts={accounts}

@@ -1,19 +1,16 @@
-import Link from 'next/link';
-
 import { AccountAvatar } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { NavLink } from '@/components/ui/nav-link';
+import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 import { formatCurrency } from '@/lib/utils/formatters';
 
 import { AccountActionsDropdown } from './account-actions-dropdown';
 import { CreateAccountButton } from './create-account-button';
 import { NoAccountsPlaceholder } from './no-accounts-placeholder';
 
-interface AccountsCardProps {
-  accounts: SimpleAccount[];
-}
+export async function AccountsCard() {
+  const accounts = await getSimpleAccounts();
 
-export async function AccountsCard({ accounts }: AccountsCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between space-y-0">
@@ -26,14 +23,14 @@ export async function AccountsCard({ accounts }: AccountsCardProps) {
       <CardContent className="space-y-4">
         {accounts.map((account) => (
           <div key={account.id} className="flex items-center gap-4">
-            <AccountAvatar category={account.category} />
+            <AccountAvatar category={account.category} className="hidden sm:flex" />
             <div className="space-y-1">
-              <Link
+              <NavLink
                 href={`/dashboard/accounts/${account.id}`}
                 className="text-sm font-medium leading-none"
               >
                 {account.name}
-              </Link>
+              </NavLink>
               <p className="text-sm text-muted-foreground">
                 <span className="uppercase">{account.currency}</span>
                 {' • '}
@@ -43,7 +40,7 @@ export async function AccountsCard({ accounts }: AccountsCardProps) {
             <div className="ml-auto font-bold">
               {formatCurrency(account.balance, account.currency)}
             </div>
-            <AccountActionsDropdown account={account} />
+            <AccountActionsDropdown account={account} className="hidden sm:inline-flex" />
           </div>
         ))}
         {!accounts.length && <NoAccountsPlaceholder />}
