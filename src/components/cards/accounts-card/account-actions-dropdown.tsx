@@ -27,6 +27,7 @@ export function AccountActionsDropdown({ account, className }: AccountActionsDro
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className={className}>
               <DotsHorizontalIcon className="w-4 h-4" />
+              <span className="sr-only">Actions</span>
             </Button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
