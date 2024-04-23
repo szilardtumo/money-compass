@@ -17,5 +17,12 @@ export interface TransactionWithAccount extends Transaction {
 
 export interface TransactionHistory {
   date: string;
-  accountBalances: Record<string, number>;
+  accountBalances: Record<
+    string,
+    {
+      originalCurrency: number;
+      mainCurrency: number;
+    }
+  >;
+  mainCurrency: string;
 }

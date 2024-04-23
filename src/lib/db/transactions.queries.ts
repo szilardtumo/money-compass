@@ -1,6 +1,7 @@
 'use server';
 
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
+import { getMainCurrencyWithMapper } from '@/lib/db/currencies.queries';
 import { Enums, Tables } from '@/lib/types/database.types';
 import { TimeInterval } from '@/lib/types/time.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
@@ -101,17 +102,21 @@ export async function getTransactionHistory(
 ): Promise<TransactionHistory[]> {
   const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['transactions'] } });
 
-  const [accounts, { data: buckets, error }] = await Promise.all([
-    getSimpleAccounts(),
-    supabase.rpc('query_transaction_history', {
-      date_range: dateRange,
-      bucket_interval: interval,
-    }),
-  ]);
+  const [accounts, { mainCurrency, mapper: mainCurrencyMapper }, { data: buckets, error }] =
+    await Promise.all([
+      getSimpleAccounts(),
+      getMainCurrencyWithMapper(),
+      supabase.rpc('query_transaction_history', {
+        date_range: dateRange,
+        bucket_interval: interval,
+      }),
+    ]);
 
   if (error) {
     throw error;
   }
+
+  const accountMap = Object.fromEntries(accounts.map((account) => [account.subaccountId, account]));
 
   // FIXME: We consider that the account has a balance of 0 at the beginning of the date range, but that's not always true
   // We need to fetch the balance at the beginning of the date range and use that as the starting balance
@@ -140,7 +145,16 @@ export async function getTransactionHistory(
     currentBalances = { ...currentBalances, ...dateMap[date.getTime()] };
     return {
       date: date.toISOString(),
-      accountBalances: { ...currentBalances },
+      accountBalances: Object.fromEntries(
+        Object.entries(currentBalances).map(([id, balance]) => [
+          id,
+          {
+            originalCurrency: balance,
+            mainCurrency: balance * mainCurrencyMapper[accountMap[id].currency],
+          },
+        ]),
+      ),
+      mainCurrency,
     };
   });
 

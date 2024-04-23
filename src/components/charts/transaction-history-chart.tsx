@@ -6,22 +6,18 @@ import { useMemo } from 'react';
 import { Metric } from '@/components/ui/metric';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { mainCurrency } from '@/lib/constants';
 import { SimpleAccount } from '@/lib/types/accounts.types';
-import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
 
 interface TransactionHistoryChartProps {
   data: TransactionHistory[];
   accounts: SimpleAccount[];
-  currencyMapper?: CurrencyMapper; // Only required if there are multiple subaccounts to show. Throws an error if needed but not provided.
   subaccountIdsToShow?: string[]; // If not provided, the total net worth will be shown, otherwise a detailed view of the selected subaccounts
 }
 
 export function TransactionHistoryChart({
   data,
-  currencyMapper,
   accounts,
   subaccountIdsToShow,
 }: TransactionHistoryChartProps) {
@@ -34,32 +30,26 @@ export function TransactionHistoryChart({
   }, [accounts]);
 
   // Account currency is used if there is only one account to show, otherwise the main currency is used
-  const currency =
-    subaccountIdsToShow?.length === 1 ? accountMap[subaccountIdsToShow[0]].currency : mainCurrency;
-  // Currency conversion is needed if we show the total or there are multiple subaccounts to show
-  const isCurrencyConversionNeeded = !subaccountIdsToShow || subaccountIdsToShow.length > 1;
-
-  if (isCurrencyConversionNeeded && !currencyMapper) {
-    throw new Error('currencyMapper prop is required when showing multiple subaccounts!');
-  }
+  const useMainCurrency = !subaccountIdsToShow || subaccountIdsToShow.length > 1;
+  const currency = useMainCurrency
+    ? data[0]?.mainCurrency ?? 'eur'
+    : accountMap[subaccountIdsToShow[0]].currency;
 
   const parsedData = useMemo(() => {
     const parsedTransactionHistory = data.map((item) => ({
       Date: formatDate(item.date), // TODO: should be date range
       // Generate an entry for the total value
-      Total: Object.entries(item.accountBalances).reduce(
-        (acc, [subaccountId, balance]) =>
-          acc +
-          balance *
-            (isCurrencyConversionNeeded ? currencyMapper![accountMap[subaccountId].currency] : 1),
+      Total: Object.values(item.accountBalances).reduce(
+        (acc, balance) => acc + (useMainCurrency ? balance.mainCurrency : balance.originalCurrency),
         0,
       ),
       // Generate an entry for every subaccount
       ...Object.fromEntries(
         accounts.map((account) => [
           account.name,
-          item.accountBalances[account.subaccountId] *
-            (isCurrencyConversionNeeded ? currencyMapper![account.currency] : 1),
+          useMainCurrency
+            ? item.accountBalances[account.subaccountId].mainCurrency
+            : item.accountBalances[account.subaccountId].originalCurrency,
         ]),
       ),
     }));
@@ -69,7 +59,7 @@ export function TransactionHistoryChart({
       return [parsedTransactionHistory[0], { ...parsedTransactionHistory[0], Date: 'Now' }];
     }
     return parsedTransactionHistory;
-  }, [accountMap, accounts, currencyMapper, data, isCurrencyConversionNeeded]);
+  }, [accounts, data, useMainCurrency]);
 
   const chartCategories = useMemo(() => {
     return subaccountIdsToShow?.map((subaccountId) => accountMap[subaccountId].name) ?? ['Total'];
