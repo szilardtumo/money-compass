@@ -5,7 +5,6 @@ import {
   HamburgerMenuIcon,
   MixIcon,
 } from '@radix-ui/react-icons';
-import { User } from '@supabase/supabase-js';
 import { Suspense } from 'react';
 
 import { AccountIcon } from '@/components/ui/account-avatar';
@@ -15,6 +14,8 @@ import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
+import { Currency } from '@/lib/types/currencies.types';
+import { Profile } from '@/lib/types/profiles.types';
 
 import { AccountDropdown } from './account-dropdown';
 import { NavItem } from './nav-item';
@@ -48,14 +49,15 @@ async function NavbarAccountItems() {
 }
 
 interface NavbarContentProps {
-  user: User;
+  profile: Profile;
+  currencies: Currency[];
 }
 
-function NavbarContent({ user }: NavbarContentProps) {
+function NavbarContent({ profile, currencies }: NavbarContentProps) {
   return (
     <aside className="w-full">
       <div className="flex h-14 items-center justify-center px-2">
-        <AccountDropdown user={user} />
+        <AccountDropdown profile={profile} currencies={currencies} />
       </div>
       <Separator />
       <nav className="flex flex-col gap-1 p-2">
@@ -93,10 +95,11 @@ function NavbarContent({ user }: NavbarContentProps) {
 }
 
 interface NavbarProps {
-  user: User;
+  profile: Profile;
+  currencies: Currency[];
 }
 
-export function Navbar({ user }: NavbarProps) {
+export function Navbar({ profile, currencies }: NavbarProps) {
   return (
     <>
       {/* Mobile */}
@@ -108,14 +111,14 @@ export function Navbar({ user }: NavbarProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
-            <NavbarContent user={user} />
+            <NavbarContent profile={profile} currencies={currencies} />
           </SheetContent>
         </Sheet>
       </div>
 
       {/* Desktop */}
       <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="hidden sm:flex">
-        <NavbarContent user={user} />
+        <NavbarContent profile={profile} currencies={currencies} />
       </ResizablePanel>
       <ResizableHandle withHandle className="hidden sm:flex" />
     </>

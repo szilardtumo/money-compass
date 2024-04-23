@@ -1,9 +1,9 @@
 'use client';
 
 import { CaretDownIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
-import { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -22,15 +22,20 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { updateProfile } from '@/lib/db/profiles.actions';
+import { Currency } from '@/lib/types/currencies.types';
+import { Profile } from '@/lib/types/profiles.types';
 import { createBrowserSupabaseClient } from '@/lib/utils/supabase/client';
 
 interface AccountDropdownProps {
-  user: User;
+  profile: Profile;
+  currencies: Currency[];
 }
 
-export function AccountDropdown({ user }: AccountDropdownProps) {
+export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
   const router = useRouter();
   const { theme, setTheme, systemTheme } = useTheme();
+  // const [optimisticMainCurrency, setOptimisticMainCurrency] = useOptimistic(profile.mainCurrency);
 
   const handleLogout = async () => {
     const supabase = createBrowserSupabaseClient();
@@ -38,7 +43,17 @@ export function AccountDropdown({ user }: AccountDropdownProps) {
     router.refresh();
   };
 
-  const displayedName = user.user_metadata?.name ?? user.email ?? 'Account';
+  const handleMainCurrencyChange = useCallback(
+    async (currencyId: string) => {
+      if (currencyId !== profile.mainCurrency) {
+        // setOptimisticMainCurrency(currencyId);
+        await updateProfile({ mainCurrency: currencyId });
+      }
+    },
+    [profile.mainCurrency],
+  );
+
+  const displayedName = profile.name ?? profile.email ?? 'Account';
   const initials = displayedName
     .split(' ')
     .slice(0, 2)
@@ -50,7 +65,7 @@ export function AccountDropdown({ user }: AccountDropdownProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="w-full flex justify-between">
           <Avatar className="w-6 h-6 mr-2">
-            <AvatarImage src={user.user_metadata?.picture} alt="avatar" />
+            <AvatarImage src={profile.picture} alt="avatar" />
             <AvatarFallback delayMs={600} className="text-xs">
               {initials}
             </AvatarFallback>
@@ -86,6 +101,25 @@ export function AccountDropdown({ user }: AccountDropdownProps) {
                     <SunIcon />
                   </DropdownMenuShortcut>
                 </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuPortal>
+        </DropdownMenuSub>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>Main currency</DropdownMenuSubTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuSubContent>
+              <DropdownMenuRadioGroup
+                // value={optimisticMainCurrency}
+                value={profile.mainCurrency}
+                onValueChange={handleMainCurrencyChange}
+                // onSelect={(e) => e.preventDefault()} // Prevents the dropdown menu from closing  from closing when selecting that item
+              >
+                {currencies.map((currency) => (
+                  <DropdownMenuRadioItem key={currency.id} value={currency.id}>
+                    {currency.name}
+                  </DropdownMenuRadioItem>
+                ))}
               </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
