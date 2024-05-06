@@ -40,7 +40,8 @@ export function TransactionHistoryChart({
       Date: formatDate(item.date), // TODO: should be date range
       // Generate an entry for the total value
       Total: Object.values(item.accountBalances).reduce(
-        (acc, balance) => acc + (useMainCurrency ? balance.mainCurrency : balance.originalCurrency),
+        (acc, balance) =>
+          acc + (useMainCurrency ? balance.mainCurrencyValue : balance.originalValue),
         0,
       ),
       // Generate an entry for every subaccount
@@ -48,8 +49,8 @@ export function TransactionHistoryChart({
         accounts.map((account) => [
           account.name,
           useMainCurrency
-            ? item.accountBalances[account.subaccountId].mainCurrency
-            : item.accountBalances[account.subaccountId].originalCurrency,
+            ? item.accountBalances[account.subaccountId].mainCurrencyValue
+            : item.accountBalances[account.subaccountId].originalValue,
         ]),
       ),
     }));

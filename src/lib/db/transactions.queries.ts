@@ -2,6 +2,7 @@
 
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 import { getMainCurrencyWithMapper } from '@/lib/db/currencies.queries';
+import { CurrencyMapper, CurrencyValue } from '@/lib/types/currencies.types';
 import { Enums, Tables } from '@/lib/types/database.types';
 import { TimeInterval } from '@/lib/types/time.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
@@ -23,13 +24,35 @@ interface GetTransactionsParams {
   pageSize?: number;
 }
 
-function parseTransaction(data: Tables<'transactions'>) {
+interface ParseTransactionParams {
+  mainCurrency: string;
+  mainCurrencyMapper: CurrencyMapper;
+}
+
+interface DbTransactionWithCurrency extends Tables<'transactions'> {
+  subaccounts: { currency: string };
+}
+
+function parseTransaction(
+  data: DbTransactionWithCurrency,
+  { mainCurrency, mainCurrencyMapper }: ParseTransactionParams,
+): Transaction {
+  const originalCurrency = data.subaccounts.currency;
+
   return {
     id: data.id,
     subaccountId: data.subaccount_id,
     type: data.type,
-    amount: data.amount,
-    balance: data.balance,
+    amount: {
+      originalValue: data.amount,
+      mainCurrencyValue: data.amount * mainCurrencyMapper[originalCurrency],
+    },
+    balance: {
+      originalValue: data.balance,
+      mainCurrencyValue: data.balance * mainCurrencyMapper[originalCurrency],
+    },
+    originalCurrency,
+    mainCurrency,
     startedDate: data.started_date,
     order: data.order,
     description: data.description,
@@ -47,7 +70,7 @@ export async function getTransactions({
 
   let query = supabase
     .from('transactions')
-    .select('*', { count: 'estimated' })
+    .select('*, subaccounts(currency)', { count: 'estimated' })
     .order('started_date', { ascending: false })
     .order('order', { ascending: false })
     .range(page * pageSize, (page + 1) * pageSize - 1);
@@ -62,14 +85,20 @@ export async function getTransactions({
     query = query.lte('started_date', toDate);
   }
 
-  const { data, count, error } = await query;
+  const [{ data, count, error }, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
+    query.returns<DbTransactionWithCurrency[]>(),
+    getMainCurrencyWithMapper(),
+  ]);
 
   if (error) {
     throw error;
   }
 
   return {
-    data: data?.map((transaction) => parseTransaction(transaction)) ?? [],
+    data:
+      data?.map((transaction) =>
+        parseTransaction(transaction, { mainCurrency, mainCurrencyMapper }),
+      ) ?? [],
     page,
     pageSize,
     total: count ?? 0,
@@ -79,11 +108,14 @@ export async function getTransactions({
 export async function getTransactionById(id: string): Promise<Transaction | undefined> {
   const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['transactions'] } });
 
-  const { data, error } = await supabase
-    .from('transactions')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle();
+  const [{ data, error }, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
+    supabase
+      .from('transactions')
+      .select('*, subaccounts(currency)')
+      .eq('id', id)
+      .returns<DbTransactionWithCurrency>(),
+    getMainCurrencyWithMapper(),
+  ]);
 
   if (error) {
     throw error;
@@ -93,7 +125,7 @@ export async function getTransactionById(id: string): Promise<Transaction | unde
     return undefined;
   }
 
-  return parseTransaction(data);
+  return parseTransaction(data, { mainCurrency, mainCurrencyMapper });
 }
 
 export async function getTransactionHistory(
@@ -149,9 +181,9 @@ export async function getTransactionHistory(
         Object.entries(currentBalances).map(([id, balance]) => [
           id,
           {
-            originalCurrency: balance,
-            mainCurrency: balance * mainCurrencyMapper[accountMap[id].currency],
-          },
+            originalValue: balance,
+            mainCurrencyValue: balance * mainCurrencyMapper[accountMap[id].currency],
+          } satisfies CurrencyValue,
         ]),
       ),
       mainCurrency,

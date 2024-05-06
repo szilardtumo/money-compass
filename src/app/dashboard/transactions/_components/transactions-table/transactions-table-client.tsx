@@ -64,7 +64,7 @@ const staticColumns = [
     ),
     filterFn: 'arrIncludesSome',
   }),
-  columnHelper.accessor('amount', {
+  columnHelper.accessor('amount.originalValue', {
     meta: { align: 'right' },
     header: 'Amount',
     cell: ({ row, getValue }) => (
@@ -73,7 +73,7 @@ const staticColumns = [
       </span>
     ),
   }),
-  columnHelper.accessor('balance', {
+  columnHelper.accessor('balance.originalValue', {
     meta: { align: 'right' },
     header: 'Balance',
     cell: ({ row, getValue }) => (
@@ -146,7 +146,14 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openUpdateTransactionDialog(row.original)}>
+            <DropdownMenuItem
+              onClick={() =>
+                openUpdateTransactionDialog({
+                  ...row.original,
+                  amount: row.original.amount.originalValue,
+                })
+              }
+            >
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => deleteTransaction(row.original.id)}>

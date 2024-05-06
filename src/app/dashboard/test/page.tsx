@@ -42,11 +42,7 @@ export default async function TestPage() {
 
         <AccountsCard />
 
-        <RecentTransactionsCard
-          accounts={accounts}
-          transactions={transactions.data}
-          currencyMapper={currencyMapper}
-        />
+        <RecentTransactionsCard accounts={accounts} transactions={transactions.data} />
 
         <DataTableTest accounts={accounts} transactions={transactions} />
       </PageContent>
