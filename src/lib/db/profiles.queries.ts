@@ -19,11 +19,7 @@ export async function getProfile(): Promise<Profile> {
     throw profileError;
   }
 
-  if (userError) {
-    throw userError;
-  }
-
-  if (!user) {
+  if (userError || !user) {
     throw new Error('User not found');
   }
 
