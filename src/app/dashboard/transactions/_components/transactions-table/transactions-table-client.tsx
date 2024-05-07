@@ -69,7 +69,7 @@ const staticColumns = [
     header: 'Amount',
     cell: ({ row, getValue }) => (
       <span className="whitespace-nowrap">
-        {formatCurrency(getValue(), row.original.account.currency)}
+        {formatCurrency(getValue(), row.original.account.originalCurrency)}
       </span>
     ),
   }),
@@ -78,7 +78,7 @@ const staticColumns = [
     header: 'Balance',
     cell: ({ row, getValue }) => (
       <span className="whitespace-nowrap">
-        {formatCurrency(getValue(), row.original.account.currency)}
+        {formatCurrency(getValue(), row.original.account.originalCurrency)}
       </span>
     ),
   }),

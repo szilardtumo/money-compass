@@ -100,7 +100,7 @@ export function UpdateTransactionForm({
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
-                <CurrencyInput currency={account.currency} {...field} />
+                <CurrencyInput currency={account.originalCurrency} {...field} />
               </FormControl>
               <FormDescription>
                 The transaction value. Positive value means income, negative means expense.

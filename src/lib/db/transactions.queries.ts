@@ -113,7 +113,7 @@ export async function getTransactionById(id: string): Promise<Transaction | unde
       .from('transactions')
       .select('*, subaccounts(currency)')
       .eq('id', id)
-      .returns<DbTransactionWithCurrency>(),
+      .single<DbTransactionWithCurrency>(),
     getMainCurrencyWithMapper(),
   ]);
 
@@ -182,7 +182,7 @@ export async function getTransactionHistory(
           id,
           {
             originalValue: balance,
-            mainCurrencyValue: balance * mainCurrencyMapper[accountMap[id].currency],
+            mainCurrencyValue: balance * mainCurrencyMapper[accountMap[id].originalCurrency],
           } satisfies CurrencyValue,
         ]),
       ),

@@ -39,7 +39,7 @@ const columns = [
   columnHelper.accessor('amount.originalValue', {
     meta: { align: 'right' },
     header: 'Amount',
-    cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.account.currency),
+    cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.account.originalCurrency),
   }),
 ];
 

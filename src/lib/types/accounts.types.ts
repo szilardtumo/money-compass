@@ -1,3 +1,5 @@
+import { CurrencyValue } from '@/lib/types/currencies.types';
+
 type AccountCategory = 'checking' | 'investment';
 
 interface Subaccount {
@@ -18,7 +20,8 @@ export interface SimpleAccount {
   id: string;
   subaccountId: string;
   name: string;
-  balance: number;
-  currency: string;
+  balance: CurrencyValue;
+  originalCurrency: string;
+  mainCurrency: string;
   category: AccountCategory;
 }

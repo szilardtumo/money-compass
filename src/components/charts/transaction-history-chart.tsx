@@ -33,7 +33,7 @@ export function TransactionHistoryChart({
   const useMainCurrency = !subaccountIdsToShow || subaccountIdsToShow.length > 1;
   const currency = useMainCurrency
     ? data[0]?.mainCurrency ?? 'eur'
-    : accountMap[subaccountIdsToShow[0]].currency;
+    : accountMap[subaccountIdsToShow[0]].originalCurrency;
 
   const parsedData = useMemo(() => {
     const parsedTransactionHistory = data.map((item) => ({

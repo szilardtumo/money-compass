@@ -65,7 +65,7 @@ export function CreateTransactionForm({
 
   const selectedAccountId = form.watch('account');
   const selectedAccountCurrency = useMemo(
-    () => accounts.find((account) => account.id === selectedAccountId)?.currency,
+    () => accounts.find((account) => account.id === selectedAccountId)?.originalCurrency,
     [accounts, selectedAccountId],
   );
 

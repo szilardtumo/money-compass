@@ -32,13 +32,13 @@ export async function AccountsCard() {
                 {account.name}
               </NavLink>
               <p className="text-sm text-muted-foreground">
-                <span className="uppercase">{account.currency}</span>
+                <span className="uppercase">{account.originalCurrency}</span>
                 {' • '}
                 <span className="capitalize">{account.category}</span>
               </p>
             </div>
             <div className="ml-auto font-bold">
-              {formatCurrency(account.balance, account.currency)}
+              {formatCurrency(account.balance.originalValue, account.originalCurrency)}
             </div>
             <AccountActionsDropdown account={account} className="hidden sm:inline-flex" />
           </div>

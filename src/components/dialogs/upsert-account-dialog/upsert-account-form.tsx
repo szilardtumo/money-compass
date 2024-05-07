@@ -43,7 +43,7 @@ const formSchema = z.object({
     .string()
     .min(2, { message: 'Account name must be at least 2 characters.' })
     .max(50, { message: 'Account name must be at most 50 characters.' }),
-  currency: z.string({ required_error: 'A currency must be selected.' }),
+  originalCurrency: z.string({ required_error: 'A currency must be selected.' }),
   category: z.enum(['checking', 'investment'], {
     required_error: 'An account category must be selected.',
   }),
@@ -129,7 +129,7 @@ export function UpsertAccountForm({
         />
         <FormField
           control={form.control}
-          name="currency"
+          name="originalCurrency"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Currency</FormLabel>

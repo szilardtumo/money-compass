@@ -10,7 +10,7 @@ import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 interface CreateSimpleAccountParams {
   name: string;
-  currency: string;
+  originalCurrency: string;
   category: Enums<'account_category'>;
 }
 
@@ -37,7 +37,7 @@ export async function createSimpleAccount(
 
   const { error: subaccountError } = await supabase
     .from('subaccounts')
-    .insert({ currency: params.currency, account_id: account.id });
+    .insert({ currency: params.originalCurrency, account_id: account.id });
 
   if (subaccountError) {
     return {
@@ -53,7 +53,7 @@ export async function createSimpleAccount(
 
 interface UpdateSimpleAccountParams {
   name?: string;
-  currency?: string;
+  originalCurrency?: string;
   category?: Enums<'account_category'>;
 }
 
@@ -72,7 +72,8 @@ export async function updateSimpleAccount(
     };
   }
 
-  const currencyChanged = params.currency && params.currency !== account.currency;
+  const currencyChanged =
+    params.originalCurrency && params.originalCurrency !== account.originalCurrency;
 
   const [accountResult, subaccountResult] = await Promise.all([
     supabase
@@ -83,7 +84,7 @@ export async function updateSimpleAccount(
     currencyChanged
       ? supabase.rpc('update_subaccount', {
           _id: account.subaccountId,
-          _currency: params.currency!,
+          _currency: params.originalCurrency!,
         })
       : undefined,
   ]);

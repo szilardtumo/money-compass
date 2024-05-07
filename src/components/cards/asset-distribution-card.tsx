@@ -7,14 +7,13 @@ import { AccountDistributionChart } from '@/components/charts/account-distributi
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SimpleAccount } from '@/lib/types/accounts.types';
-import { CurrencyMapper } from '@/lib/types/currencies.types';
 
 interface AssetDistributionCardProps {
   accounts: SimpleAccount[];
-  currencyMapper: CurrencyMapper;
+  mainCurrency: string;
 }
 
-export function AssetDistributionCard({ accounts, currencyMapper }: AssetDistributionCardProps) {
+export function AssetDistributionCard({ accounts, mainCurrency }: AssetDistributionCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -27,10 +26,10 @@ export function AssetDistributionCard({ accounts, currencyMapper }: AssetDistrib
             <TabsTrigger value="category">By Category</TabsTrigger>
           </TabsList>
           <TabsContent value="account">
-            <AccountDistributionChart accounts={accounts} currencyMapper={currencyMapper} />
+            <AccountDistributionChart accounts={accounts} mainCurrency={mainCurrency} />
           </TabsContent>
           <TabsContent value="category">
-            <AccountCategoryDistributionChart accounts={accounts} currencyMapper={currencyMapper} />
+            <AccountCategoryDistributionChart accounts={accounts} mainCurrency={mainCurrency} />
           </TabsContent>
         </Tabs>
       </CardContent>

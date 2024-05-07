@@ -41,7 +41,11 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
           account={account}
           title="Transaction history (past 12 months)"
         />
-        <RecentTransactionsCard accounts={[account]} transactions={transactions.data} />
+        <RecentTransactionsCard
+          accounts={[account]}
+          transactions={transactions.data}
+          mainCurrency={account.mainCurrency}
+        />
       </PageContent>
     </PageLayout>
   );

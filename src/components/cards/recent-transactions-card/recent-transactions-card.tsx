@@ -23,9 +23,14 @@ import { TransactionItem } from './transaction-item';
 interface RecentTransactionsCardProps {
   transactions: Transaction[];
   accounts: SimpleAccount[];
+  mainCurrency: string;
 }
 
-export function RecentTransactionsCard({ transactions, accounts }: RecentTransactionsCardProps) {
+export function RecentTransactionsCard({
+  transactions,
+  accounts,
+  mainCurrency,
+}: RecentTransactionsCardProps) {
   const { openDialog: openCreateTransactionDialog } = useCreateTransactionDialog();
 
   const [selectedsubAccountIds, setSelectedSubaccountIds] = useState<string[]>(() =>
@@ -37,8 +42,6 @@ export function RecentTransactionsCard({ transactions, accounts }: RecentTransac
       selected ? [...ids, subaccountId] : ids.filter((id) => id !== subaccountId),
     );
   };
-
-  const mainCurrency = useMemo(() => transactions[0].mainCurrency, [transactions]);
 
   const groupedTransactions = useMemo(() => {
     const transactionsWithAccount = transactions

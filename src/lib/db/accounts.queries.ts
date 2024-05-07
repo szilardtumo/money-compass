@@ -3,7 +3,7 @@
 import { Account, SimpleAccount } from '@/lib/types/accounts.types';
 import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
-import { getCurrencyMapper } from './currencies.queries';
+import { getCurrencyMapper, getMainCurrencyWithMapper } from './currencies.queries';
 
 export async function getSubaccountBalances(): Promise<Record<string, number>> {
   const supabase = createServerSupabaseClient({
@@ -91,9 +91,14 @@ export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
     next: { revalidate: 60, tags: ['accounts'] },
   });
 
-  const [{ data: accounts, error }, subaccountBalances] = await Promise.all([
+  const [
+    { data: accounts, error },
+    subaccountBalances,
+    { mainCurrency, mapper: mainCurrencyMapper },
+  ] = await Promise.all([
     supabase.from('accounts').select(`id, name, category, subaccounts(id, currency)`),
     getSubaccountBalances(),
+    getMainCurrencyWithMapper(),
   ]);
 
   if (error) {
@@ -106,8 +111,14 @@ export async function getSimpleAccounts(): Promise<SimpleAccount[]> {
       id: account.id,
       subaccountId: account.subaccounts[0].id,
       name: account.name,
-      balance: subaccountBalances[account.subaccounts[0].id] ?? 0,
-      currency: account.subaccounts[0].currency,
+      balance: {
+        originalValue: subaccountBalances[account.subaccounts[0].id] ?? 0,
+        mainCurrencyValue:
+          (subaccountBalances[account.subaccounts[0].id] ?? 0) *
+          mainCurrencyMapper[account.subaccounts[0].currency],
+      },
+      originalCurrency: account.subaccounts[0].currency,
+      mainCurrency,
       category: account.category,
     }));
 }
@@ -136,14 +147,21 @@ export async function getSimpleAccount(accountId: string): Promise<SimpleAccount
     return undefined;
   }
 
-  const subaccountBalance = await getSubaccountBalance(account.subaccounts[0].id);
+  const [subaccountBalance, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
+    getSubaccountBalance(account.subaccounts[0].id),
+    getMainCurrencyWithMapper(),
+  ]);
 
   return {
     id: account.id,
     subaccountId: account.subaccounts[0].id,
     name: account.name,
-    balance: subaccountBalance,
-    currency: account.subaccounts[0].currency,
+    balance: {
+      originalValue: subaccountBalance,
+      mainCurrencyValue: subaccountBalance * mainCurrencyMapper[account.subaccounts[0].currency],
+    },
+    originalCurrency: account.subaccounts[0].currency,
+    mainCurrency,
     category: account.category,
   };
 }
