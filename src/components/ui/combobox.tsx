@@ -8,6 +8,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/cn';
@@ -56,22 +57,24 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
           <Command>
             <CommandInput placeholder={placeholder} className="h-9" />
-            <CommandEmpty>{notFoundMessage}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onValueChange?.(currentValue === value ? undefined : currentValue);
-                    setOpen(false);
-                  }}
-                >
-                  {option.label}
-                  {value === option.value && <CheckIcon className="ml-auto h-4 w-4" />}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <CommandList>
+              <CommandEmpty>{notFoundMessage}</CommandEmpty>
+              <CommandGroup>
+                {options.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    value={option.value}
+                    onSelect={(currentValue) => {
+                      onValueChange?.(currentValue === value ? undefined : currentValue);
+                      setOpen(false);
+                    }}
+                  >
+                    {option.label}
+                    {value === option.value && <CheckIcon className="ml-auto h-4 w-4" />}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
