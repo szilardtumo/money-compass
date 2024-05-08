@@ -1,8 +1,8 @@
 'use client';
 
 import { CaretDownIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
-import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { useCallback } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
