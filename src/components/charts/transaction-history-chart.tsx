@@ -90,6 +90,15 @@ export function TransactionHistoryChart({
     };
   }, [parsedData, chartCategories]);
 
+  const minValue = useMemo(() => {
+    const min = parsedData.length
+      ? parsedData.reduce((acc, item) => Math.min(acc, item.Total), Infinity)
+      : 0;
+
+    // The chart minimum value is 25% lower than the minimum value
+    return min * 0.75;
+  }, [parsedData]);
+
   const isSm = useBreakpoint('sm');
 
   return (
@@ -114,6 +123,7 @@ export function TransactionHistoryChart({
         showLegend={false}
         showGridLines={false}
         showGradient={chartCategories.length <= 1}
+        minValue={minValue}
         connectNulls
         showAnimation
         className="mt-6 h-48"
