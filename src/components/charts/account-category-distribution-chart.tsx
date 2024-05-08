@@ -14,21 +14,19 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/cn';
-import { mainCurrency } from '@/lib/constants';
 import { SimpleAccount } from '@/lib/types/accounts.types';
-import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { chartColors } from '@/lib/utils/charts';
 import { capitalize, formatCurrency, formatPercent } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/groupBy';
 
 interface AccountCategoryDistributionChartProps {
   accounts: SimpleAccount[];
-  currencyMapper: CurrencyMapper;
+  mainCurrency: string;
 }
 
 export function AccountCategoryDistributionChart({
   accounts,
-  currencyMapper,
+  mainCurrency,
 }: AccountCategoryDistributionChartProps) {
   const data = useMemo(() => {
     const groups = groupBy(accounts, (account) => capitalize(account.category));
@@ -36,12 +34,9 @@ export function AccountCategoryDistributionChart({
     return Object.entries(groups).map(([category, items]) => ({
       id: category,
       category,
-      balance: items.reduce(
-        (acc, current) => acc + current.balance * currencyMapper[current.currency],
-        0,
-      ),
+      balance: items.reduce((acc, current) => acc + current.balance.mainCurrencyValue, 0),
     }));
-  }, [accounts, currencyMapper]);
+  }, [accounts]);
 
   const totalBalance = useMemo(
     () => data.reduce((acc, current) => acc + current.balance, 0),

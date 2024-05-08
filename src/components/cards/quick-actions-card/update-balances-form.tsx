@@ -38,7 +38,7 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
     resolver: zodResolver(formSchema),
     defaultValues: {
       balances: Object.fromEntries(
-        accounts.map((account) => [account.subaccountId, account.balance]),
+        accounts.map((account) => [account.subaccountId, account.balance.originalValue]),
       ),
     },
   });
@@ -70,10 +70,11 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
               <FormItem>
                 <FormLabel>{account.name}</FormLabel>
                 <FormControl>
-                  <CurrencyInput currency={account.currency} {...field} />
+                  <CurrencyInput currency={account.originalCurrency} {...field} />
                 </FormControl>
                 <FormDescription>
-                  Previous balance: {formatCurrency(account.balance, account.currency)}
+                  Previous balance:{' '}
+                  {formatCurrency(account.balance.originalValue, account.originalCurrency)}
                 </FormDescription>
                 <FormMessage />
               </FormItem>

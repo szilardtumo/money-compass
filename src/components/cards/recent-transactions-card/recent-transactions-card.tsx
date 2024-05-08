@@ -13,9 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NavLink } from '@/components/ui/nav-link';
-import { mainCurrency } from '@/lib/constants';
 import { SimpleAccount } from '@/lib/types/accounts.types';
-import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/groupBy';
@@ -25,13 +23,13 @@ import { TransactionItem } from './transaction-item';
 interface RecentTransactionsCardProps {
   transactions: Transaction[];
   accounts: SimpleAccount[];
-  currencyMapper: CurrencyMapper;
+  mainCurrency: string;
 }
 
 export function RecentTransactionsCard({
   transactions,
   accounts,
-  currencyMapper,
+  mainCurrency,
 }: RecentTransactionsCardProps) {
   const { openDialog: openCreateTransactionDialog } = useCreateTransactionDialog();
 
@@ -61,12 +59,9 @@ export function RecentTransactionsCard({
     return Object.entries(groups).map(([date, items]) => ({
       date,
       transactions: items,
-      totalAmount: items.reduce(
-        (acc, item) => acc + item.amount * currencyMapper[item.account.currency],
-        0,
-      ),
+      totalAmount: items.reduce((acc, item) => acc + item.amount.mainCurrencyValue, 0),
     }));
-  }, [transactions, accounts, currencyMapper, selectedsubAccountIds]);
+  }, [transactions, accounts, selectedsubAccountIds]);
 
   return (
     <Card>

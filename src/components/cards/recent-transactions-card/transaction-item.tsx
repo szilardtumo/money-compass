@@ -26,7 +26,7 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
         </p>
       </div>
       <div className="ml-auto font-medium whitespace-nowrap">
-        {formatCurrency(transaction.amount, transaction.account.currency)}
+        {formatCurrency(transaction.amount.originalValue, transaction.account.originalCurrency)}
       </div>
     </div>
   );

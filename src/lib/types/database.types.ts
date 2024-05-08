@@ -92,6 +92,36 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          id: string
+          main_currency: string
+        }
+        Insert: {
+          id?: string
+          main_currency?: string
+        }
+        Update: {
+          id?: string
+          main_currency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_profiles_main_currency_fkey"
+            columns: ["main_currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subaccounts: {
         Row: {
           account_id: string
@@ -140,6 +170,7 @@ export type Database = {
           started_date: string
           subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
         }
         Insert: {
           amount: number
@@ -152,6 +183,7 @@ export type Database = {
           started_date: string
           subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string
         }
         Update: {
           amount?: number
@@ -164,6 +196,7 @@ export type Database = {
           started_date?: string
           subaccount_id?: string
           type?: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string
         }
         Relationships: [
           {

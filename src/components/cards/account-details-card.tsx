@@ -16,11 +16,13 @@ export function AccountDetailsCard({ account }: AccountDetailsCardProps) {
         </div>
         <div>
           <p className="text-muted-foreground text-xs mb-1">Currency</p>
-          <p className="text-xl font-bold uppercase">{account.currency}</p>
+          <p className="text-xl font-bold uppercase">{account.originalCurrency}</p>
         </div>
         <div>
           <p className="text-muted-foreground text-xs mb-1">Balance</p>
-          <p className="text-xl font-bold">{formatCurrency(account.balance, account.currency)}</p>
+          <p className="text-xl font-bold">
+            {formatCurrency(account.balance.originalValue, account.originalCurrency)}
+          </p>
         </div>
       </CardContent>
     </Card>

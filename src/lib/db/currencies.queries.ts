@@ -1,5 +1,6 @@
 'use server';
 
+import { getProfile } from '@/lib/db/profiles.queries';
 import { Currency, CurrencyMapper } from '@/lib/types/currencies.types';
 import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
@@ -35,4 +36,14 @@ export async function getCurrencyMapper(toCurrency: string): Promise<CurrencyMap
   }
 
   return data;
+}
+
+export async function getMainCurrencyWithMapper(): Promise<{
+  mainCurrency: string;
+  mapper: CurrencyMapper;
+}> {
+  const profile = await getProfile();
+  const mainCurrencyMapper = await getCurrencyMapper(profile.mainCurrency);
+
+  return { mainCurrency: profile.mainCurrency, mapper: mainCurrencyMapper };
 }

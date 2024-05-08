@@ -4,9 +4,7 @@ import { AccountDetailsCard } from '@/components/cards/account-details-card';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
-import { mainCurrency } from '@/lib/constants';
 import { getSimpleAccount } from '@/lib/db/accounts.queries';
-import { getCurrencyMapper } from '@/lib/db/currencies.queries';
 import { getTransactionHistory, getTransactions } from '@/lib/db/transactions.queries';
 
 import { AccountActionButtons } from './components/account-action-buttons';
@@ -24,10 +22,9 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
     notFound();
   }
 
-  const [transactions, transactionHistory, currencyMapper] = await Promise.all([
+  const [transactions, transactionHistory] = await Promise.all([
     getTransactions({ subaccountId: account?.subaccountId, pageSize: 5 }),
     getTransactionHistory('12 month', '1 month'),
-    getCurrencyMapper(mainCurrency),
   ]);
 
   return (
@@ -47,7 +44,7 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
         <RecentTransactionsCard
           accounts={[account]}
           transactions={transactions.data}
-          currencyMapper={currencyMapper}
+          mainCurrency={account.mainCurrency}
         />
       </PageContent>
     </PageLayout>

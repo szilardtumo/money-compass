@@ -32,7 +32,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
     const { error } = await supabase.from('transactions').insert({
       type: params.type,
       amount: params.amount,
-      balance: (latestTransaction?.balance ?? 0) + params.amount,
+      balance: (latestTransaction?.balance.originalValue ?? 0) + params.amount,
       subaccount_id: params.subaccountId,
       description: params.description,
       started_date: params.date,
@@ -119,7 +119,8 @@ export async function updateTransaction(
     };
   }
 
-  const amountToAdd = (params.amount ?? transaction.amount) - transaction.amount;
+  const amountToAdd =
+    (params.amount ?? transaction.amount.originalValue) - transaction.amount.originalValue;
 
   try {
     const { error } = await supabase
@@ -128,7 +129,7 @@ export async function updateTransaction(
         type: params.type,
         amount: params.amount,
         description: params.description,
-        balance: transaction.balance + amountToAdd,
+        balance: transaction.balance.originalValue + amountToAdd,
       })
       .eq('id', transactionId);
 

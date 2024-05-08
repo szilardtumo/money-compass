@@ -14,20 +14,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/cn';
-import { mainCurrency } from '@/lib/constants';
 import { SimpleAccount } from '@/lib/types/accounts.types';
-import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { chartColors } from '@/lib/utils/charts';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
 
 interface AccountDistributionChartProps {
   accounts: SimpleAccount[];
-  currencyMapper: CurrencyMapper;
+  mainCurrency: string;
 }
 
 export function AccountDistributionChart({
   accounts,
-  currencyMapper,
+  mainCurrency,
 }: AccountDistributionChartProps) {
   const data = useMemo(
     () =>
@@ -35,15 +33,15 @@ export function AccountDistributionChart({
         id: account.id,
         name: account.name,
         balance: account.balance,
-        currency: account.currency,
-        balanceInMainCurrency: account.balance * currencyMapper[account.currency],
+        originalCurrency: account.originalCurrency,
+        mainCurrency: account.mainCurrency,
         category: account.category,
       })),
-    [accounts, currencyMapper],
+    [accounts],
   );
 
   const totalBalance = useMemo(
-    () => data.reduce((acc, current) => acc + current.balanceInMainCurrency, 0),
+    () => data.reduce((acc, current) => acc + current.balance.mainCurrencyValue, 0),
     [data],
   );
 
@@ -58,7 +56,10 @@ export function AccountDistributionChart({
         showAnimation
         showTooltip
         showLabel
-        label={formatCurrency(selectedSlice?.balanceInMainCurrency ?? totalBalance, mainCurrency)}
+        label={formatCurrency(
+          selectedSlice?.balance.mainCurrencyValue ?? totalBalance,
+          mainCurrency,
+        )}
         variant="donut"
         className="h-48 my-4"
         colors={chartColors}
@@ -93,13 +94,13 @@ export function AccountDistributionChart({
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge>{formatPercent(item.balanceInMainCurrency / totalBalance)}</Badge>
+                <Badge>{formatPercent(item.balance.mainCurrencyValue / totalBalance)}</Badge>
               </TableCell>
               <TableCell className="text-right">
-                {formatCurrency(item.balance, item.currency)}
+                {formatCurrency(item.balance.originalValue, item.originalCurrency)}
               </TableCell>
               <TableCell className="text-right">
-                {formatCurrency(item.balanceInMainCurrency, mainCurrency)}
+                {formatCurrency(item.balance.mainCurrencyValue, item.mainCurrency)}
               </TableCell>
             </TableRow>
           ))}
