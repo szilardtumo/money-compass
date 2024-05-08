@@ -106,5 +106,6 @@
     "supabase": "^1.145.4",
     "tailwindcss": "^3",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "yarn@4.2.1"
 }
