@@ -4,6 +4,7 @@ import {
   CubeIcon,
   HamburgerMenuIcon,
   MixIcon,
+  PieChartIcon,
 } from '@radix-ui/react-icons';
 import { Suspense } from 'react';
 
@@ -69,6 +70,9 @@ function NavbarContent({ profile, currencies }: NavbarContentProps) {
           icon={<CounterClockwiseClockIcon className="mr-2" />}
         >
           Transactions
+        </NavItem>
+        <NavItem href="/dashboard/statistics" icon={<PieChartIcon className="mr-2" />}>
+          Statistics
         </NavItem>
 
         <Separator className="my-2" />
