@@ -9,7 +9,7 @@
     "lint": "next lint",
     "check-types": "tsc --project tsconfig.json --pretty --noEmit",
     "validate": "npm-run-all --parallel check-types && lint-staged",
-    "prepare": "husky install",
+    "prepare": "husky",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
