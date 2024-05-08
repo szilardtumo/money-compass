@@ -70,7 +70,15 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
               <FormItem>
                 <FormLabel>{account.name}</FormLabel>
                 <FormControl>
-                  <CurrencyInput currency={account.originalCurrency} {...field} />
+                  <CurrencyInput
+                    currency={account.originalCurrency}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                      }
+                    }}
+                    {...field}
+                  />
                 </FormControl>
                 <FormDescription>
                   Previous balance:{' '}
