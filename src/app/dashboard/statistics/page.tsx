@@ -1,4 +1,5 @@
 import { AssetDistributionCard } from '@/components/cards/asset-distribution-card';
+import { NetWorthDifferenceCard } from '@/components/cards/net-worth-difference-card';
 import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
 import { getSimpleAccounts } from '@/lib/db/accounts.queries';
@@ -20,6 +21,7 @@ export default async function StatisticsPage() {
 
       <PageContent>
         <NetWorthHistoryCard data={transactionHistory} accounts={accounts} />
+        <NetWorthDifferenceCard data={transactionHistory} />
         <AssetDistributionCard accounts={accounts} mainCurrency={mainCurrency} />
       </PageContent>
     </PageLayout>
