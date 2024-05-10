@@ -1,6 +1,6 @@
 'use client';
 
-import { CaretDownIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
+import { CaretDownIcon, ExitIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback, useOptimistic } from 'react';
@@ -126,7 +126,11 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
-        <DropdownMenuItem onSelect={handleLogout}>Log out</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={handleLogout}>
+          <ExitIcon className="mr-2" />
+          Log out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
