@@ -52,7 +52,7 @@ export function AccountDistributionChart({
       <DonutChart
         data={data}
         index="name"
-        category="balanceInMainCurrency"
+        category="balance.mainCurrencyValue"
         showAnimation
         showTooltip
         showLabel
@@ -77,7 +77,7 @@ export function AccountDistributionChart({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((item, i) => (
+          {accounts.map((item, i) => (
             <TableRow key={item.id}>
               <TableCell className="font-medium whitespace-nowrap">
                 <div

@@ -37,7 +37,8 @@ export function TransactionHistoryChart({
 
   const parsedData = useMemo(() => {
     const parsedTransactionHistory = data.map((item) => ({
-      Date: formatDate(item.date), // TODO: should be date range
+      Date: item.date,
+      Month: formatDate(item.date, 'MMMM yyyy'),
       // Generate an entry for the total value
       Total: Object.values(item.accountBalances).reduce(
         (acc, balance) =>
@@ -57,7 +58,7 @@ export function TransactionHistoryChart({
 
     // If there is only one data point, duplicate it so that the chart renders a horizontal line
     if (parsedTransactionHistory.length === 1) {
-      return [parsedTransactionHistory[0], { ...parsedTransactionHistory[0], Date: 'Now' }];
+      return [parsedTransactionHistory[0], { ...parsedTransactionHistory[0], Month: 'Now' }];
     }
     return parsedTransactionHistory;
   }, [accounts, data, useMainCurrency]);
@@ -90,6 +91,15 @@ export function TransactionHistoryChart({
     };
   }, [parsedData, chartCategories]);
 
+  const minValue = useMemo(() => {
+    const min = parsedData.length
+      ? parsedData.reduce((acc, item) => Math.min(acc, item.Total), Infinity)
+      : 0;
+
+    // The chart minimum value is 25% lower than the minimum value
+    return min * 0.75;
+  }, [parsedData]);
+
   const isSm = useBreakpoint('sm');
 
   return (
@@ -104,7 +114,7 @@ export function TransactionHistoryChart({
 
       <AreaChart
         data={parsedData}
-        index="Date"
+        index="Month"
         categories={chartCategories}
         stack={!!subaccountIdsToShow}
         curveType="monotone"
@@ -114,6 +124,7 @@ export function TransactionHistoryChart({
         showLegend={false}
         showGridLines={false}
         showGradient={chartCategories.length <= 1}
+        minValue={minValue}
         connectNulls
         showAnimation
         className="mt-6 h-48"
