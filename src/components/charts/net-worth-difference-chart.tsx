@@ -24,7 +24,9 @@ function CustomTooltip({ payload, label }: CustomTooltipProps) {
   return (
     <ChartTooltip>
       <ChartTooltipHeader>
-        <ChartTooltipTitle>{label}</ChartTooltipTitle>
+        <ChartTooltipTitle>
+          {displayedItem ? formatDate(displayedItem?.payload.Date, 'MMMM yyyy') : label}
+        </ChartTooltipTitle>
       </ChartTooltipHeader>
       <ChartTooltipContent>
         {!!displayedItem && (
@@ -48,7 +50,8 @@ export function NetWorthDifferenceChart({ data }: NetWorthDifferenceChartProps) 
   const parsedData = useMemo(() => {
     const parsedTransactionHistory = data
       .map((item) => ({
-        Date: formatDate(item.date), // TODO: should be date range
+        Date: item.date,
+        Month: formatDate(item.date, 'MMM'),
         Currency: item.mainCurrency,
         Total: Object.values(item.accountBalances).reduce(
           (acc, balance) => acc + balance.mainCurrencyValue,
@@ -72,17 +75,15 @@ export function NetWorthDifferenceChart({ data }: NetWorthDifferenceChartProps) 
     <div>
       <BarChart
         data={parsedData}
-        index="Date"
+        index="Month"
         categories={['Profit', 'Loss']}
         colors={['green', 'red']}
         showYAxis={isSm}
         yAxisWidth={75}
-        showXAxis={false}
         showLegend={false}
         customTooltip={CustomTooltip}
         stack
         showAnimation
-        className=""
         valueFormatter={(value) => formatCurrency(value, currency)}
       />
     </div>
