@@ -1,9 +1,9 @@
 'use client';
 
-import { CaretDownIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
+import { CaretDownIcon, ExitIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useCallback } from 'react';
+import { useCallback, useOptimistic } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ interface AccountDropdownProps {
 export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
   const router = useRouter();
   const { theme, setTheme, systemTheme } = useTheme();
-  // const [optimisticMainCurrency, setOptimisticMainCurrency] = useOptimistic(profile.mainCurrency);
+  const [optimisticMainCurrency, setOptimisticMainCurrency] = useOptimistic(profile.mainCurrency);
 
   const handleLogout = async () => {
     const supabase = createBrowserSupabaseClient();
@@ -46,11 +46,11 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
   const handleMainCurrencyChange = useCallback(
     async (currencyId: string) => {
       if (currencyId !== profile.mainCurrency) {
-        // setOptimisticMainCurrency(currencyId);
+        setOptimisticMainCurrency(currencyId);
         await updateProfile({ mainCurrency: currencyId });
       }
     },
-    [profile.mainCurrency],
+    [profile.mainCurrency, setOptimisticMainCurrency],
   );
 
   const displayedName = profile.name ?? profile.email ?? 'Account';
@@ -110,13 +110,15 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
           <DropdownMenuPortal>
             <DropdownMenuSubContent>
               <DropdownMenuRadioGroup
-                // value={optimisticMainCurrency}
-                value={profile.mainCurrency}
+                value={optimisticMainCurrency}
                 onValueChange={handleMainCurrencyChange}
-                // onSelect={(e) => e.preventDefault()} // Prevents the dropdown menu from closing  from closing when selecting that item
               >
                 {currencies.map((currency) => (
-                  <DropdownMenuRadioItem key={currency.id} value={currency.id}>
+                  <DropdownMenuRadioItem
+                    key={currency.id}
+                    value={currency.id}
+                    onSelect={(e) => e.preventDefault()} // Prevents the dropdown menu from closing when selecting the item
+                  >
                     {currency.name}
                   </DropdownMenuRadioItem>
                 ))}
@@ -124,7 +126,11 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
-        <DropdownMenuItem onSelect={handleLogout}>Log out</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={handleLogout}>
+          <ExitIcon className="mr-2" />
+          Log out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
