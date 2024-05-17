@@ -13,10 +13,8 @@ export default function AuthPage() {
       </div>
 
       <div className="flex items-center justify-center py-12">
-        <div className="mx-auto grid w-[350px] gap-6">
-          <h1 className="text-2xl text-center font-semibold tracking-tight">
-            Log in or Create an account
-          </h1>
+        <div className="mx-auto flex flex-col w-[350px] min-h-[50%] gap-8">
+          <h1 className="text-2xl text-center font-semibold tracking-tight">Sign in</h1>
           <AuthForm />
         </div>
       </div>

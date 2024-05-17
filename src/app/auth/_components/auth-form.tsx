@@ -1,8 +1,8 @@
 'use client';
 
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { RiGithubFill, RiGoogleFill } from '@remixicon/react';
 
+import { Button } from '@/components/ui/button';
 import { createBrowserSupabaseClient } from '@/lib/utils/supabase/client';
 
 export default function AuthForm() {
@@ -14,13 +14,30 @@ export default function AuthForm() {
     redirectUrl = `${location.origin}/api/auth/callback`;
   }
 
+  const signInWithGoogle = () => {
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { queryParams: { prompt: 'select_account' }, redirectTo: redirectUrl },
+    });
+  };
+
+  const signInWithGithub = () => {
+    supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: { redirectTo: redirectUrl },
+    });
+  };
+
   return (
-    <Auth
-      appearance={{ theme: ThemeSupa }}
-      supabaseClient={supabase}
-      providers={['google']}
-      queryParams={{ prompt: 'select_account' }}
-      redirectTo={redirectUrl}
-    />
+    <div className="flex flex-col gap-4">
+      <Button size="lg" onClick={signInWithGoogle}>
+        <RiGoogleFill className="w-6 h-7 mr-2" />
+        Sign in with Google
+      </Button>
+      <Button size="lg" onClick={signInWithGithub}>
+        <RiGithubFill className="w-6 h-7 mr-2" />
+        Sign in with GitHub
+      </Button>
+    </div>
   );
 }
