@@ -51,7 +51,7 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        devDependencies: ['cypress.config.js'],
+        devDependencies: ['cypress.config.js', 'drizzle.config.ts'],
       },
     ],
     'import/prefer-default-export': 'off',
@@ -69,6 +69,12 @@ module.exports = {
       extends: ['airbnb-typescript', 'prettier', 'plugin:import/typescript'],
       rules: {
         '@typescript-eslint/no-throw-literal': 'off',
+        'import/no-extraneous-dependencies': [
+          'error',
+          {
+            devDependencies: ['drizzle.config.ts'],
+          },
+        ],
       },
     },
   ],
