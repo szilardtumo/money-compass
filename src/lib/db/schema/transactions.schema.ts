@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { index, numeric, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { transactionType } from './enums.schema';
@@ -11,12 +12,16 @@ export const transactions = pgTable(
     amount: numeric('amount').notNull(),
     startedDate: timestamp('started_date').notNull(),
     completedDate: timestamp('completed_date').notNull(),
+    order: numeric('order').notNull(),
     description: text('description').default('').notNull(),
     type: transactionType('type').notNull(),
     subaccountId: uuid('subaccount_id')
       .notNull()
       .references(() => subaccounts.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
     balance: numeric('balance').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .default(sql`auth.uid()`),
   },
   (table) => {
     return {
