@@ -1,6 +1,6 @@
 import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
 
-import { currencies } from '@/lib/db/schema/currencies.schema';
+import { currencies } from './currencies.schema';
 
 export const profiles = pgTable('profiles', {
   id: uuid('id').notNull().primaryKey(),

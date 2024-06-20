@@ -9989,6 +9989,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"postgres@npm:^3.4.4":
+  version: 3.4.4
+  resolution: "postgres@npm:3.4.4"
+  checksum: 10c0/5c01a1501a1cb8851d981b1949bffd0a0a82ac5fd8453c410fdf4d6c0f91d01e69a42b30da2d08a77a00d6ddac0ea6ce58a1aa0dd6bd3f76e9220b1176bdfe60
+  languageName: node
+  linkType: hard
+
 "prelude-ls@npm:^1.2.1":
   version: 1.2.1
   resolution: "prelude-ls@npm:1.2.1"
@@ -11065,6 +11072,7 @@ __metadata:
     npm-run-all: "npm:^4.1.5"
     nprogress: "npm:^0.2.0"
     postcss: "npm:^8"
+    postgres: "npm:^3.4.4"
     prettier: "npm:^3.2.4"
     react: "npm:^18.3.1"
     react-day-picker: "npm:^8.10.0"

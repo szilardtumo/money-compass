@@ -7,10 +7,10 @@ export const exchangeRates = pgTable(
   {
     from: text('from')
       .notNull()
-      .references(() => currencies.id, { onUpdate: 'cascade' }),
+      .references(() => currencies.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
     to: text('to')
       .notNull()
-      .references(() => currencies.id, { onUpdate: 'cascade' }),
+      .references(() => currencies.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
     rate: numeric('rate').notNull(),
   },
   (table) => {

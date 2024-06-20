@@ -1,7 +1,7 @@
-import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text } from 'drizzle-orm/pg-core';
 
 export const currencies = pgTable('currencies', {
-  id: uuid('id').notNull().defaultRandom().primaryKey(),
+  id: text('id').notNull().primaryKey(),
   name: text('name').notNull().unique(),
   country: text('country').notNull(),
 });
