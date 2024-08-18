@@ -130,7 +130,7 @@ export async function deleteAccount(accountId: string): Promise<ActionResponse> 
 export async function updateAccountBalances(
   balances: Record<string, number>,
 ): Promise<ActionResponse> {
-  const subaccountBalances = await getSubaccountBalances();
+  const subaccountBalances = await apiQueries.accounts.getSubaccountBalances();
   const now = new Date().toISOString();
 
   const transactions: Parameters<typeof createTransactions>[0] = Object.entries(balances)
