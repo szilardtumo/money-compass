@@ -17,7 +17,7 @@ import { cn } from '@/lib/cn';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { chartColors } from '@/lib/utils/charts';
 import { capitalize, formatCurrency, formatPercent } from '@/lib/utils/formatters';
-import { groupBy } from '@/lib/utils/groupBy';
+import { groupBy } from '@/lib/utils/group-by';
 
 interface AccountCategoryDistributionChartProps {
   accounts: SimpleAccount[];

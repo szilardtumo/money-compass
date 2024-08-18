@@ -16,7 +16,7 @@ import { NavLink } from '@/components/ui/nav-link';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
-import { groupBy } from '@/lib/utils/groupBy';
+import { groupBy } from '@/lib/utils/group-by';
 
 import { TransactionItem } from './transaction-item';
 

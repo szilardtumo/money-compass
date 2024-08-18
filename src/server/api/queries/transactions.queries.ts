@@ -6,7 +6,7 @@ import { Enums, Tables } from '@/lib/types/database.types';
 import { TimeInterval } from '@/lib/types/time.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
-import { generateTimeBuckets } from '@/lib/utils/timeBuckets';
+import { generateTimeBuckets } from '@/lib/utils/time-buckets';
 
 import { getSimpleAccounts } from './accounts.queries';
 import { getMainCurrencyWithMapper } from './currencies.queries';
