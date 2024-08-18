@@ -26,12 +26,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { NavLink } from '@/components/ui/nav-link';
-import { deleteTransactions } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { ActionErrorCode, Paginated } from '@/lib/types/transport.types';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
 import { createToastPromise } from '@/lib/utils/toasts';
+import { apiActions } from '@/server/api/actions';
 
 const columnHelper = createColumnHelper<TransactionWithAccount>();
 
@@ -120,7 +120,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
 
   const deleteTransaction = useCallback(async (transactionId: string) => {
     setIsDeleting(true);
-    const promise = deleteTransactions([transactionId]);
+    const promise = apiActions.transactions.deleteTransactions([transactionId]);
 
     toast.promise(createToastPromise(promise), {
       loading: 'Deleting transaction...',
@@ -189,7 +189,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
   const deleteSelected = useCallback(async () => {
     setIsDeleting(true);
     const transactionIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
-    const promise = deleteTransactions(transactionIds);
+    const promise = apiActions.transactions.deleteTransactions(transactionIds);
 
     toast.promise(createToastPromise(promise), {
       loading: 'Deleting selected transactions...',

@@ -1,8 +1,9 @@
-'use server';
+import 'server-only';
 
-import { getProfile } from '@/lib/db/profiles.queries';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Currency, CurrencyMapper } from '@/lib/types/currencies.types';
-import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
+
+import { getProfile } from './profiles.queries';
 
 export async function getCurrencies(): Promise<Currency[]> {
   const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['currencies'] } });

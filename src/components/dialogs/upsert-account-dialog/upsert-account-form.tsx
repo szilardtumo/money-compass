@@ -20,11 +20,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
-import { createSimpleAccount, updateSimpleAccount } from '@/lib/db/accounts.actions';
 import { Currency } from '@/lib/types/currencies.types';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode } from '@/lib/types/transport.types';
 import { createToastPromise } from '@/lib/utils/toasts';
+import { apiActions } from '@/server/api/actions';
 
 interface UpsertAccountFormProps {
   currencies: Currency[];
@@ -67,7 +67,9 @@ export function UpsertAccountForm({
   async function onSubmit({ id, ...values }: FormFields) {
     const isUpdate = !!id;
 
-    const promise = isUpdate ? updateSimpleAccount(id, values) : createSimpleAccount(values);
+    const promise = isUpdate
+      ? apiActions.accounts.updateSimpleAccount(id, values)
+      : apiActions.accounts.createSimpleAccount(values);
 
     toast.promise(createToastPromise(promise), {
       loading: isUpdate ? 'Updating account...' : 'Creating account...',

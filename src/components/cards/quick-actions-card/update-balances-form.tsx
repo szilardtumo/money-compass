@@ -17,10 +17,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { updateAccountBalances } from '@/lib/db/accounts.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { createToastPromise } from '@/lib/utils/toasts';
+import { apiActions } from '@/server/api/actions';
 
 interface UpdateBalancesFormProps {
   accounts: SimpleAccount[];
@@ -44,7 +44,7 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
   });
 
   async function onSubmit(values: FormFields) {
-    const promise = updateAccountBalances(values.balances);
+    const promise = apiActions.accounts.updateAccountBalances(values.balances);
 
     toast.promise(createToastPromise(promise), {
       loading: 'Updating account balances...',

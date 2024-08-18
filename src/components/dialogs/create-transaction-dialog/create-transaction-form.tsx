@@ -23,10 +23,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
-import { createTransaction } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Enums } from '@/lib/types/database.types';
 import { createToastPromise } from '@/lib/utils/toasts';
+import { apiActions } from '@/server/api/actions';
 
 interface CreateTransactionFormProps {
   accounts: SimpleAccount[];
@@ -76,7 +76,7 @@ export function CreateTransactionForm({
       form.setError('account', { message: 'Select a valid account.' });
     }
 
-    const promise = createTransaction({
+    const promise = apiActions.transactions.createTransaction({
       amount: values.amount,
       type: values.type as Enums<'transaction_type'>,
       subaccountId: subaccountId!,

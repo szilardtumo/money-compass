@@ -4,8 +4,7 @@ import { AccountDetailsCard } from '@/components/cards/account-details-card';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
-import { getSimpleAccount } from '@/lib/db/accounts.queries';
-import { getTransactionHistory, getTransactions } from '@/lib/db/transactions.queries';
+import { apiQueries } from '@/server/api/queries';
 
 import { AccountActionButtons } from './components/account-action-buttons';
 
@@ -16,15 +15,15 @@ interface AccountDetailsPageProps {
 }
 
 export default async function AccountDetailsPage({ params }: AccountDetailsPageProps) {
-  const account = await getSimpleAccount(params.id);
+  const account = await apiQueries.accounts.getSimpleAccount(params.id);
 
   if (!account) {
     notFound();
   }
 
   const [transactions, transactionHistory] = await Promise.all([
-    getTransactions({ subaccountId: account?.subaccountId, pageSize: 5 }),
-    getTransactionHistory('12 month', '1 month'),
+    apiQueries.transactions.getTransactions({ subaccountId: account?.subaccountId, pageSize: 5 }),
+    apiQueries.transactions.getTransactionHistory('12 month', '1 month'),
   ]);
 
   return (

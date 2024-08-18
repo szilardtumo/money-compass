@@ -1,7 +1,7 @@
-'use server';
+import 'server-only';
 
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Account, SimpleAccount } from '@/lib/types/accounts.types';
-import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 import { getCurrencyMapper, getMainCurrencyWithMapper } from './currencies.queries';
 

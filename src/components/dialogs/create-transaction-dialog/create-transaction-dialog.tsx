@@ -1,11 +1,11 @@
 'use server';
 
-import { getSimpleAccounts } from '@/lib/db/accounts.queries';
+import { apiQueries } from '@/server/api/queries';
 
 import { CreateTransactionDialogClient } from './create-transaction-dialog-client';
 
 export async function CreateTransactionDialog() {
-  const accounts = await getSimpleAccounts();
+  const accounts = await apiQueries.accounts.getSimpleAccounts();
 
   return <CreateTransactionDialogClient accounts={accounts} />;
 }

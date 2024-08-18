@@ -19,9 +19,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { deleteAccount } from '@/lib/db/accounts.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { createToastPromise } from '@/lib/utils/toasts';
+import { apiActions } from '@/server/api/actions';
 
 interface AccountActionButtonsProps {
   account: SimpleAccount;
@@ -37,7 +37,7 @@ export function AccountActionButtons({ account }: AccountActionButtonsProps) {
   const handleDelete = async (e: MouseEvent) => {
     e.preventDefault();
     setIsDeleting(true);
-    const promise = deleteAccount(account.id);
+    const promise = apiActions.accounts.deleteAccount(account.id);
 
     toast.promise(createToastPromise(promise), {
       loading: 'Deleting account...',

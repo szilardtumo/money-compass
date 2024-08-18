@@ -3,16 +3,14 @@ import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { QuickActionsCard } from '@/components/cards/quick-actions-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
-import { getSimpleAccounts } from '@/lib/db/accounts.queries';
-import { getMainCurrencyWithMapper } from '@/lib/db/currencies.queries';
-import { getTransactionHistory, getTransactions } from '@/lib/db/transactions.queries';
+import { apiQueries } from '@/server/api/queries';
 
 export default async function DashboardPage() {
   const [accounts, transactionHistory, transactions, { mainCurrency }] = await Promise.all([
-    getSimpleAccounts(),
-    getTransactionHistory('12 month', '1 month'),
-    getTransactions({ pageSize: 5 }),
-    getMainCurrencyWithMapper(),
+    apiQueries.accounts.getSimpleAccounts(),
+    apiQueries.transactions.getTransactionHistory('12 month', '1 month'),
+    apiQueries.transactions.getTransactions({ pageSize: 5 }),
+    apiQueries.currencies.getMainCurrencyWithMapper(),
   ]);
 
   return (

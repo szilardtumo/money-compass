@@ -14,9 +14,9 @@ import { ResizableHandle, ResizablePanel } from '@/components/ui/resizable';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 import { Currency } from '@/lib/types/currencies.types';
 import { Profile } from '@/lib/types/profiles.types';
+import { apiQueries } from '@/server/api/queries';
 
 import { AccountDropdown } from './account-dropdown';
 import { NavItem } from './nav-item';
@@ -32,7 +32,7 @@ function NavbarAccountItemsSkeleton() {
 }
 
 async function NavbarAccountItems() {
-  const accounts = await getSimpleAccounts();
+  const accounts = await apiQueries.accounts.getSimpleAccounts();
 
   return (
     <div className="pl-4 flex flex-col gap-1">
