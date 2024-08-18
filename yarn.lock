@@ -3001,6 +3001,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rollup/rollup-linux-x64-gnu@npm:^4.9.5":
+  version: 4.21.0
+  resolution: "@rollup/rollup-linux-x64-gnu@npm:4.21.0"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
 "@sinclair/typebox@npm:^0.27.8":
   version: 0.27.8
   resolution: "@sinclair/typebox@npm:0.27.8"
@@ -3105,15 +3112,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/ssr@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@supabase/ssr@npm:0.3.0"
+"@supabase/ssr@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@supabase/ssr@npm:0.4.0"
   dependencies:
-    cookie: "npm:^0.5.0"
-    ramda: "npm:^0.29.0"
+    "@rollup/rollup-linux-x64-gnu": "npm:^4.9.5"
+    cookie: "npm:^0.6.0"
   peerDependencies:
-    "@supabase/supabase-js": ^2.33.1
-  checksum: 10c0/c2e1df6b98b3cbb57c663771ea26b9afe2cf9037fde33d142d7552b740dcafe3110b5be8d15fc0c6612b8803176606fbab867235d745ee47d63d038511768dc6
+    "@supabase/supabase-js": ^2.43.4
+  dependenciesMeta:
+    "@rollup/rollup-linux-x64-gnu":
+      optional: true
+  checksum: 10c0/378f92e271eeed700dfc509f7f6398b4e0984a4845de91467b5ac211f50c690548fd32eb72f80b9600963084a947b4573a370b3419df15ca6fdf87df8252de09
   languageName: node
   linkType: hard
 
@@ -5076,10 +5086,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cookie@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "cookie@npm:0.5.0"
-  checksum: 10c0/c01ca3ef8d7b8187bae434434582288681273b5a9ed27521d4d7f9f7928fe0c920df0decd9f9d3bbd2d14ac432b8c8cf42b98b3bdd5bfe0e6edddeebebe8b61d
+"cookie@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "cookie@npm:0.6.0"
+  checksum: 10c0/f2318b31af7a31b4ddb4a678d024514df5e705f9be5909a192d7f116cfb6d45cbacf96a473fa733faa95050e7cff26e7832bb3ef94751592f1387b71c8956686
   languageName: node
   linkType: hard
 
@@ -9421,7 +9431,7 @@ __metadata:
     "@remixicon/react": "npm:^4.2.0"
     "@supabase/auth-ui-react": "npm:^0.4.7"
     "@supabase/auth-ui-shared": "npm:^0.1.8"
-    "@supabase/ssr": "npm:^0.3.0"
+    "@supabase/ssr": "npm:0.4.0"
     "@supabase/supabase-js": "npm:^2.45.1"
     "@tailwindcss/forms": "npm:^0.5.7"
     "@tanstack/react-table": "npm:^8.20.1"
@@ -10549,13 +10559,6 @@ __metadata:
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
   checksum: 10c0/900a93d3cdae3acd7d16f642c29a642aea32c2026446151f0778c62ac089d4b8e6c986811076e1ae180a694cedf077d453a11b58ff0a865629a4f82ab558e102
-  languageName: node
-  linkType: hard
-
-"ramda@npm:^0.29.0":
-  version: 0.29.1
-  resolution: "ramda@npm:0.29.1"
-  checksum: 10c0/5de53a07400959c1a704c366ec52b1b8cd9a444dc1f9cdf17d607e0b9eeaa38cbaea309d43e59dbd7f36731ba977a64d40092555c0e7c2d4a41e8e922239c0ba
   languageName: node
   linkType: hard
 
