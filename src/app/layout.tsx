@@ -20,7 +20,6 @@ export const metadata: Metadata = {
   },
 };
 
-// eslint-disable-next-line react/function-component-definition
 let CacheToolbar: React.ComponentType = () => null;
 
 if (process.env.NODE_ENV === 'development') {

@@ -9,8 +9,7 @@ export default defineConfig({
   },
 
   e2e: {
-    // eslint-disable-next-line no-unused-vars
-    setupNodeEvents(on, config) {
+    setupNodeEvents(_on, _config) {
       // implement node event listeners here
     },
   },

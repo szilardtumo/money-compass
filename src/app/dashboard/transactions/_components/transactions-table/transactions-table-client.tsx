@@ -136,7 +136,9 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
   }, []);
 
   const columns = useMemo(() => {
-    const actionsCell: ColumnDefTemplate<CellContext<TransactionWithAccount, any>> = ({ row }) => {
+    const actionsCell: ColumnDefTemplate<CellContext<TransactionWithAccount, unknown>> = ({
+      row,
+    }) => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

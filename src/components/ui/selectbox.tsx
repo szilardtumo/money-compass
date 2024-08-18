@@ -16,7 +16,7 @@ export interface SelectboxProps extends React.HTMLAttributes<HTMLButtonElement> 
 }
 
 const Selectbox = React.forwardRef<HTMLButtonElement, SelectboxProps>(
-  ({ className, options, value, onValueChange, placeholder = 'Select...', ...props }, ref) => {
+  ({ options, value, onValueChange, placeholder = 'Select...', ...props }, ref) => {
     return (
       <Select onValueChange={onValueChange} defaultValue={value}>
         <SelectTrigger ref={ref} {...props}>

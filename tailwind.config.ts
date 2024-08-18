@@ -1,11 +1,9 @@
-/* eslint-disable import/no-extraneous-dependencies */
-
 import headlessuiTailwindcss from '@headlessui/tailwindcss';
 import tailwindcssForms from '@tailwindcss/forms';
 import type { Config } from 'tailwindcss';
-import tailwindcssAnimate from 'tailwindcss-animate';
 import colors from 'tailwindcss/colors';
 import { fontFamily } from 'tailwindcss/defaultTheme';
+import tailwindcssAnimate from 'tailwindcss-animate';
 
 const config = {
   darkMode: ['class'],

@@ -10,7 +10,6 @@ export default function AuthForm() {
 
   let redirectUrl = '/api/auth/callback';
   if (typeof window !== 'undefined') {
-    // eslint-disable-next-line no-restricted-globals
     redirectUrl = `${location.origin}/api/auth/callback`;
   }
 

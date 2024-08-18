@@ -9,8 +9,8 @@ interface ClientCodeProviderProps {
 const disableDefaultPropsError = () => {
   const { error } = console;
   // eslint-disable-next-line no-console
-  console.error = (...args: any) => {
-    if (/defaultProps/.test(args[0])) return;
+  console.error = (...args: unknown[]) => {
+    if (/defaultProps/.test(args[0] as string)) return;
     error(...args);
   };
 };
