@@ -77,6 +77,7 @@ export async function getAccounts(): Promise<Account[]> {
             mainCurrencyValue:
               (subaccontBalances[subaccount.id] ?? 0) * mainCurrencyMapper[subaccount.currency],
           },
+          accountId: account.id,
         }) satisfies Subaccount,
     );
 
@@ -134,6 +135,7 @@ export async function getAccount(accountId: string): Promise<Account | undefined
           mainCurrencyValue:
             (subaccountBalances[subaccount.id] ?? 0) * mainCurrencyMapper[subaccount.currency],
         },
+        accountId: account.id,
       }) satisfies Subaccount,
   );
 

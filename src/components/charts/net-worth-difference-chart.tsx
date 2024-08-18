@@ -54,7 +54,7 @@ export function NetWorthDifferenceChart({ data }: NetWorthDifferenceChartProps) 
         Month: formatDate(item.date, 'MMM'),
         Currency: item.mainCurrency,
         Total: Object.values(item.accountBalances).reduce(
-          (acc, balance) => acc + balance.mainCurrencyValue,
+          (acc, balance) => acc + balance.totalBalance,
           0,
         ),
       }))

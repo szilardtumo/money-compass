@@ -15,14 +15,14 @@ interface AccountDetailsPageProps {
 }
 
 export default async function AccountDetailsPage({ params }: AccountDetailsPageProps) {
-  const account = await apiQueries.accounts.getSimpleAccount(params.id);
+  const account = await apiQueries.accounts.getAccount(params.id);
 
   if (!account) {
     notFound();
   }
 
   const [transactions, transactionHistory] = await Promise.all([
-    apiQueries.transactions.getTransactions({ subaccountId: account?.subaccountId, pageSize: 5 }),
+    apiQueries.transactions.getTransactions({ accountId: account.id, pageSize: 5 }),
     apiQueries.transactions.getTransactionHistory('12 month', '1 month'),
   ]);
 

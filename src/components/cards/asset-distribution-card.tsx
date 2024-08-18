@@ -6,10 +6,10 @@ import { AccountCategoryDistributionChart } from '@/components/charts/account-ca
 import { AccountDistributionChart } from '@/components/charts/account-distribution-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 
 interface AssetDistributionCardProps {
-  accounts: SimpleAccount[];
+  accounts: Account[];
   mainCurrency: string;
 }
 

@@ -1,11 +1,11 @@
 import { TransactionHistoryChart } from '@/components/charts/transaction-history-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';
 
 interface AccountHistoryCardProps {
   data: TransactionHistory[];
-  account: SimpleAccount;
+  account: Account;
   title?: string;
 }
 
@@ -20,11 +20,7 @@ export async function AccountHistoryCard({
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <TransactionHistoryChart
-          accounts={[account]}
-          subaccountIdsToShow={[account.subaccountId]}
-          data={data}
-        />
+        <TransactionHistoryChart accounts={[account]} data={data} stack={false} />
       </CardContent>
     </Card>
   );

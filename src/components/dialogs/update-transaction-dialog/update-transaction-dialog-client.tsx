@@ -19,7 +19,7 @@ export function UpdateTransactionDialogClient() {
         </DialogHeader>
 
         <UpdateTransactionForm
-          account={internal.defaultValues?.account}
+          currency={internal.defaultValues?.currency}
           defaultValues={internal.defaultValues}
           onSuccess={() => internal.setIsOpen(false)}
         />

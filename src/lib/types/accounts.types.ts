@@ -7,6 +7,7 @@ export interface Subaccount {
   originalCurrency: string;
   mainCurrency: string;
   balance: CurrencyValue;
+  accountId: string;
 }
 
 export interface Account {

@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NavLink } from '@/components/ui/nav-link';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
@@ -22,7 +22,7 @@ import { TransactionItem } from './transaction-item';
 
 interface RecentTransactionsCardProps {
   transactions: Transaction[];
-  accounts: SimpleAccount[];
+  accounts: Account[];
   mainCurrency: string;
 }
 
@@ -33,22 +33,22 @@ export function RecentTransactionsCard({
 }: RecentTransactionsCardProps) {
   const { openDialog: openCreateTransactionDialog } = useCreateTransactionDialog();
 
-  const [selectedsubAccountIds, setSelectedSubaccountIds] = useState<string[]>(() =>
-    accounts.map((account) => account.subaccountId),
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>(() =>
+    accounts.map((account) => account.id),
   );
 
-  const toggleSubaccountSelection = (subaccountId: string, selected: boolean) => {
-    setSelectedSubaccountIds((ids) =>
-      selected ? [...ids, subaccountId] : ids.filter((id) => id !== subaccountId),
+  const toggleAccountSelection = (accountId: string, selected: boolean) => {
+    setSelectedAccountIds((ids) =>
+      selected ? [...ids, accountId] : ids.filter((id) => id !== accountId),
     );
   };
 
   const groupedTransactions = useMemo(() => {
     const transactionsWithAccount = transactions
-      .filter((transaction) => selectedsubAccountIds.includes(transaction.subaccountId))
+      .filter((transaction) => selectedAccountIds.includes(transaction.accountId))
       .map((transaction) => ({
         ...transaction,
-        account: accounts.find((account) => account.subaccountId === transaction.subaccountId),
+        account: accounts.find((account) => account.id === transaction.accountId),
       }))
       .filter((transaction): transaction is TransactionWithAccount => !!transaction.account);
 
@@ -61,7 +61,7 @@ export function RecentTransactionsCard({
       transactions: items,
       totalAmount: items.reduce((acc, item) => acc + item.amount.mainCurrencyValue, 0),
     }));
-  }, [transactions, accounts, selectedsubAccountIds]);
+  }, [transactions, accounts, selectedAccountIds]);
 
   return (
     <Card>
@@ -87,11 +87,9 @@ export function RecentTransactionsCard({
             <DropdownMenuContent align="end">
               {accounts.map((account) => (
                 <DropdownMenuCheckboxItem
-                  key={account.subaccountId}
-                  checked={selectedsubAccountIds.includes(account.subaccountId)}
-                  onCheckedChange={(checked) =>
-                    toggleSubaccountSelection(account.subaccountId, checked)
-                  }
+                  key={account.id}
+                  checked={selectedAccountIds.includes(account.id)}
+                  onCheckedChange={(checked) => toggleAccountSelection(account.id, checked)}
                 >
                   {account.name}
                 </DropdownMenuCheckboxItem>

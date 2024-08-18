@@ -1,8 +1,9 @@
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { CurrencyValue } from '@/lib/types/currencies.types';
 
 export interface Transaction {
   id: string;
+  accountId: string;
   subaccountId: string;
   type: string;
   amount: CurrencyValue;
@@ -15,11 +16,17 @@ export interface Transaction {
 }
 
 export interface TransactionWithAccount extends Transaction {
-  account: SimpleAccount;
+  account: Account;
 }
 
 export interface TransactionHistory {
   date: string;
-  accountBalances: Record<string, CurrencyValue>;
+  accountBalances: Record<
+    string,
+    {
+      totalBalance: number;
+      subaccountBalances: Record<string, CurrencyValue>;
+    }
+  >;
   mainCurrency: string;
 }

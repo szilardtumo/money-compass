@@ -7,7 +7,7 @@ import { apiQueries } from '@/server/api/queries';
 
 export default async function DashboardPage() {
   const [accounts, transactionHistory, transactions, { mainCurrency }] = await Promise.all([
-    apiQueries.accounts.getSimpleAccounts(),
+    apiQueries.accounts.getAccounts(),
     apiQueries.transactions.getTransactionHistory('12 month', '1 month'),
     apiQueries.transactions.getTransactions({ pageSize: 5 }),
     apiQueries.currencies.getMainCurrencyWithMapper(),

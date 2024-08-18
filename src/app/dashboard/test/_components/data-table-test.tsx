@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/data-table';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
 import { formatCurrency } from '@/lib/utils/formatters';
@@ -39,12 +39,12 @@ const columns = [
   columnHelper.accessor('amount.originalValue', {
     meta: { align: 'right' },
     header: 'Amount',
-    cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.account.originalCurrency),
+    cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.originalCurrency),
   }),
 ];
 
 interface DataTableTestProps {
-  accounts: SimpleAccount[];
+  accounts: Account[];
   transactions: Paginated<Transaction>;
 }
 
@@ -54,7 +54,7 @@ export function DataTableTest({ accounts, transactions }: DataTableTestProps) {
       transactions.data
         .map((transaction) => ({
           ...transaction,
-          account: accounts.find((account) => account.subaccountId === transaction.subaccountId)!,
+          account: accounts.find((account) => account.id === transaction.accountId)!,
         }))
         .filter((transaction) => !!transaction.account),
     [transactions, accounts],
@@ -64,7 +64,7 @@ export function DataTableTest({ accounts, transactions }: DataTableTestProps) {
     () =>
       accounts.map((account) => ({
         label: account.name,
-        value: account.subaccountId,
+        value: account.id,
         icon: CubeIcon,
       })),
     [accounts],

@@ -1,11 +1,11 @@
 import { TransactionHistoryChart } from '@/components/charts/transaction-history-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';
 
 interface NetWorthHistoryCardProps {
   data: TransactionHistory[];
-  accounts: SimpleAccount[];
+  accounts: Account[];
 }
 
 export async function NetWorthHistoryCard({ data, accounts }: NetWorthHistoryCardProps) {
@@ -15,7 +15,7 @@ export async function NetWorthHistoryCard({ data, accounts }: NetWorthHistoryCar
         <CardTitle>Net Worth</CardTitle>
       </CardHeader>
       <CardContent>
-        <TransactionHistoryChart accounts={accounts} data={data} />
+        <TransactionHistoryChart accounts={accounts} data={data} stack={false} />
       </CardContent>
     </Card>
   );

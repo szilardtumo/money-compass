@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { NavLink } from '@/components/ui/nav-link';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { ActionErrorCode, Paginated } from '@/lib/types/transport.types';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
@@ -69,7 +69,7 @@ const staticColumns = [
     header: 'Amount',
     cell: ({ row, getValue }) => (
       <span className="whitespace-nowrap">
-        {formatCurrency(getValue(), row.original.account.originalCurrency)}
+        {formatCurrency(getValue(), row.original.originalCurrency)}
       </span>
     ),
   }),
@@ -78,7 +78,7 @@ const staticColumns = [
     header: 'Balance',
     cell: ({ row, getValue }) => (
       <span className="whitespace-nowrap">
-        {formatCurrency(getValue(), row.original.account.originalCurrency)}
+        {formatCurrency(getValue(), row.original.originalCurrency)}
       </span>
     ),
   }),
@@ -90,7 +90,7 @@ const staticColumns = [
 ];
 
 interface TransactionsTableClientProps {
-  accounts: SimpleAccount[];
+  accounts: Account[];
   transactions: Paginated<Transaction>;
 }
 
@@ -100,7 +100,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
       transactions.data
         .map((transaction) => ({
           ...transaction,
-          account: accounts.find((account) => account.subaccountId === transaction.subaccountId)!,
+          account: accounts.find((account) => account.id === transaction.accountId)!,
         }))
         .filter((transaction) => !!transaction.account),
     [transactions, accounts],
@@ -153,6 +153,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
                 openUpdateTransactionDialog({
                   ...row.original,
                   amount: row.original.amount.originalValue,
+                  currency: row.original.originalCurrency,
                 })
               }
             >
