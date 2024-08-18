@@ -2,8 +2,8 @@
 
 import { revalidateTag } from 'next/cache';
 
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { ActionResponse } from '@/lib/types/transport.types';
-import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 interface UpdateProfileParams {
   mainCurrency: string;

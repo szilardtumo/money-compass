@@ -9,9 +9,7 @@ import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { QuickActionsCard } from '@/components/cards/quick-actions-card/quick-actions-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
-import { getSimpleAccounts } from '@/lib/db/accounts.queries';
-import { getMainCurrencyWithMapper } from '@/lib/db/currencies.queries';
-import { getTransactionHistory, getTransactions } from '@/lib/db/transactions.queries';
+import { apiQueries } from '@/server/api/queries';
 
 export default async function TestPage() {
   if (process.env.NODE_ENV !== 'development') {
@@ -19,10 +17,10 @@ export default async function TestPage() {
   }
 
   const [accounts, transactionHistory, transactions, { mainCurrency }] = await Promise.all([
-    getSimpleAccounts(),
-    getTransactionHistory('12 month', '1 month'),
-    getTransactions(),
-    getMainCurrencyWithMapper(),
+    apiQueries.accounts.getSimpleAccounts(),
+    apiQueries.transactions.getTransactionHistory('12 month', '1 month'),
+    apiQueries.transactions.getTransactions(),
+    apiQueries.currencies.getMainCurrencyWithMapper(),
   ]);
 
   return (

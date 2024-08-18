@@ -1,14 +1,15 @@
-'use server';
+import 'server-only';
 
-import { getSimpleAccounts } from '@/lib/db/accounts.queries';
-import { getMainCurrencyWithMapper } from '@/lib/db/currencies.queries';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { CurrencyMapper, CurrencyValue } from '@/lib/types/currencies.types';
 import { Enums, Tables } from '@/lib/types/database.types';
 import { TimeInterval } from '@/lib/types/time.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
-import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 import { generateTimeBuckets } from '@/lib/utils/timeBuckets';
+
+import { getSimpleAccounts } from './accounts.queries';
+import { getMainCurrencyWithMapper } from './currencies.queries';
 
 export interface CreateTransactionParams {
   subaccountId: string;

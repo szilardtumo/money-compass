@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { getSimpleAccounts } from '@/lib/db/accounts.queries';
+import { apiQueries } from '@/server/api/queries';
 
 import { UpdateBalancesDialog } from './update-balances-dialog';
 
 export async function QuickActionsCard() {
-  const accounts = await getSimpleAccounts();
+  const accounts = await apiQueries.accounts.getSimpleAccounts();
 
   return (
     <Card>

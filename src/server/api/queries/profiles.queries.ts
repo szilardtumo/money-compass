@@ -1,5 +1,7 @@
+import 'server-only';
+
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Profile } from '@/lib/types/profiles.types';
-import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
 
 export async function getProfile(): Promise<Profile> {
   const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['profiles'] } });

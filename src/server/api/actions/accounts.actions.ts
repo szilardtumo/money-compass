@@ -2,11 +2,12 @@
 
 import { revalidateTag } from 'next/cache';
 
-import { getSimpleAccount, getSubaccountBalances } from '@/lib/db/accounts.queries';
-import { createTransactions } from '@/lib/db/transactions.actions';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
-import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
+import { apiQueries } from '@/server/api/queries';
+
+import { createTransactions } from './transactions.actions';
 
 interface CreateSimpleAccountParams {
   name: string;
@@ -63,7 +64,7 @@ export async function updateSimpleAccount(
 ): Promise<ActionResponse> {
   const supabase = createServerSupabaseClient();
 
-  const account = await getSimpleAccount(id);
+  const account = await apiQueries.accounts.getSimpleAccount(id);
 
   if (!account) {
     return {

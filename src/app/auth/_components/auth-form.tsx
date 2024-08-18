@@ -3,7 +3,7 @@
 import { RiGithubFill, RiGoogleFill } from '@remixicon/react';
 
 import { Button } from '@/components/ui/button';
-import { createBrowserSupabaseClient } from '@/lib/utils/supabase/client';
+import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 export default function AuthForm() {
   const supabase = createBrowserSupabaseClient();

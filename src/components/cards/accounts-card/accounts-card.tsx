@@ -1,15 +1,15 @@
 import { AccountAvatar } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavLink } from '@/components/ui/nav-link';
-import { getSimpleAccounts } from '@/lib/db/accounts.queries';
 import { formatCurrency } from '@/lib/utils/formatters';
+import { apiQueries } from '@/server/api/queries';
 
 import { AccountActionsDropdown } from './account-actions-dropdown';
 import { CreateAccountButton } from './create-account-button';
 import { NoAccountsPlaceholder } from './no-accounts-placeholder';
 
 export async function AccountsCard() {
-  const accounts = await getSimpleAccounts();
+  const accounts = await apiQueries.accounts.getSimpleAccounts();
 
   return (
     <Card>

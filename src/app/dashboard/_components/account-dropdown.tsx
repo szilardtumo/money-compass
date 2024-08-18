@@ -22,10 +22,10 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { updateProfile } from '@/lib/db/profiles.actions';
+import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { Currency } from '@/lib/types/currencies.types';
 import { Profile } from '@/lib/types/profiles.types';
-import { createBrowserSupabaseClient } from '@/lib/utils/supabase/client';
+import { apiActions } from '@/server/api/actions';
 
 interface AccountDropdownProps {
   profile: Profile;
@@ -47,7 +47,7 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
     async (currencyId: string) => {
       if (currencyId !== profile.mainCurrency) {
         setOptimisticMainCurrency(currencyId);
-        await updateProfile({ mainCurrency: currencyId });
+        await apiActions.profiles.updateProfile({ mainCurrency: currencyId });
       }
     },
     [profile.mainCurrency, setOptimisticMainCurrency],

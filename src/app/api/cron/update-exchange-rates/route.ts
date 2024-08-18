@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 
-import { getCurrencies } from '@/lib/db/currencies.queries';
-import { createServerAdminSupabaseClient } from '@/lib/utils/supabase/server-admin';
+import { createServerAdminSupabaseClient } from '@/lib/supabase/server-admin';
+import { apiQueries } from '@/server/api/queries';
 
 interface ExchangeRatesResponse {
   success: true;
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
   const data = (await response.json()) as ExchangeRatesResponse;
 
-  const currencies = await getCurrencies();
+  const currencies = await apiQueries.currencies.getCurrencies();
 
   const exchangeRates = currencies.flatMap((fromCurrency) =>
     currencies.map((toCurrency) => ({

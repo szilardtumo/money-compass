@@ -19,10 +19,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
-import { updateTransaction } from '@/lib/db/transactions.actions';
 import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Enums } from '@/lib/types/database.types';
 import { createToastPromise } from '@/lib/utils/toasts';
+import { apiActions } from '@/server/api/actions';
 
 interface UpdateTransactionFormProps {
   account: SimpleAccount;
@@ -59,7 +59,7 @@ export function UpdateTransactionForm({
   });
 
   async function onSubmit(values: FormFields) {
-    const promise = updateTransaction(values.id, {
+    const promise = apiActions.transactions.updateTransaction(values.id, {
       type: values.type as Enums<'transaction_type'>,
       amount: values.amount,
       description: values.description,

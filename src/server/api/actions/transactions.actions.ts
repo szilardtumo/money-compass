@@ -3,11 +3,10 @@
 import { PostgrestError } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
 
-import { getSubaccountBalances } from '@/lib/db/accounts.queries';
-import { getTransactionById, getTransactions } from '@/lib/db/transactions.queries';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
-import { createServerSupabaseClient } from '@/lib/utils/supabase/server';
+import { apiQueries } from '@/server/api/queries';
 
 export interface CreateTransactionParams {
   subaccountId: string;
@@ -23,7 +22,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
   try {
     const {
       data: [latestTransaction],
-    } = await getTransactions({
+    } = await apiQueries.transactions.getTransactions({
       pageSize: 1,
       subaccountId: params.subaccountId,
       toDate: params.date,
@@ -67,7 +66,7 @@ export async function createTransactions(
   const supabase = createServerSupabaseClient();
 
   try {
-    const subaccountBalances = await getSubaccountBalances();
+    const subaccountBalances = await apiQueries.accounts.getSubaccountBalances();
     const now = new Date().toISOString();
 
     const { error } = await supabase.from('transactions').insert(
@@ -110,7 +109,7 @@ export async function updateTransaction(
 ): Promise<ActionResponse> {
   const supabase = createServerSupabaseClient();
 
-  const transaction = await getTransactionById(transactionId);
+  const transaction = await apiQueries.transactions.getTransactionById(transactionId);
 
   if (!transaction) {
     return {
@@ -160,7 +159,9 @@ export async function deleteTransactions(transactionIds: string[]): Promise<Acti
   const supabase = createServerSupabaseClient();
 
   try {
-    const latestTransactions = await getTransactions({ pageSize: transactionIds.length });
+    const latestTransactions = await apiQueries.transactions.getTransactions({
+      pageSize: transactionIds.length,
+    });
 
     const areLatestTransactions = transactionIds.every((id) =>
       latestTransactions.data.some((transaction) => transaction.id === id),

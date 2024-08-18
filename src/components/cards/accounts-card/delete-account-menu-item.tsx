@@ -4,8 +4,8 @@ import { TrashIcon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 
 import { DropdownMenuItem, DropdownMenuShortcut } from '@/components/ui/dropdown-menu';
-import { deleteAccount } from '@/lib/db/accounts.actions';
 import { createToastPromise } from '@/lib/utils/toasts';
+import { apiActions } from '@/server/api/actions';
 
 interface DeleteAccountMenuItemProps {
   accountId: string;
@@ -13,7 +13,7 @@ interface DeleteAccountMenuItemProps {
 
 export function DeleteAccountMenuItem({ accountId }: DeleteAccountMenuItemProps) {
   const onDeleteAccount = async () => {
-    const promise = deleteAccount(accountId);
+    const promise = apiActions.accounts.deleteAccount(accountId);
 
     toast.promise(createToastPromise(promise), {
       loading: 'Deleting account...',
