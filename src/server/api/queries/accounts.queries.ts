@@ -1,9 +1,9 @@
 import 'server-only';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { Account, SimpleAccount } from '@/lib/types/accounts.types';
+import { Account, SimpleAccount, Subaccount } from '@/lib/types/accounts.types';
 
-import { getCurrencyMapper, getMainCurrencyWithMapper } from './currencies.queries';
+import { getMainCurrencyWithMapper } from './currencies.queries';
 
 export async function getSubaccountBalances(): Promise<Record<string, number>> {
   const supabase = createServerSupabaseClient({
@@ -44,17 +44,20 @@ export async function getSubaccountBalance(subaccountId: string): Promise<number
 
 /**
  * Returns the list of accounts with all of their subaccounts.
- * The total value of the account is calculated by converting all subaccounts' value to the provided main currency.
+ * The total value of the account is calculated by converting all subaccounts' value to the user's main currency.
  *
- * @param mainCurrency The currency to use for the total value of the account.
  * @returns
  */
-export async function getAccounts(mainCurrency: string): Promise<Account[]> {
+export async function getAccounts(): Promise<Account[]> {
   const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['accounts'] } });
 
-  const [{ data: accounts, error }, currencyMapper, subaccontBalances] = await Promise.all([
+  const [
+    { data: accounts, error },
+    { mainCurrency, mapper: mainCurrencyMapper },
+    subaccontBalances,
+  ] = await Promise.all([
     supabase.from('accounts').select(`id, name, category, subaccounts(id, currency)`),
-    getCurrencyMapper(mainCurrency),
+    getMainCurrencyWithMapper(),
     getSubaccountBalances(),
   ]);
 
@@ -62,23 +65,86 @@ export async function getAccounts(mainCurrency: string): Promise<Account[]> {
     throw error;
   }
 
-  return (accounts ?? []).map((account) => ({
+  return (accounts ?? []).map((account) => {
+    const subaccounts = account.subaccounts.map(
+      (subaccount) =>
+        ({
+          id: subaccount.id,
+          originalCurrency: subaccount.currency,
+          mainCurrency,
+          balance: {
+            originalValue: subaccontBalances[subaccount.id] ?? 0,
+            mainCurrencyValue:
+              (subaccontBalances[subaccount.id] ?? 0) * mainCurrencyMapper[subaccount.currency],
+          },
+        }) satisfies Subaccount,
+    );
+
+    return {
+      id: account.id,
+      name: account.name,
+      category: account.category,
+      mainCurrency,
+      totalBalance: subaccounts.reduce(
+        (acc, current) => acc + current.balance.mainCurrencyValue,
+        0,
+      ),
+      subaccounts,
+    };
+  });
+}
+
+/**
+ * Returns the account with the specified id, with all of its subaccounts.
+ *
+ * @returns
+ */
+export async function getAccount(accountId: string): Promise<Account | undefined> {
+  const supabase = createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['accounts', accountId] },
+  });
+
+  const { data: account, error: accountError } = await supabase
+    .from('accounts')
+    .select(`id, name, category, subaccounts(id, currency)`)
+    .eq('id', accountId)
+    .maybeSingle();
+
+  if (accountError) {
+    throw accountError;
+  }
+
+  if (!account) {
+    return undefined;
+  }
+
+  const [subaccountBalances, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
+    getSubaccountBalances(),
+    getMainCurrencyWithMapper(),
+  ]);
+
+  const subaccounts = account.subaccounts.map(
+    (subaccount) =>
+      ({
+        id: subaccount.id,
+        originalCurrency: subaccount.currency,
+        mainCurrency,
+        balance: {
+          originalValue: subaccountBalances[subaccount.id] ?? 0,
+          mainCurrencyValue:
+            (subaccountBalances[subaccount.id] ?? 0) * mainCurrencyMapper[subaccount.currency],
+        },
+      }) satisfies Subaccount,
+  );
+
+  return {
     id: account.id,
     name: account.name,
     category: account.category,
-    subaccounts: account.subaccounts.map((subaccount) => ({
-      id: subaccount.id,
-      currency: subaccount.currency,
-      balance: subaccontBalances[subaccount.id] ?? 0,
-    })),
-    totalBalance: account.subaccounts.reduce(
-      (acc, current) =>
-        acc +
-        (subaccontBalances[current.id] ?? 0) *
-          (current.currency === mainCurrency ? 1 : currencyMapper[current.currency] ?? 0),
-      0,
-    ),
-  }));
+    mainCurrency,
+    totalBalance: subaccounts.reduce((acc, current) => acc + current.balance.mainCurrencyValue, 0),
+    subaccounts,
+  };
 }
 
 /**
