@@ -51,7 +51,7 @@ export function AccountDistributionChart({
       <DonutChart
         data={data}
         index="name"
-        category="balance.mainCurrencyValue"
+        category="balance"
         showAnimation
         showTooltip
         showLabel
