@@ -37,7 +37,7 @@ export function TransactionHistoryChart({
           ...account.subaccounts.map(
             (subaccount) =>
               [
-                subaccount.originalCurrency, // TODO: add subaccount name
+                subaccount.name,
                 item.accountBalances[account.id].subaccountBalances[subaccount.id]
                   .mainCurrencyValue,
               ] as const,
@@ -56,7 +56,7 @@ export function TransactionHistoryChart({
   const chartCategories = useMemo(() => {
     if (accounts.length === 1) {
       if (stack) {
-        return accounts[0].subaccounts.map((subaccount) => subaccount.originalCurrency); // TODO: add subaccount name
+        return accounts[0].subaccounts.map((subaccount) => subaccount.name);
       } else {
         return [accounts[0].name];
       }

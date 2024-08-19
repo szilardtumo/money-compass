@@ -210,8 +210,9 @@ export async function getTransactionHistory(
                     subaccount.id,
                     {
                       originalValue: currentBalances[subaccount.id],
-                      mainCurrencyValue: (currentBalances[subaccount.id] =
-                        mainCurrencyMapper[subaccount.originalCurrency]),
+                      mainCurrencyValue:
+                        currentBalances[subaccount.id] *
+                        mainCurrencyMapper[subaccount.originalCurrency],
                     },
                   ]),
                 ),
