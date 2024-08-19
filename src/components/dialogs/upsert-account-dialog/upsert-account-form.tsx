@@ -43,10 +43,18 @@ const formSchema = z.object({
     .string()
     .min(2, { message: 'Account name must be at least 2 characters.' })
     .max(50, { message: 'Account name must be at most 50 characters.' }),
-  originalCurrency: z.string({ required_error: 'A currency must be selected.' }),
   category: z.enum(['checking', 'investment'], {
     required_error: 'An account category must be selected.',
   }),
+  subaccounts: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        originalCurrency: z.string({ required_error: 'A currency must be selected.' }),
+      }),
+    )
+    .optional(),
 });
 
 type FormFields = z.infer<typeof formSchema>;
@@ -68,8 +76,8 @@ export function UpsertAccountForm({
     const isUpdate = !!id;
 
     const promise = isUpdate
-      ? apiActions.accounts.updateSimpleAccount(id, values)
-      : apiActions.accounts.createSimpleAccount(values);
+      ? apiActions.accounts.updateAccount(id, values)
+      : apiActions.accounts.createAccount(values);
 
     toast.promise(createToastPromise(promise), {
       loading: isUpdate ? 'Updating account...' : 'Creating account...',
@@ -129,7 +137,7 @@ export function UpsertAccountForm({
             </FormItem>
           )}
         />
-        <FormField
+        {/* <FormField
           control={form.control}
           name="originalCurrency"
           render={({ field }) => (
@@ -145,7 +153,7 @@ export function UpsertAccountForm({
               <FormMessage />
             </FormItem>
           )}
-        />
+        /> */}
         <Button
           type="submit"
           className="self-stretch sm:self-end"

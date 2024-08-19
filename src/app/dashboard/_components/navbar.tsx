@@ -32,7 +32,7 @@ function NavbarAccountItemsSkeleton() {
 }
 
 async function NavbarAccountItems() {
-  const accounts = await apiQueries.accounts.getSimpleAccounts();
+  const accounts = await apiQueries.accounts.getAccounts();
 
   return (
     <div className="pl-4 flex flex-col gap-1">

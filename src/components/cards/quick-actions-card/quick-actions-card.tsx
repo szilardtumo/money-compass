@@ -4,7 +4,7 @@ import { apiQueries } from '@/server/api/queries';
 import { UpdateBalancesDialog } from './update-balances-dialog';
 
 export async function QuickActionsCard() {
-  const accounts = await apiQueries.accounts.getSimpleAccounts();
+  const accounts = await apiQueries.accounts.getAccounts();
 
   return (
     <Card>

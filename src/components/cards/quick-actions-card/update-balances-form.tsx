@@ -17,13 +17,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
 interface UpdateBalancesFormProps {
-  accounts: SimpleAccount[];
+  accounts: Account[];
   onSuccess?: () => void;
 }
 
@@ -38,7 +38,12 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
     resolver: zodResolver(formSchema),
     defaultValues: {
       balances: Object.fromEntries(
-        accounts.map((account) => [account.subaccountId, account.balance.originalValue]),
+        accounts.flatMap((account) =>
+          account.subaccounts.map((subaccount) => [
+            subaccount.id,
+            subaccount.balance.originalValue,
+          ]),
+        ),
       ),
     },
   });
@@ -62,32 +67,40 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-8">
         {accounts.map((account) => (
-          <FormField
-            key={account.subaccountId}
-            control={form.control}
-            name={`balances.${account.subaccountId}`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{account.name}</FormLabel>
-                <FormControl>
-                  <CurrencyInput
-                    currency={account.originalCurrency}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                      }
-                    }}
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Previous balance:{' '}
-                  {formatCurrency(account.balance.originalValue, account.originalCurrency)}
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div key={account.id}>
+            <h3>{account.name}</h3>
+            {account.subaccounts.map((subaccount) => (
+              <FormField
+                key={subaccount.id}
+                control={form.control}
+                name={`balances.${subaccount.id}`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{subaccount.originalCurrency}</FormLabel>
+                    <FormControl>
+                      <CurrencyInput
+                        currency={subaccount.originalCurrency}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                          }
+                        }}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Previous balance:{' '}
+                      {formatCurrency(
+                        subaccount.balance.originalValue,
+                        subaccount.originalCurrency,
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
         ))}
 
         <Button

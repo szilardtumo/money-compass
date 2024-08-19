@@ -10,7 +10,7 @@ import { Transaction, TransactionHistory } from '@/lib/types/transactions.types'
 import { Paginated } from '@/lib/types/transport.types';
 import { generateTimeBuckets } from '@/lib/utils/time-buckets';
 import { getAccounts } from '@/server/api/queries/accounts.queries';
-import { db } from '@/server/db';
+import { getDb } from '@/server/db';
 import { subaccounts, transactions } from '@/server/db/schema';
 
 import { getMainCurrencyWithMapper } from './currencies.queries';
@@ -75,21 +75,25 @@ export async function getTransactions({
   page = 0,
   pageSize = 20,
 }: GetTransactionsParams = {}): Promise<Paginated<Transaction>> {
-  const query = db
-    .select()
-    .from(transactions)
-    .innerJoin(subaccounts, eq(transactions.subaccountId, subaccounts.id))
-    .where(
-      and(
-        accountId ? eq(subaccounts.accountId, accountId) : undefined,
-        subaccountId ? eq(transactions.subaccountId, subaccountId) : undefined,
-        fromDate ? gte(transactions.startedDate, new Date(fromDate)) : undefined,
-        toDate ? lte(transactions.startedDate, new Date(toDate)) : undefined,
-      ),
-    )
-    .orderBy(desc(transactions.startedDate), desc(transactions.order))
-    .offset(page * pageSize)
-    .limit(pageSize);
+  const db = await getDb();
+
+  const query = db.transaction((tx) =>
+    tx
+      .select()
+      .from(transactions)
+      .innerJoin(subaccounts, eq(transactions.subaccountId, subaccounts.id))
+      .where(
+        and(
+          accountId ? eq(subaccounts.accountId, accountId) : undefined,
+          subaccountId ? eq(transactions.subaccountId, subaccountId) : undefined,
+          fromDate ? gte(transactions.startedDate, new Date(fromDate)) : undefined,
+          toDate ? lte(transactions.startedDate, new Date(toDate)) : undefined,
+        ),
+      )
+      .orderBy(desc(transactions.startedDate), desc(transactions.order))
+      .offset(page * pageSize)
+      .limit(pageSize),
+  );
 
   const [data, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
     query,

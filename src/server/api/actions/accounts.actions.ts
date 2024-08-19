@@ -1,70 +1,66 @@
 'use server';
 
+import { and, eq, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { apiQueries } from '@/server/api/queries';
+import { getDb, schema } from '@/server/db';
 
 import { createTransactions } from './transactions.actions';
 
-interface CreateSimpleAccountParams {
+interface CreateAccountParams {
   name: string;
-  originalCurrency: string;
   category: Enums<'account_category'>;
+  subaccounts?: { name: string; originalCurrency: string }[];
 }
 
 /**
- * Creates a new account with a single subaccount.
+ * Creates a new account with a subaccounts.
  *
  * @param params The parameters to create the account.
  * @returns
  */
-export async function createSimpleAccount(
-  params: CreateSimpleAccountParams,
-): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
+export async function createAccount(params: CreateAccountParams): Promise<ActionResponse> {
+  const db = await getDb();
 
-  const { data: account, error: accountError } = await supabase
-    .from('accounts')
-    .insert({ name: params.name, category: params.category })
-    .select('id')
-    .single();
+  await db.transaction(async (tx) => {
+    const [{ id }] = await tx
+      .insert(schema.accounts)
+      .values({ name: params.name, category: params.category })
+      .returning({ id: schema.accounts.id });
 
-  if (accountError || !account) {
-    return { success: false, error: { code: accountError.code, message: accountError.message } };
-  }
+    if (params.subaccounts?.length) {
+      await tx.insert(schema.subaccounts).values(
+        params.subaccounts.map((subaccount) => ({
+          accountId: id,
+          currency: subaccount.originalCurrency,
+          name: subaccount.name,
+        })),
+      );
+    }
+  });
 
-  const { error: subaccountError } = await supabase
-    .from('subaccounts')
-    .insert({ currency: params.originalCurrency, account_id: account.id });
-
-  if (subaccountError) {
-    return {
-      success: false,
-      error: { code: subaccountError.code, message: subaccountError.message },
-    };
-  }
+  // TODO: error handling
 
   revalidateTag('accounts');
   revalidateTag('subaccounts');
   return { success: true };
 }
 
-interface UpdateSimpleAccountParams {
+interface UpdateAccountParams {
   name?: string;
-  originalCurrency?: string;
   category?: Enums<'account_category'>;
+  subaccounts?: { id: string; name?: string; originalCurrency?: string }[];
 }
 
-export async function updateSimpleAccount(
+export async function updateAccount(
   id: string,
-  params: UpdateSimpleAccountParams,
+  params: UpdateAccountParams,
 ): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
-
-  const account = await apiQueries.accounts.getSimpleAccount(id);
+  const db = await getDb();
+  const account = await apiQueries.accounts.getAccount(id);
 
   if (!account) {
     return {
@@ -73,38 +69,65 @@ export async function updateSimpleAccount(
     };
   }
 
-  const currencyChanged =
-    params.originalCurrency && params.originalCurrency !== account.originalCurrency;
+  const currencyChangeItems =
+    params.subaccounts
+      ?.map((subaccount) => ({
+        subaccount,
+        prevSubaccount: account.subaccounts.find((item) => item.id === subaccount.id),
+      }))
+      .filter(
+        ({ subaccount, prevSubaccount }) =>
+          prevSubaccount &&
+          subaccount.originalCurrency &&
+          subaccount.originalCurrency !== prevSubaccount.originalCurrency,
+      ) ?? [];
 
-  const [accountResult, subaccountResult] = await Promise.all([
-    supabase
-      .from('accounts')
-      .update({ name: params.name, category: params.category })
-      .eq('id', id)
-      .select(),
-    currencyChanged
-      ? supabase.rpc('update_subaccount', {
-          _id: account.subaccountId,
-          _currency: params.originalCurrency!,
-        })
-      : undefined,
-  ]);
+  await db.transaction(async (tx) => {
+    // Update account
+    await tx
+      .update(schema.accounts)
+      .set({ name: params.name, category: params.category })
+      .where(eq(schema.accounts.id, id));
 
-  if (accountResult.error) {
-    return {
-      success: false,
-      error: { code: accountResult.error.code, message: accountResult.error.message },
-    };
-  }
+    if (params.subaccounts && params.subaccounts.length) {
+      await Promise.all([
+        // Update subaccounts
+        ...params.subaccounts!.map((subaccount) =>
+          tx
+            .update(schema.subaccounts)
+            .set({ name: subaccount.name, currency: subaccount.originalCurrency })
+            .where(eq(schema.subaccounts.id, subaccount.id)),
+        ),
+        // Update transactions where the subaccount's currency changed
+        ...currencyChangeItems.map(({ subaccount, prevSubaccount }) => {
+          const rate = tx.$with('rate').as(
+            db
+              .select({ rate: schema.exchangeRates.rate })
+              .from(schema.exchangeRates)
+              .where(
+                and(
+                  eq(schema.exchangeRates.from, prevSubaccount!.originalCurrency),
+                  eq(schema.exchangeRates.to, subaccount.originalCurrency!),
+                ),
+              ),
+          );
 
-  if (subaccountResult?.error) {
-    return {
-      success: false,
-      error: { code: subaccountResult.error.code, message: subaccountResult.error.message },
-    };
-  }
+          return tx
+            .with(rate)
+            .update(schema.transactions)
+            .set({
+              amount: sql`${schema.transactions.amount} * ${rate}`,
+              balance: sql`${schema.transactions.balance} * ${rate}`,
+            })
+            .where(eq(schema.transactions.subaccountId, subaccount.id));
+        }),
+      ]);
+    }
+  });
 
-  if (currencyChanged) {
+  // TODO: error handling
+
+  if (currencyChangeItems.length) {
     revalidateTag('transactions');
   }
   revalidateTag('accounts');
@@ -113,13 +136,10 @@ export async function updateSimpleAccount(
 }
 
 export async function deleteAccount(accountId: string): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
+  const db = await getDb();
+  await db.transaction((tx) => tx.delete(schema.accounts).where(eq(schema.accounts.id, accountId)));
 
-  const { error } = await supabase.from('accounts').delete().eq('id', accountId);
-
-  if (error) {
-    return { success: false, error: { code: error.code, message: error.message } };
-  }
+  //TODO: error handling
 
   revalidateTag('accounts');
   revalidateTag('subaccounts');
