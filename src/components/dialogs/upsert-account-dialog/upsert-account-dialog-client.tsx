@@ -22,7 +22,7 @@ export function UpsertAccountDialogClient({ currencies }: UpsertAccountDialogCli
 
   return (
     <Dialog open={isOpen} onOpenChange={internal.setIsOpen}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{isUpdate ? 'Update account' : 'Add account'}</DialogTitle>
           {!isUpdate && (

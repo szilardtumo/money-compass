@@ -1,9 +1,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ReloadIcon } from '@radix-ui/react-icons';
-import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { Cross1Icon, PlusIcon, ReloadIcon, ResetIcon } from '@radix-ui/react-icons';
+import { useCallback, useMemo } from 'react';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -19,7 +19,16 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Selectbox } from '@/components/ui/selectbox';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Currency } from '@/lib/types/currencies.types';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode } from '@/lib/types/transport.types';
@@ -49,9 +58,10 @@ const formSchema = z.object({
   subaccounts: z
     .array(
       z.object({
-        id: z.string(),
-        name: z.string(),
-        originalCurrency: z.string({ required_error: 'A currency must be selected.' }),
+        id: z.string().optional(),
+        name: z.string().min(1, 'Subaccount name is required'),
+        originalCurrency: z.string().min(1, 'A currency must be selected.'),
+        delete: z.literal(true).optional(),
       }),
     )
     .optional(),
@@ -71,6 +81,37 @@ export function UpsertAccountForm({
       ...defaultValues,
     },
   });
+
+  const { getValues } = form;
+
+  const subaccountFieldArray = useFieldArray({
+    control: form.control,
+    name: 'subaccounts',
+    keyName: '_id', // Do not overwrite our own id
+  });
+
+  const onRemoveSubaccount = useCallback(
+    (index: number) => {
+      const subaccount = getValues().subaccounts![index];
+      if (subaccount.id) {
+        subaccountFieldArray.update(index, { ...subaccount, delete: true });
+      } else {
+        subaccountFieldArray.remove(index);
+      }
+    },
+    [getValues, subaccountFieldArray],
+  );
+
+  const onReinstateSubaccount = useCallback(
+    (index: number) => {
+      const subaccount = getValues().subaccounts![index];
+      subaccountFieldArray.update(index, {
+        ...subaccount,
+        delete: undefined,
+      });
+    },
+    [getValues, subaccountFieldArray],
+  );
 
   async function onSubmit({ id, ...values }: FormFields) {
     const isUpdate = !!id;
@@ -137,23 +178,96 @@ export function UpsertAccountForm({
             </FormItem>
           )}
         />
-        {/* <FormField
-          control={form.control}
-          name="originalCurrency"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Currency</FormLabel>
-              <FormControl>
-                <Combobox
-                  options={currencyOptions}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        /> */}
+
+        <div className="space-y-2">
+          <Label>Subaccounts</Label>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Name</TableHead>
+                <TableHead className="w-[180px]">Currency</TableHead>
+                <TableHead className="sr-only">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {subaccountFieldArray.fields.map((subaccount, index) => (
+                <TableRow key={subaccount._id} className="hover:bg-transparent">
+                  <TableCell className="align-top">
+                    <FormField
+                      control={form.control}
+                      name={`subaccounts.${index}.name`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} disabled={subaccount.delete} />
+                          </FormControl>
+                          {subaccount.delete && (
+                            <FormDescription>This subaccount will be deleted.</FormDescription>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TableCell>
+                  <TableCell className="align-top">
+                    <FormField
+                      control={form.control}
+                      name={`subaccounts.${index}.originalCurrency`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Combobox
+                              options={currencyOptions}
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              disabled={subaccount.delete}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TableCell>
+                  <TableCell className="align-top">
+                    {subaccount.delete ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => onReinstateSubaccount(index)}
+                        disabled={form.formState.isSubmitting}
+                        aria-label="Reinstate subaccount"
+                      >
+                        <ResetIcon />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => onRemoveSubaccount(index)}
+                        disabled={form.formState.isSubmitting}
+                        aria-label="Remove subaccount"
+                      >
+                        <Cross1Icon />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <Button
+            type="button"
+            className="self-start mx-4"
+            onClick={() => subaccountFieldArray.append({ name: '', originalCurrency: '' })}
+            disabled={form.formState.isSubmitting}
+          >
+            <PlusIcon className="mr-2" />
+            Add more
+          </Button>
+        </div>
+
         <Button
           type="submit"
           className="self-stretch sm:self-end"
