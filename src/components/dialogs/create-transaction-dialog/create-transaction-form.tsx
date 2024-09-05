@@ -108,7 +108,7 @@ export function CreateTransactionForm({
       accounts
         .find((account) => account.id === selectedAccountId)
         ?.subaccounts.map((subaccount) => ({
-          label: subaccount.originalCurrency,
+          label: subaccount.name,
           value: subaccount.id,
         })) ?? []
     );
