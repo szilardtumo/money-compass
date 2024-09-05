@@ -1,6 +1,6 @@
 'use server';
 
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 
 import { Enums } from '@/lib/types/database.types';
@@ -9,6 +9,139 @@ import { apiQueries } from '@/server/api/queries';
 import { getDb, schema } from '@/server/db';
 
 import { createTransactions } from './transactions.actions';
+
+interface CreateSubaccountParams {
+  accountId: string;
+  name: string;
+  currency: string;
+}
+
+/**
+ * Creates new subaccounts
+ *
+ * @param params A list of parameters to create the subaccounts.
+ * @returns
+ */
+async function createSubaccounts(params: CreateSubaccountParams[]): Promise<ActionResponse> {
+  if (!params.length) {
+    return { success: true };
+  }
+
+  const db = await getDb();
+
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.subaccounts).values(
+      params.map((item) => ({
+        accountId: item.accountId,
+        name: item.name,
+        currency: item.currency,
+      })),
+    );
+  });
+
+  // TODO: error handling
+
+  revalidateTag('accounts');
+  revalidateTag('subaccounts');
+  return { success: true };
+}
+
+/**
+ * Deletes subaccounts with the specified ids
+ *
+ * @param subaccountIds A list of subaccount ids
+ * @returns
+ */
+async function deleteSubaccounts(subaccountIds: string[]): Promise<ActionResponse> {
+  const db = await getDb();
+
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.subaccounts).where(inArray(schema.subaccounts.id, subaccountIds));
+  });
+
+  // TODO: error handling
+
+  revalidateTag('accounts');
+  revalidateTag('subaccounts');
+  return { success: true };
+}
+
+interface UpdateSubaccountParams {
+  id: string;
+  name?: string;
+  currency?: string;
+}
+
+async function updateSubaccounts(params: UpdateSubaccountParams[]): Promise<ActionResponse> {
+  const db = await getDb();
+
+  const wasCurrencyChanged = await db.transaction(async (tx) => {
+    const dbSubaccounts = await tx
+      .select()
+      .from(schema.subaccounts)
+      .where(
+        inArray(
+          schema.subaccounts.id,
+          params.map((subaccount) => subaccount.id),
+        ),
+      );
+
+    const currencyChangeSubaccounts =
+      params
+        .map((subaccount) => ({
+          subaccount,
+          prevSubaccount: dbSubaccounts.find((item) => item.id === subaccount.id),
+        }))
+        .filter(
+          ({ subaccount, prevSubaccount }) =>
+            prevSubaccount &&
+            subaccount.currency &&
+            subaccount.currency !== prevSubaccount.currency,
+        ) ?? [];
+
+    await Promise.all([
+      // Update existing subaccounts
+      ...params.map((subaccount) =>
+        tx
+          .update(schema.subaccounts)
+          .set({ name: subaccount.name, currency: subaccount.currency })
+          .where(eq(schema.subaccounts.id, subaccount.id)),
+      ),
+      // Update transactions where the subaccount's currency changed
+      ...currencyChangeSubaccounts.map(async ({ subaccount, prevSubaccount }) => {
+        const [{ rate }] = await tx
+          .select({ rate: schema.exchangeRates.rate })
+          .from(schema.exchangeRates)
+          .where(
+            and(
+              eq(schema.exchangeRates.from, prevSubaccount!.currency),
+              eq(schema.exchangeRates.to, subaccount.currency!),
+            ),
+          )
+          .execute();
+
+        await tx
+          .update(schema.transactions)
+          .set({
+            amount: sql`${schema.transactions.amount} * ${rate}`,
+            balance: sql`${schema.transactions.balance} * ${rate}`,
+          })
+          .where(eq(schema.transactions.subaccountId, subaccount.id));
+      }),
+    ]);
+
+    return !!currencyChangeSubaccounts.length;
+  });
+
+  // TODO: error handling
+
+  if (wasCurrencyChanged) {
+    revalidateTag('transactions');
+  }
+  revalidateTag('accounts');
+  revalidateTag('subaccounts');
+  return { success: true };
+}
 
 interface CreateAccountParams {
   name: string;
@@ -32,11 +165,11 @@ export async function createAccount(params: CreateAccountParams): Promise<Action
       .returning({ id: schema.accounts.id });
 
     if (params.subaccounts?.length) {
-      await tx.insert(schema.subaccounts).values(
+      await createSubaccounts(
         params.subaccounts.map((subaccount) => ({
           accountId: id,
-          currency: subaccount.originalCurrency,
           name: subaccount.name,
+          currency: subaccount.originalCurrency,
         })),
       );
     }
@@ -52,7 +185,10 @@ export async function createAccount(params: CreateAccountParams): Promise<Action
 interface UpdateAccountParams {
   name?: string;
   category?: Enums<'account_category'>;
-  subaccounts?: { id: string; name?: string; originalCurrency?: string }[];
+  subaccounts?: (
+    | { id: string; name?: string; originalCurrency?: string; delete?: true }
+    | { name: string; originalCurrency: string }
+  )[];
 }
 
 export async function updateAccount(
@@ -69,18 +205,23 @@ export async function updateAccount(
     };
   }
 
-  const currencyChangeItems =
-    params.subaccounts
-      ?.map((subaccount) => ({
-        subaccount,
-        prevSubaccount: account.subaccounts.find((item) => item.id === subaccount.id),
-      }))
-      .filter(
-        ({ subaccount, prevSubaccount }) =>
-          prevSubaccount &&
-          subaccount.originalCurrency &&
-          subaccount.originalCurrency !== prevSubaccount.originalCurrency,
-      ) ?? [];
+  const subaccountsToDelete =
+    params.subaccounts?.filter(
+      (subaccount): subaccount is { id: string; delete: true } =>
+        'id' in subaccount && 'delete' in subaccount && subaccount.delete === true,
+    ) ?? [];
+
+  const newSubaccounts =
+    params.subaccounts?.filter(
+      (subaccount): subaccount is { name: string; originalCurrency: string } =>
+        !('id' in subaccount),
+    ) ?? [];
+
+  const existingSubaccounts =
+    params.subaccounts?.filter(
+      (subaccount): subaccount is { id: string; name?: string; originalCurrency?: string } =>
+        'id' in subaccount && !subaccount.delete,
+    ) ?? [];
 
   await db.transaction(async (tx) => {
     // Update account
@@ -91,45 +232,27 @@ export async function updateAccount(
 
     if (params.subaccounts && params.subaccounts.length) {
       await Promise.all([
-        // Update subaccounts
-        ...params.subaccounts!.map((subaccount) =>
-          tx
-            .update(schema.subaccounts)
-            .set({ name: subaccount.name, currency: subaccount.originalCurrency })
-            .where(eq(schema.subaccounts.id, subaccount.id)),
+        deleteSubaccounts(subaccountsToDelete.map((subaccount) => subaccount.id)),
+        createSubaccounts(
+          newSubaccounts.map((subaccount) => ({
+            accountId: id,
+            name: subaccount.name,
+            currency: subaccount.originalCurrency,
+          })),
         ),
-        // Update transactions where the subaccount's currency changed
-        ...currencyChangeItems.map(({ subaccount, prevSubaccount }) => {
-          const rate = tx.$with('rate').as(
-            db
-              .select({ rate: schema.exchangeRates.rate })
-              .from(schema.exchangeRates)
-              .where(
-                and(
-                  eq(schema.exchangeRates.from, prevSubaccount!.originalCurrency),
-                  eq(schema.exchangeRates.to, subaccount.originalCurrency!),
-                ),
-              ),
-          );
-
-          return tx
-            .with(rate)
-            .update(schema.transactions)
-            .set({
-              amount: sql`${schema.transactions.amount} * ${rate}`,
-              balance: sql`${schema.transactions.balance} * ${rate}`,
-            })
-            .where(eq(schema.transactions.subaccountId, subaccount.id));
-        }),
+        updateSubaccounts(
+          existingSubaccounts.map((subaccount) => ({
+            id: subaccount.id,
+            name: subaccount.name,
+            currency: subaccount.originalCurrency,
+          })),
+        ),
       ]);
     }
   });
 
   // TODO: error handling
 
-  if (currencyChangeItems.length) {
-    revalidateTag('transactions');
-  }
   revalidateTag('accounts');
   revalidateTag('subaccounts');
   return { success: true };
