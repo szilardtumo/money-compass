@@ -58,11 +58,16 @@ const staticColumns = [
     header: 'Account',
     cell: ({ getValue, row }) => (
       <div className="flex items-center">
-        <AccountIcon category={row.original.account.category} className="w-4 h-4 mr-1" />
+        <AccountIcon category={row.original.account.category} className="w-4 h-4 mr-1 shrink-0" />
         <NavLink href={`/dashboard/accounts/${row.original.account.id}`}>{getValue()}</NavLink>
       </div>
     ),
     filterFn: 'arrIncludesSome',
+  }),
+  columnHelper.accessor((row) => row.subaccount.name, {
+    id: 'subaccount',
+    header: 'Subaccount',
+    cell: ({ getValue }) => getValue(),
   }),
   columnHelper.accessor('amount.originalValue', {
     meta: { align: 'right' },
@@ -98,10 +103,17 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
   const transactionsWithAccount = useMemo<TransactionWithAccount[]>(
     () =>
       transactions.data
-        .map((transaction) => ({
-          ...transaction,
-          account: accounts.find((account) => account.id === transaction.accountId)!,
-        }))
+        .map((transaction) => {
+          const account = accounts.find((account) => account.id === transaction.accountId)!;
+          const subaccount = account.subaccounts.find(
+            (subaccount) => subaccount.id === transaction.subaccountId,
+          )!;
+          return {
+            ...transaction,
+            subaccount,
+            account,
+          };
+        })
         .filter((transaction) => !!transaction.account),
     [transactions, accounts],
   );

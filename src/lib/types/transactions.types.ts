@@ -1,4 +1,4 @@
-import { Account } from '@/lib/types/accounts.types';
+import { Account, Subaccount } from '@/lib/types/accounts.types';
 import { CurrencyValue } from '@/lib/types/currencies.types';
 
 export interface Transaction {
@@ -16,6 +16,7 @@ export interface Transaction {
 }
 
 export interface TransactionWithAccount extends Transaction {
+  subaccount: Subaccount;
   account: Account;
 }
 

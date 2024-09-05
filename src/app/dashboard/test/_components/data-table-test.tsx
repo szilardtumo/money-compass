@@ -52,10 +52,17 @@ export function DataTableTest({ accounts, transactions }: DataTableTestProps) {
   const transactionsWithAccount = React.useMemo<TransactionWithAccount[]>(
     () =>
       transactions.data
-        .map((transaction) => ({
-          ...transaction,
-          account: accounts.find((account) => account.id === transaction.accountId)!,
-        }))
+        .map((transaction) => {
+          const account = accounts.find((account) => account.id === transaction.accountId)!;
+          const subaccount = account.subaccounts.find(
+            (subaccount) => subaccount.id === transaction.subaccountId,
+          )!;
+          return {
+            ...transaction,
+            subaccount,
+            account,
+          };
+        })
         .filter((transaction) => !!transaction.account),
     [transactions, accounts],
   );
