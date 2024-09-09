@@ -1,12 +1,24 @@
 import 'server-only';
 
 import { sql } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
+import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { jwtDecode } from 'jwt-decode';
 import postgres from 'postgres';
 import React from 'react';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+
+declare global {
+  // eslint-disable-next-line no-var
+  var database: PostgresJsDatabase<typeof schema> | undefined;
+}
+
+// Disable prefetch as it is not supported for "Transaction" pool mode
+const client = postgres(process.env.DATABASE_URL!, { prepare: false });
+const drizzleClient = drizzle(client, { schema });
+
+const db = global.database || drizzleClient;
+if (process.env.NODE_ENV !== 'production') global.database = db;
 
 import * as schema from './schema';
 if (!process.env.DATABASE_URL) {
@@ -21,9 +33,6 @@ export const getDb = React.cache(async () => {
     ? jwtDecode<{ sub: string; email: string; role: string }>(token)
     : null;
 
-  // Disable prefetch as it is not supported for "Transaction" pool mode
-  const client = postgres(process.env.DATABASE_URL!, { prepare: false });
-  const db = drizzle(client, { schema });
   return new Proxy<typeof db>(db, {
     get(target, prop) {
       if (prop === 'transaction') {
