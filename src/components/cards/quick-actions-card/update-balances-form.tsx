@@ -66,42 +66,47 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-8">
-        {accounts.map((account) => (
-          <div key={account.id}>
-            <h3>{account.name}</h3>
-            {account.subaccounts.map((subaccount) => (
-              <FormField
-                key={subaccount.id}
-                control={form.control}
-                name={`balances.${subaccount.id}`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{subaccount.originalCurrency}</FormLabel>
-                    <FormControl>
-                      <CurrencyInput
-                        currency={subaccount.originalCurrency}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                          }
-                        }}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Previous balance:{' '}
-                      {formatCurrency(
-                        subaccount.balance.originalValue,
-                        subaccount.originalCurrency,
-                      )}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
-          </div>
-        ))}
+        {accounts
+          .filter((account) => account.subaccounts.length)
+          .map((account) => (
+            <div key={account.id} className="space-y-1">
+              <h3 className="text-base font-semibold">{account.name}</h3>
+              <div className="flex flex-col gap-3">
+                {account.subaccounts.map((subaccount) => (
+                  <FormField
+                    key={subaccount.id}
+                    control={form.control}
+                    name={`balances.${subaccount.id}`}
+                    render={({ field }) => (
+                      <FormItem className="space-y-0 grid grid-cols-[12ch_1fr] gap-x-2 items-center">
+                        <FormLabel className="line-clamp-2">{subaccount.name}</FormLabel>
+                        <FormControl>
+                          <CurrencyInput
+                            currency={subaccount.originalCurrency}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                              }
+                            }}
+                            {...field}
+                          />
+                        </FormControl>
+
+                        <FormDescription className="col-start-2 !mt-1">
+                          Previous balance:{' '}
+                          {formatCurrency(
+                            subaccount.balance.originalValue,
+                            subaccount.originalCurrency,
+                          )}
+                        </FormDescription>
+                        <FormMessage className="col-start-2" />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
 
         <Button
           type="submit"
