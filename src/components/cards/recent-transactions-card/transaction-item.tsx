@@ -21,7 +21,7 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
             href={`/dashboard/accounts/${transaction.account.id}`}
             className="hover:underline"
           >
-            {transaction.account.name}
+            {transaction.account.name} ({transaction.subaccount.name})
           </NavLink>
         </p>
       </div>

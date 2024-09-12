@@ -46,11 +46,16 @@ export function RecentTransactionsCard({
   const groupedTransactions = useMemo(() => {
     const transactionsWithAccount = transactions
       .filter((transaction) => selectedAccountIds.includes(transaction.accountId))
-      .map((transaction) => ({
-        ...transaction,
-        account: accounts.find((account) => account.id === transaction.accountId),
-      }))
-      .filter((transaction): transaction is TransactionWithAccount => !!transaction.account);
+      .map((transaction) => {
+        const account = accounts.find((account) => account.id === transaction.accountId);
+        const subaccount = account?.subaccounts.find((subaccount) => subaccount.id === transaction.subaccountId);
+
+        return { ...transaction, account, subaccount };
+      })
+      .filter(
+        (transaction): transaction is TransactionWithAccount =>
+          !!transaction.account && !!transaction.subaccount,
+      );
 
     const groups = groupBy(transactionsWithAccount, (transaction) =>
       new Date(transaction.startedDate).toDateString(),

@@ -190,6 +190,13 @@ export function UpsertAccountForm({
               </TableRow>
             </TableHeader>
             <TableBody>
+              {!subaccountFieldArray.fields.length && (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center text-muted-foreground">
+                    Click on the Add more button to add a subaccount.
+                  </TableCell>
+                </TableRow>
+              )}
               {subaccountFieldArray.fields.map((subaccount, index) => (
                 <TableRow key={subaccount._id} className="hover:bg-transparent">
                   <TableCell className="align-top">

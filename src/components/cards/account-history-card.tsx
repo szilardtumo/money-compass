@@ -26,10 +26,12 @@ export function AccountHistoryCard({
     <Card>
       <CardHeader className="flex flex-row space-y-0 gap-4 justify-between">
         <CardTitle>{title}</CardTitle>
-        <div className="flex items-center gap-2">
-          <Switch id="stack" checked={stack} onCheckedChange={setStack} />
-          <Label htmlFor="stack">Stack subaccounts</Label>
-        </div>
+        {account.subaccounts.length > 1 && (
+          <div className="flex items-center gap-2">
+            <Switch id="stack" checked={stack} onCheckedChange={setStack} />
+            <Label htmlFor="stack">Stack subaccounts</Label>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <TransactionHistoryChart accounts={[account]} data={data} stack={stack} />
