@@ -23,13 +23,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { Enums } from '@/lib/types/database.types';
 import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
 interface CreateTransactionFormProps {
-  accounts: SimpleAccount[];
+  accounts: Account[];
   defaultValues?: Partial<FormFields>;
   onSuccess?: () => void;
 }
@@ -45,6 +45,7 @@ const transactionTypeOptions = [
 
 const formSchema = z.object({
   account: z.string({ required_error: 'An account must be selected.' }),
+  subaccount: z.string({ required_error: 'A subaccount must be selected.' }),
   type: z.string({ required_error: 'A transaction type must be selected.' }),
   amount: z.number(),
   description: z.string().min(1, 'Description is required.'),
@@ -64,22 +65,21 @@ export function CreateTransactionForm({
   });
 
   const selectedAccountId = form.watch('account');
-  const selectedAccountCurrency = useMemo(
-    () => accounts.find((account) => account.id === selectedAccountId)?.originalCurrency,
-    [accounts, selectedAccountId],
+  const selectedSubaccountId = form.watch('subaccount');
+  const selectedSubaccountCurrency = useMemo(
+    () =>
+      accounts
+        .find((account) => account.id === selectedAccountId)
+        ?.subaccounts.find((subaccount) => subaccount.id === selectedSubaccountId)
+        ?.originalCurrency,
+    [accounts, selectedAccountId, selectedSubaccountId],
   );
 
   async function onSubmit(values: FormFields) {
-    const subaccountId = accounts.find((account) => account.id === values.account)?.subaccountId;
-
-    if (!subaccountId) {
-      form.setError('account', { message: 'Select a valid account.' });
-    }
-
     const promise = apiActions.transactions.createTransaction({
       amount: values.amount,
       type: values.type as Enums<'transaction_type'>,
-      subaccountId: subaccountId!,
+      subaccountId: selectedSubaccountId,
       description: values.description,
       date: values.date.toISOString(),
     });
@@ -103,6 +103,17 @@ export function CreateTransactionForm({
     }));
   }, [accounts]);
 
+  const subaccountOptions = useMemo(() => {
+    return (
+      accounts
+        .find((account) => account.id === selectedAccountId)
+        ?.subaccounts.map((subaccount) => ({
+          label: subaccount.name,
+          value: subaccount.id,
+        })) ?? []
+    );
+  }, [accounts, selectedAccountId]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-8">
@@ -114,6 +125,19 @@ export function CreateTransactionForm({
               <FormLabel>Account</FormLabel>
               <FormControl>
                 <Combobox options={accountOptions} onValueChange={onChange} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="subaccount"
+          render={({ field: { onChange, ...field } }) => (
+            <FormItem>
+              <FormLabel>Subaccount</FormLabel>
+              <FormControl>
+                <Combobox options={subaccountOptions} onValueChange={onChange} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -139,7 +163,7 @@ export function CreateTransactionForm({
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
-                <CurrencyInput currency={selectedAccountCurrency} {...field} />
+                <CurrencyInput currency={selectedSubaccountCurrency} {...field} />
               </FormControl>
               <FormDescription>
                 The transaction value. Positive value means income, negative means expense.

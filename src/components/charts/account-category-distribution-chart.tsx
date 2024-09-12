@@ -14,13 +14,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/cn';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { chartColors } from '@/lib/utils/charts';
 import { capitalize, formatCurrency, formatPercent } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
 
 interface AccountCategoryDistributionChartProps {
-  accounts: SimpleAccount[];
+  accounts: Account[];
   mainCurrency: string;
 }
 
@@ -34,7 +34,7 @@ export function AccountCategoryDistributionChart({
     return Object.entries(groups).map(([category, items]) => ({
       id: category,
       category,
-      balance: items.reduce((acc, current) => acc + current.balance.mainCurrencyValue, 0),
+      balance: items.reduce((acc, current) => acc + current.totalBalance, 0),
     }));
   }, [accounts]);
 

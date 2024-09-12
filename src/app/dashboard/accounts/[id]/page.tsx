@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { AccountDetailsCard } from '@/components/cards/account-details-card';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
+import { SubaccountsCard } from '@/components/cards/subaccounts-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
 import { apiQueries } from '@/server/api/queries';
 
@@ -15,14 +16,14 @@ interface AccountDetailsPageProps {
 }
 
 export default async function AccountDetailsPage({ params }: AccountDetailsPageProps) {
-  const account = await apiQueries.accounts.getSimpleAccount(params.id);
+  const account = await apiQueries.accounts.getAccount(params.id);
 
   if (!account) {
     notFound();
   }
 
   const [transactions, transactionHistory] = await Promise.all([
-    apiQueries.transactions.getTransactions({ subaccountId: account?.subaccountId, pageSize: 5 }),
+    apiQueries.transactions.getTransactions({ accountId: account.id, pageSize: 5 }),
     apiQueries.transactions.getTransactionHistory('12 month', '1 month'),
   ]);
 
@@ -40,6 +41,7 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
           account={account}
           title="Transaction history (past 12 months)"
         />
+        <SubaccountsCard subaccounts={account.subaccounts} accountBalance={account.totalBalance} />
         <RecentTransactionsCard
           accounts={[account]}
           transactions={transactions.data}

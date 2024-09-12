@@ -6,52 +6,42 @@ import { useMemo } from 'react';
 import { Metric } from '@/components/ui/metric';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
 
 interface TransactionHistoryChartProps {
   data: TransactionHistory[];
-  accounts: SimpleAccount[];
-  subaccountIdsToShow?: string[]; // If not provided, the total net worth will be shown, otherwise a detailed view of the selected subaccounts
+  accounts: Account[];
+  /** If there are multiple accounts, it stacks accounts, if there is only one account, it stacks its subaccounts */
+  stack?: boolean;
 }
 
 export function TransactionHistoryChart({
   data,
   accounts,
-  subaccountIdsToShow,
+  stack = false,
 }: TransactionHistoryChartProps) {
-  // helper map to access accounts by subaccountId in O(1)
-  const accountMap = useMemo(() => {
-    return accounts.reduce<Record<string, SimpleAccount>>((acc, account) => {
-      acc[account.subaccountId] = account;
-      return acc;
-    }, {});
-  }, [accounts]);
-
-  // Account currency is used if there is only one account to show, otherwise the main currency is used
-  const useMainCurrency = !subaccountIdsToShow || subaccountIdsToShow.length > 1;
-  const currency = useMainCurrency
-    ? data[0]?.mainCurrency ?? 'eur'
-    : accountMap[subaccountIdsToShow[0]].originalCurrency;
+  const currency = data[0]?.mainCurrency ?? 'eur';
 
   const parsedData = useMemo(() => {
     const parsedTransactionHistory = data.map((item) => ({
       Date: item.date,
       Month: formatDate(item.date, 'MMMM yyyy'),
       // Generate an entry for the total value
-      Total: Object.values(item.accountBalances).reduce(
-        (acc, balance) =>
-          acc + (useMainCurrency ? balance.mainCurrencyValue : balance.originalValue),
-        0,
-      ),
-      // Generate an entry for every subaccount
+      Total: Object.values(item.accountBalances).reduce((acc, item) => acc + item.totalBalance, 0),
+      // Generate an entry for every account and subaccount
       ...Object.fromEntries(
-        accounts.map((account) => [
-          account.name,
-          useMainCurrency
-            ? item.accountBalances[account.subaccountId].mainCurrencyValue
-            : item.accountBalances[account.subaccountId].originalValue,
+        accounts.flatMap((account) => [
+          [account.name, item.accountBalances[account.id].totalBalance] as const,
+          ...account.subaccounts.map(
+            (subaccount) =>
+              [
+                subaccount.name,
+                item.accountBalances[account.id].subaccountBalances[subaccount.id]
+                  .mainCurrencyValue,
+              ] as const,
+          ),
         ]),
       ),
     }));
@@ -61,11 +51,23 @@ export function TransactionHistoryChart({
       return [parsedTransactionHistory[0], { ...parsedTransactionHistory[0], Month: 'Now' }];
     }
     return parsedTransactionHistory;
-  }, [accounts, data, useMainCurrency]);
+  }, [accounts, data]);
 
   const chartCategories = useMemo(() => {
-    return subaccountIdsToShow?.map((subaccountId) => accountMap[subaccountId].name) ?? ['Total'];
-  }, [accountMap, subaccountIdsToShow]);
+    if (accounts.length === 1) {
+      if (stack) {
+        return accounts[0].subaccounts.map((subaccount) => subaccount.name);
+      } else {
+        return [accounts[0].name];
+      }
+    }
+
+    if (stack) {
+      return accounts.map((account) => account.name);
+    } else {
+      return ['Total'];
+    }
+  }, [accounts, stack]);
 
   const metric = useMemo(() => {
     const value = parsedData[parsedData.length - 1]
@@ -116,7 +118,7 @@ export function TransactionHistoryChart({
         data={parsedData}
         index="Month"
         categories={chartCategories}
-        stack={!!subaccountIdsToShow}
+        stack={stack}
         curveType="monotone"
         yAxisWidth={75}
         showYAxis={isSm}

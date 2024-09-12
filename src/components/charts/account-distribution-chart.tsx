@@ -14,12 +14,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/cn';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { chartColors } from '@/lib/utils/charts';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
 
 interface AccountDistributionChartProps {
-  accounts: SimpleAccount[];
+  accounts: Account[];
   mainCurrency: string;
 }
 
@@ -32,8 +32,7 @@ export function AccountDistributionChart({
       accounts.map((account) => ({
         id: account.id,
         name: account.name,
-        balance: account.balance,
-        originalCurrency: account.originalCurrency,
+        balance: account.totalBalance,
         mainCurrency: account.mainCurrency,
         category: account.category,
       })),
@@ -41,7 +40,7 @@ export function AccountDistributionChart({
   );
 
   const totalBalance = useMemo(
-    () => data.reduce((acc, current) => acc + current.balance.mainCurrencyValue, 0),
+    () => data.reduce((acc, current) => acc + current.balance, 0),
     [data],
   );
 
@@ -52,14 +51,11 @@ export function AccountDistributionChart({
       <DonutChart
         data={data}
         index="name"
-        category="balance.mainCurrencyValue"
+        category="balance"
         showAnimation
         showTooltip
         showLabel
-        label={formatCurrency(
-          selectedSlice?.balance.mainCurrencyValue ?? totalBalance,
-          mainCurrency,
-        )}
+        label={formatCurrency(selectedSlice?.balance ?? totalBalance, mainCurrency)}
         variant="donut"
         className="h-48 my-4"
         colors={chartColors}
@@ -72,7 +68,6 @@ export function AccountDistributionChart({
             <TableHead>Account</TableHead>
             <TableHead>Category</TableHead>
             <TableHead>Share</TableHead>
-            <TableHead className="text-right">Balance (in original currency)</TableHead>
             <TableHead className="text-right">Balance</TableHead>
           </TableRow>
         </TableHeader>
@@ -94,13 +89,10 @@ export function AccountDistributionChart({
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge>{formatPercent(item.balance.mainCurrencyValue / totalBalance)}</Badge>
+                <Badge>{formatPercent(item.totalBalance / totalBalance)}</Badge>
               </TableCell>
               <TableCell className="text-right">
-                {formatCurrency(item.balance.originalValue, item.originalCurrency)}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(item.balance.mainCurrencyValue, item.mainCurrency)}
+                {formatCurrency(item.totalBalance, item.mainCurrency)}
               </TableCell>
             </TableRow>
           ))}

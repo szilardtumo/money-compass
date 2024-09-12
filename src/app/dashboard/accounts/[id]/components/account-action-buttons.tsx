@@ -19,12 +19,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
 interface AccountActionButtonsProps {
-  account: SimpleAccount;
+  account: Account;
 }
 
 export function AccountActionButtons({ account }: AccountActionButtonsProps) {

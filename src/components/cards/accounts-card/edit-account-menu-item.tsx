@@ -2,10 +2,10 @@
 
 import { useUpsertAccountDialog } from '@/components/providers/upsert-account-dialog-provider';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 
 interface EditAccountMenuItemProps {
-  account: SimpleAccount;
+  account: Account;
 }
 
 export function EditAccountMenuItem({ account }: EditAccountMenuItemProps) {

@@ -12,12 +12,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 
 import { UpdateBalancesForm } from './update-balances-form';
 
 interface UpdateBalancesDialogProps {
-  accounts: SimpleAccount[];
+  accounts: Account[];
 }
 
 export function UpdateBalancesDialog({ accounts }: UpdateBalancesDialogProps) {

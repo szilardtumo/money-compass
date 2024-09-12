@@ -8,14 +8,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 
 import { AddTransactionMenuItem } from './add-transaction-menu-item';
 import { DeleteAccountMenuItem } from './delete-account-menu-item';
 import { EditAccountMenuItem } from './edit-account-menu-item';
 
 interface AccountActionsDropdownProps {
-  account: SimpleAccount;
+  account: Account;
   className?: string;
 }
 

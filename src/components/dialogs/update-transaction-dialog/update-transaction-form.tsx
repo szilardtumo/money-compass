@@ -19,13 +19,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
-import { SimpleAccount } from '@/lib/types/accounts.types';
 import { Enums } from '@/lib/types/database.types';
 import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
 interface UpdateTransactionFormProps {
-  account: SimpleAccount;
+  currency: string;
   defaultValues: FormFields;
   onSuccess?: () => void;
 }
@@ -49,7 +48,7 @@ const formSchema = z.object({
 type FormFields = z.infer<typeof formSchema>;
 
 export function UpdateTransactionForm({
-  account,
+  currency,
   defaultValues,
   onSuccess,
 }: UpdateTransactionFormProps) {
@@ -100,7 +99,7 @@ export function UpdateTransactionForm({
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
-                <CurrencyInput currency={account.originalCurrency} {...field} />
+                <CurrencyInput currency={currency} {...field} />
               </FormControl>
               <FormDescription>
                 The transaction value. Positive value means income, negative means expense.

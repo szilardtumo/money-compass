@@ -1,70 +1,202 @@
 'use server';
 
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { apiQueries } from '@/server/api/queries';
+import { getDb, schema } from '@/server/db';
 
 import { createTransactions } from './transactions.actions';
 
-interface CreateSimpleAccountParams {
+interface CreateSubaccountParams {
+  accountId: string;
   name: string;
-  originalCurrency: string;
-  category: Enums<'account_category'>;
+  currency: string;
 }
 
 /**
- * Creates a new account with a single subaccount.
+ * Creates new subaccounts
  *
- * @param params The parameters to create the account.
+ * @param params A list of parameters to create the subaccounts.
  * @returns
  */
-export async function createSimpleAccount(
-  params: CreateSimpleAccountParams,
-): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
-
-  const { data: account, error: accountError } = await supabase
-    .from('accounts')
-    .insert({ name: params.name, category: params.category })
-    .select('id')
-    .single();
-
-  if (accountError || !account) {
-    return { success: false, error: { code: accountError.code, message: accountError.message } };
+async function createSubaccounts(params: CreateSubaccountParams[]): Promise<ActionResponse> {
+  if (!params.length) {
+    return { success: true };
   }
 
-  const { error: subaccountError } = await supabase
-    .from('subaccounts')
-    .insert({ currency: params.originalCurrency, account_id: account.id });
+  const db = await getDb();
 
-  if (subaccountError) {
-    return {
-      success: false,
-      error: { code: subaccountError.code, message: subaccountError.message },
-    };
-  }
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.subaccounts).values(
+      params.map((item) => ({
+        accountId: item.accountId,
+        name: item.name,
+        currency: item.currency,
+      })),
+    );
+  });
+
+  // TODO: error handling
 
   revalidateTag('accounts');
   revalidateTag('subaccounts');
   return { success: true };
 }
 
-interface UpdateSimpleAccountParams {
-  name?: string;
-  originalCurrency?: string;
-  category?: Enums<'account_category'>;
+/**
+ * Deletes subaccounts with the specified ids
+ *
+ * @param subaccountIds A list of subaccount ids
+ * @returns
+ */
+async function deleteSubaccounts(subaccountIds: string[]): Promise<ActionResponse> {
+  const db = await getDb();
+
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.subaccounts).where(inArray(schema.subaccounts.id, subaccountIds));
+  });
+
+  // TODO: error handling
+
+  revalidateTag('accounts');
+  revalidateTag('subaccounts');
+  return { success: true };
 }
 
-export async function updateSimpleAccount(
-  id: string,
-  params: UpdateSimpleAccountParams,
-): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
+interface UpdateSubaccountParams {
+  id: string;
+  name?: string;
+  currency?: string;
+}
 
-  const account = await apiQueries.accounts.getSimpleAccount(id);
+async function updateSubaccounts(params: UpdateSubaccountParams[]): Promise<ActionResponse> {
+  const db = await getDb();
+
+  const wasCurrencyChanged = await db.transaction(async (tx) => {
+    const dbSubaccounts = await tx
+      .select()
+      .from(schema.subaccounts)
+      .where(
+        inArray(
+          schema.subaccounts.id,
+          params.map((subaccount) => subaccount.id),
+        ),
+      );
+
+    const currencyChangeSubaccounts =
+      params
+        .map((subaccount) => ({
+          subaccount,
+          prevSubaccount: dbSubaccounts.find((item) => item.id === subaccount.id),
+        }))
+        .filter(
+          ({ subaccount, prevSubaccount }) =>
+            prevSubaccount &&
+            subaccount.currency &&
+            subaccount.currency !== prevSubaccount.currency,
+        ) ?? [];
+
+    await Promise.all([
+      // Update existing subaccounts
+      ...params.map((subaccount) =>
+        tx
+          .update(schema.subaccounts)
+          .set({ name: subaccount.name, currency: subaccount.currency })
+          .where(eq(schema.subaccounts.id, subaccount.id)),
+      ),
+      // Update transactions where the subaccount's currency changed
+      ...currencyChangeSubaccounts.map(async ({ subaccount, prevSubaccount }) => {
+        const [{ rate }] = await tx
+          .select({ rate: schema.exchangeRates.rate })
+          .from(schema.exchangeRates)
+          .where(
+            and(
+              eq(schema.exchangeRates.from, prevSubaccount!.currency),
+              eq(schema.exchangeRates.to, subaccount.currency!),
+            ),
+          )
+          .execute();
+
+        await tx
+          .update(schema.transactions)
+          .set({
+            amount: sql`${schema.transactions.amount} * ${rate}`,
+            balance: sql`${schema.transactions.balance} * ${rate}`,
+          })
+          .where(eq(schema.transactions.subaccountId, subaccount.id));
+      }),
+    ]);
+
+    return !!currencyChangeSubaccounts.length;
+  });
+
+  // TODO: error handling
+
+  if (wasCurrencyChanged) {
+    revalidateTag('transactions');
+  }
+  revalidateTag('accounts');
+  revalidateTag('subaccounts');
+  return { success: true };
+}
+
+interface CreateAccountParams {
+  name: string;
+  category: Enums<'account_category'>;
+  subaccounts?: { name: string; originalCurrency: string }[];
+}
+
+/**
+ * Creates a new account with a subaccounts.
+ *
+ * @param params The parameters to create the account.
+ * @returns
+ */
+export async function createAccount(params: CreateAccountParams): Promise<ActionResponse> {
+  const db = await getDb();
+
+  await db.transaction(async (tx) => {
+    const [{ id }] = await tx
+      .insert(schema.accounts)
+      .values({ name: params.name, category: params.category })
+      .returning({ id: schema.accounts.id });
+
+    if (params.subaccounts?.length) {
+      await createSubaccounts(
+        params.subaccounts.map((subaccount) => ({
+          accountId: id,
+          name: subaccount.name,
+          currency: subaccount.originalCurrency,
+        })),
+      );
+    }
+  });
+
+  // TODO: error handling
+
+  revalidateTag('accounts');
+  revalidateTag('subaccounts');
+  return { success: true };
+}
+
+interface UpdateAccountParams {
+  name?: string;
+  category?: Enums<'account_category'>;
+  subaccounts?: (
+    | { id: string; name?: string; originalCurrency?: string; delete?: true }
+    | { name: string; originalCurrency: string }
+  )[];
+}
+
+export async function updateAccount(
+  id: string,
+  params: UpdateAccountParams,
+): Promise<ActionResponse> {
+  const db = await getDb();
+  const account = await apiQueries.accounts.getAccount(id);
 
   if (!account) {
     return {
@@ -73,53 +205,64 @@ export async function updateSimpleAccount(
     };
   }
 
-  const currencyChanged =
-    params.originalCurrency && params.originalCurrency !== account.originalCurrency;
+  const subaccountsToDelete =
+    params.subaccounts?.filter(
+      (subaccount): subaccount is { id: string; delete: true } =>
+        'id' in subaccount && 'delete' in subaccount && subaccount.delete === true,
+    ) ?? [];
 
-  const [accountResult, subaccountResult] = await Promise.all([
-    supabase
-      .from('accounts')
-      .update({ name: params.name, category: params.category })
-      .eq('id', id)
-      .select(),
-    currencyChanged
-      ? supabase.rpc('update_subaccount', {
-          _id: account.subaccountId,
-          _currency: params.originalCurrency!,
-        })
-      : undefined,
-  ]);
+  const newSubaccounts =
+    params.subaccounts?.filter(
+      (subaccount): subaccount is { name: string; originalCurrency: string } =>
+        !('id' in subaccount),
+    ) ?? [];
 
-  if (accountResult.error) {
-    return {
-      success: false,
-      error: { code: accountResult.error.code, message: accountResult.error.message },
-    };
-  }
+  const existingSubaccounts =
+    params.subaccounts?.filter(
+      (subaccount): subaccount is { id: string; name?: string; originalCurrency?: string } =>
+        'id' in subaccount && !subaccount.delete,
+    ) ?? [];
 
-  if (subaccountResult?.error) {
-    return {
-      success: false,
-      error: { code: subaccountResult.error.code, message: subaccountResult.error.message },
-    };
-  }
+  await db.transaction(async (tx) => {
+    // Update account
+    await tx
+      .update(schema.accounts)
+      .set({ name: params.name, category: params.category })
+      .where(eq(schema.accounts.id, id));
 
-  if (currencyChanged) {
-    revalidateTag('transactions');
-  }
+    if (params.subaccounts && params.subaccounts.length) {
+      await Promise.all([
+        deleteSubaccounts(subaccountsToDelete.map((subaccount) => subaccount.id)),
+        createSubaccounts(
+          newSubaccounts.map((subaccount) => ({
+            accountId: id,
+            name: subaccount.name,
+            currency: subaccount.originalCurrency,
+          })),
+        ),
+        updateSubaccounts(
+          existingSubaccounts.map((subaccount) => ({
+            id: subaccount.id,
+            name: subaccount.name,
+            currency: subaccount.originalCurrency,
+          })),
+        ),
+      ]);
+    }
+  });
+
+  // TODO: error handling
+
   revalidateTag('accounts');
   revalidateTag('subaccounts');
   return { success: true };
 }
 
 export async function deleteAccount(accountId: string): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
+  const db = await getDb();
+  await db.transaction((tx) => tx.delete(schema.accounts).where(eq(schema.accounts.id, accountId)));
 
-  const { error } = await supabase.from('accounts').delete().eq('id', accountId);
-
-  if (error) {
-    return { success: false, error: { code: error.code, message: error.message } };
-  }
+  //TODO: error handling
 
   revalidateTag('accounts');
   revalidateTag('subaccounts');

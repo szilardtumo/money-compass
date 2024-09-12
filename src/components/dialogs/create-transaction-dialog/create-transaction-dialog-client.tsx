@@ -2,12 +2,12 @@
 
 import { useCreateTransactionDialog } from '@/components/providers/create-transaction-dialog-provider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { SimpleAccount } from '@/lib/types/accounts.types';
+import { Account } from '@/lib/types/accounts.types';
 
 import { CreateTransactionForm } from './create-transaction-form';
 
 interface CreateTransactionDialogClientProps {
-  accounts: SimpleAccount[];
+  accounts: Account[];
 }
 
 export function CreateTransactionDialogClient({ accounts }: CreateTransactionDialogClientProps) {

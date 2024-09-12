@@ -17,6 +17,7 @@ export interface ComboboxProps extends React.HTMLAttributes<HTMLButtonElement> {
   options: readonly { label: string; value: string }[];
   value: string | undefined;
   onValueChange?: (value: string | undefined) => void;
+  disabled?: boolean;
   placeholder?: string;
   notFoundMessage?: string;
 }
@@ -28,6 +29,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
       options,
       value,
       onValueChange,
+      disabled = false,
       placeholder = 'Select...',
       notFoundMessage = 'Not Found.',
       ...props
@@ -43,6 +45,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            disabled={disabled}
             className={cn(
               'flex w-full justify-between focus:outline-none focus:ring-1 focus:ring-ring',
               className,

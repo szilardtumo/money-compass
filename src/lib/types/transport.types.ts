@@ -24,7 +24,7 @@ export enum ActionErrorCode {
 
 export interface Paginated<T> {
   data: T[];
-  total: number;
+  // total: number;
   page: number;
   pageSize: number;
 }

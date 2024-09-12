@@ -128,18 +128,21 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          name: string
         }
         Insert: {
           account_id: string
           created_at?: string
           currency: string
           id?: string
+          name?: string
         }
         Update: {
           account_id?: string
           created_at?: string
           currency?: string
           id?: string
+          name?: string
         }
         Relationships: [
           {

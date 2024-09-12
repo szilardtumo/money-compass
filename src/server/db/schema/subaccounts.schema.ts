@@ -1,9 +1,10 @@
-import { pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { accounts } from './accounts.shema';
 
 export const subaccounts = pgTable('subaccounts', {
   id: uuid('id').notNull().defaultRandom().primaryKey(),
+  name: text('name').notNull().default('Default'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   accountId: uuid('account_id')
     .notNull()
