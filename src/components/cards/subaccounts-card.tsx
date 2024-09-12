@@ -59,7 +59,7 @@ export function SubaccountsCard({ subaccounts, accountBalance }: SubaccountsCard
               <TableRow>
                 <TableCell>Total</TableCell>
                 <TableCell colSpan={3} className="text-right">
-                  {formatCurrency(accountBalance, subaccounts[0].originalCurrency)}
+                  {formatCurrency(accountBalance, subaccounts[0].mainCurrency)}
                 </TableCell>
               </TableRow>
             </TableFooter>
