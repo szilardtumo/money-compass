@@ -10,7 +10,7 @@ This project uses:
 - **[Supabase](https://supabase.io/)** - An open-source alternative to Firebase
 - **[Tailwind CSS](https://tailwindcss.com/)** - A utility-first CSS framework for rapid UI development
 - **[ShadCN](https://ui.shadcn.com/)** - A collection of beautiful, free, and open-source components for Tailwind CSS
-- **[Tremor](https://www.tremor.so/)** - React components to build charts
+- **[Tremor Raw](https://www.tremor.so/)** - React components to build charts
 - **[React Hook Form](https://react-hook-form.com/)** - Performant, flexible, and extensible forms with easy-to-use validation
 - **[ESlint](https://eslint.org/)** and **[Prettier](https://prettier.io/)** - For clean, consistent, and error-free code
 - **[TypeScript](https://www.typescriptlang.org/)** with **[ts-reset](https://github.com/total-typescript/ts-reset)** - For type safety
@@ -38,10 +38,10 @@ yarn dev
 
 3. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-
 ## Scripts Overview
 
 The following scripts are available in `package.json`:
+
 - `dev`: Starts the development server
 - `build`: Builds the application for production
 - `start`: Starts the production server
@@ -68,12 +68,12 @@ The following scripts are available in `package.json`:
 │  │  ├──layout.tsx
 │  │  └──page.tsx
 ├──components           // Reusable components
-│  ├──cards           
+│  ├──cards
 │  ├──charts
-│  ├──dialogs    
-│  ├──providers        
-│  └──ui                
-├──lib                  
+│  ├──dialogs
+│  ├──providers
+│  └──ui
+├──lib
 │  ├──db                // Database queries and mutations
 │  ├──types             // Global types
 │  └──utils             // Utility functions
@@ -82,7 +82,7 @@ The following scripts are available in `package.json`:
 
 ## Supabase
 
-This project uses [Supabase](https://supabase.io/) for authentication and database. 
+This project uses [Supabase](https://supabase.io/) for authentication and database.
 
 ### Database migrations
 
@@ -107,7 +107,6 @@ yarn test
 ```
 
 For other commands related to unit testing, check the [Scripts Overview](#scripts-overview) section.
-
 
 ### End-to-End Testing
 
