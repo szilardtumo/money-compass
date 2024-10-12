@@ -1,8 +1,8 @@
 'use client';
 
-import { AreaChart } from '@tremor/react';
 import { useMemo } from 'react';
 
+import { AreaChart } from '@/components/ui/chart';
 import { Metric } from '@/components/ui/metric';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -118,19 +118,18 @@ export function TransactionHistoryChart({
         data={parsedData}
         index="Month"
         categories={chartCategories}
-        stack={stack}
+        type={stack ? 'stacked' : 'default'}
+        fill={chartCategories.length <= 1 ? 'gradient' : 'solid'}
         curveType="monotone"
         yAxisWidth={75}
         showYAxis={isSm}
         showXAxis={false}
         showLegend={false}
         showGridLines={false}
-        showGradient={chartCategories.length <= 1}
         minValue={minValue}
         connectNulls
-        showAnimation
         className="mt-6 h-48"
-        valueFormatter={(value) => formatCurrency(value, currency)}
+        valueFormatter={(value) => formatCurrency(value as number, currency)}
       />
     </div>
   );

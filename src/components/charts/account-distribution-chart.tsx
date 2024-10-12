@@ -1,9 +1,9 @@
 'use client';
 
-import { DonutChart } from '@tremor/react';
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, chartColors } from '@/components/ui/chart';
 import {
   Table,
   TableBody,
@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/cn';
 import { Account } from '@/lib/types/accounts.types';
-import { chartColors } from '@/lib/utils/charts';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
 
 interface AccountDistributionChartProps {
@@ -50,17 +49,15 @@ export function AccountDistributionChart({
     <div>
       <DonutChart
         data={data}
-        index="name"
-        category="balance"
-        showAnimation
+        category="name"
+        value="balance"
         showTooltip
         showLabel
         label={formatCurrency(selectedSlice?.balance ?? totalBalance, mainCurrency)}
         variant="donut"
-        className="h-48 my-4"
-        colors={chartColors}
-        onValueChange={setSelectedSlice}
-        valueFormatter={(value) => formatCurrency(value, mainCurrency)}
+        className="h-48 mx-auto my-4"
+        onValueChange={(value) => setSelectedSlice(value?.payload ?? null)}
+        valueFormatter={(value) => formatCurrency(value as number, mainCurrency)}
       />
       <Table>
         <TableHeader>
@@ -76,10 +73,8 @@ export function AccountDistributionChart({
             <TableRow key={item.id}>
               <TableCell className="font-medium whitespace-nowrap">
                 <div
-                  className={cn(
-                    'inline-block align-baseline h-3 w-3 rounded-sm mr-2',
-                    `bg-${chartColors[i]}-500`,
-                  )}
+                  className={cn('inline-block align-baseline h-3 w-3 rounded-sm mr-2')}
+                  style={{ backgroundColor: chartColors[i % chartColors.length] }}
                 />
                 {item.name}
               </TableCell>
