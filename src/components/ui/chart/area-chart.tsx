@@ -262,17 +262,9 @@ const AreaChart = <TPayload extends Record<string, unknown>>(props: AreaChartPro
           const categoryId = `${areaId}-${category.replace(/[^a-zA-Z0-9]/g, '')}`;
           const color = colors[i % colors.length];
           return (
-            <>
-              <defs key={category}>
-                <linearGradient
-                  key={category}
-                  color={color}
-                  id={categoryId}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
+            <React.Fragment key={category}>
+              <defs>
+                <linearGradient color={color} id={categoryId} x1="0" y1="0" x2="0" y2="1">
                   {getFillContent({
                     fillType: fill,
                     activeDot: activeDot,
@@ -340,7 +332,6 @@ const AreaChart = <TPayload extends Record<string, unknown>>(props: AreaChartPro
                   }
                   return <React.Fragment key={index}></React.Fragment>;
                 }}
-                key={category}
                 name={category}
                 type={curveType}
                 dataKey={category}
@@ -352,7 +343,7 @@ const AreaChart = <TPayload extends Record<string, unknown>>(props: AreaChartPro
                 stackId={stacked ? 'stack' : undefined}
                 fill={`url(#${categoryId})`}
               />
-            </>
+            </React.Fragment>
           );
         })}
         {/* hidden lines to increase clickable target area */}

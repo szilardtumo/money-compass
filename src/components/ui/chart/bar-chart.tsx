@@ -49,7 +49,7 @@ const renderShape = (
   activeLegend: string | undefined,
   layout: string,
 ) => {
-  const { fillOpacity, name, payload, value } = props;
+  const { fill, className, fillOpacity, name, payload, value } = props;
   let { x, width, y, height } = props;
 
   if (layout === 'horizontal' && height < 0) {
@@ -62,12 +62,13 @@ const renderShape = (
 
   return (
     <rect
-      {...props}
+      className={className}
       x={x}
       y={y}
       width={width}
       height={height}
-      rx={8}
+      fill={fill}
+      rx={Math.min(8, height / 2)}
       opacity={
         activeBar || (activeLegend && activeLegend !== name)
           ? deepEqual(activeBar, { ...payload, value })
