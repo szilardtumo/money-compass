@@ -22,7 +22,9 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
     return (
       <NumericFormat
         {...props}
-        onValueChange={({ floatValue }) => onChange(floatValue)}
+        onValueChange={({ floatValue }) => {
+          onChange(floatValue ?? 0);
+        }}
         customInput={Input}
         getInputRef={ref}
         prefix={currencyPrefix}
