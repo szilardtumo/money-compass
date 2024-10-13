@@ -1,8 +1,8 @@
 'use client';
 
-import { AreaChart } from '@tremor/react';
 import { useMemo } from 'react';
 
+import { AreaChart } from '@/components/ui/chart';
 import { Metric } from '@/components/ui/metric';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -25,26 +25,37 @@ export function TransactionHistoryChart({
   const currency = data[0]?.mainCurrency ?? 'eur';
 
   const parsedData = useMemo(() => {
-    const parsedTransactionHistory = data.map((item) => ({
-      Date: item.date,
-      Month: formatDate(item.date, 'MMMM yyyy'),
-      // Generate an entry for the total value
-      Total: Object.values(item.accountBalances).reduce((acc, item) => acc + item.totalBalance, 0),
-      // Generate an entry for every account and subaccount
-      ...Object.fromEntries(
-        accounts.flatMap((account) => [
-          [account.name, item.accountBalances[account.id].totalBalance] as const,
-          ...account.subaccounts.map(
-            (subaccount) =>
-              [
-                subaccount.name,
-                item.accountBalances[account.id].subaccountBalances[subaccount.id]
-                  .mainCurrencyValue,
-              ] as const,
+    const parsedTransactionHistory = data.map(
+      (item) =>
+        ({
+          Date: item.date,
+          Month: formatDate(item.date, 'MMMM yyyy'),
+          // Generate an entry for the total value
+          Total: Object.values(item.accountBalances).reduce(
+            (acc, item) => acc + item.totalBalance,
+            0,
           ),
-        ]),
-      ),
-    }));
+          // Generate an entry for every account and subaccount
+          ...Object.fromEntries(
+            accounts.flatMap((account) => [
+              [account.name, item.accountBalances[account.id].totalBalance] as const,
+              ...account.subaccounts.map(
+                (subaccount) =>
+                  [
+                    subaccount.name,
+                    item.accountBalances[account.id].subaccountBalances[subaccount.id]
+                      .mainCurrencyValue,
+                  ] as const,
+              ),
+            ]),
+          ),
+        }) as {
+          Date: string;
+          Month: string;
+          Total: number;
+          [key: string]: string | number;
+        },
+    );
 
     // If there is only one data point, duplicate it so that the chart renders a horizontal line
     if (parsedTransactionHistory.length === 1) {
@@ -118,19 +129,18 @@ export function TransactionHistoryChart({
         data={parsedData}
         index="Month"
         categories={chartCategories}
-        stack={stack}
+        type={stack ? 'stacked' : 'default'}
+        fill={chartCategories.length <= 1 ? 'gradient' : 'solid'}
         curveType="monotone"
         yAxisWidth={75}
         showYAxis={isSm}
         showXAxis={false}
         showLegend={false}
         showGridLines={false}
-        showGradient={chartCategories.length <= 1}
         minValue={minValue}
         connectNulls
-        showAnimation
         className="mt-6 h-48"
-        valueFormatter={(value) => formatCurrency(value, currency)}
+        valueFormatter={(value) => formatCurrency(value as number, currency)}
       />
     </div>
   );
