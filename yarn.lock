@@ -2985,17 +2985,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tailwindcss/forms@npm:^0.5.7":
-  version: 0.5.7
-  resolution: "@tailwindcss/forms@npm:0.5.7"
-  dependencies:
-    mini-svg-data-uri: "npm:^1.2.3"
-  peerDependencies:
-    tailwindcss: ">=3.0.0 || >= 3.0.0-alpha.1"
-  checksum: 10c0/cd29e0c978402ae87a923ae802dcff43f7b050595666cb067321cac2e37a52f61b9d73385cb0a10455548581ddd0d3886815bd6c64a1da06247c0057fa9f4601
-  languageName: node
-  linkType: hard
-
 "@tanstack/react-table@npm:^8.20.1":
   version: 8.20.1
   resolution: "@tanstack/react-table@npm:8.20.1"
@@ -8983,15 +8972,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mini-svg-data-uri@npm:^1.2.3":
-  version: 1.4.4
-  resolution: "mini-svg-data-uri@npm:1.4.4"
-  bin:
-    mini-svg-data-uri: cli.js
-  checksum: 10c0/24545fa30b5a45449241bf19c25b8bc37594b63ec06401b3d563bd1c2e8a6abb7c18741f8b354e0064baa63c291be214154bf3a66f201ae71dfab3cc1a5e3191
-  languageName: node
-  linkType: hard
-
 "minimatch@npm:^3.0.4, minimatch@npm:^3.1.1, minimatch@npm:^3.1.2":
   version: 3.1.2
   resolution: "minimatch@npm:3.1.2"
@@ -9181,7 +9161,6 @@ __metadata:
     "@supabase/auth-ui-shared": "npm:^0.1.8"
     "@supabase/ssr": "npm:0.4.0"
     "@supabase/supabase-js": "npm:^2.45.1"
-    "@tailwindcss/forms": "npm:^0.5.7"
     "@tanstack/react-table": "npm:^8.20.1"
     "@testing-library/cypress": "npm:^10.0.2"
     "@testing-library/jest-dom": "npm:^6.4.8"
