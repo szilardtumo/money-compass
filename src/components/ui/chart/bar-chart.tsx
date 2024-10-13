@@ -5,7 +5,6 @@
 
 import React from 'react';
 import { Bar, CartesianGrid, Label, BarChart as RechartsBarChart, XAxis, YAxis } from 'recharts';
-import { ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { AxisDomain } from 'recharts/types/util/types';
 
 import { cn } from '@/lib/cn';
@@ -13,7 +12,14 @@ import { cn } from '@/lib/cn';
 import { ChartContainer } from './chart-container';
 import { ChartLegend, ChartLegendContent } from './chart-legend';
 import { ChartTooltip, ChartTooltipContent } from './chart-tooltip';
-import { BaseChartValueChangeParams } from './chart.types';
+import {
+  AxisProps,
+  BaseChartProps,
+  GridProps,
+  LegendProps,
+  TooltipProps,
+  ValueChangeProps,
+} from './chart.types';
 import { chartColors, getYAxisDomain } from './chart.utils';
 
 //#region Shape
@@ -75,73 +81,47 @@ const renderShape = (
 
 //#region BarChart
 
-interface BarChartValueChangeParams<TPayload> extends BaseChartValueChangeParams<TPayload> {
-  eventType: 'category' | 'bar';
-}
-
-type ChartTooltipProps = React.ComponentProps<typeof ChartTooltip>;
-
-interface BarChartProps<TPayload> extends React.HTMLAttributes<HTMLDivElement> {
-  data: TPayload[];
-  index: string;
-  categories: string[];
-  colors?: string[];
-  valueFormatter?: (value: ValueType) => string;
-  startEndOnly?: boolean;
-  showXAxis?: boolean;
-  showYAxis?: boolean;
-  showGridLines?: boolean;
-  yAxisWidth?: number;
-  intervalType?: 'preserveStartEnd' | 'equidistantPreserveStart';
-  showTooltip?: boolean;
-  showLegend?: boolean;
-  autoMinValue?: boolean;
-  minValue?: number;
-  maxValue?: number;
-  allowDecimals?: boolean;
-  onValueChange?: (value: BarChartValueChangeParams<TPayload> | null) => void;
-  enableLegendSlider?: boolean;
-  tickGap?: number;
+interface BarChartProps<TPayload>
+  extends BaseChartProps<TPayload>,
+    AxisProps,
+    GridProps,
+    LegendProps,
+    TooltipProps,
+    ValueChangeProps<TPayload, 'category' | 'bar'> {
   barCategoryGap?: string | number;
-  xAxisLabel?: string;
-  yAxisLabel?: string;
-  layout?: 'vertical' | 'horizontal';
   type?: 'default' | 'stacked' | 'percent';
-  legendPosition?: 'top' | 'bottom';
-  tooltipCallback?: (tooltipCallbackContent: ChartTooltipProps) => void;
-  customTooltipContent?: React.ComponentType<ChartTooltipProps>;
+  layout?: 'vertical' | 'horizontal';
 }
 
 const BarChart = <TPayload extends Record<string, unknown>>(props: BarChartProps<TPayload>) => {
   const {
     data = [],
-    categories = [],
     index,
+    categories = [],
     colors = chartColors,
     valueFormatter,
-    startEndOnly = false,
     showXAxis = true,
     showYAxis = true,
-    showGridLines = true,
     yAxisWidth = 56,
+    xAxisLabel,
+    yAxisLabel,
+    startEndOnly = false,
     intervalType = 'equidistantPreserveStart',
-    showTooltip = true,
-    showLegend = true,
+    tickGap = 5,
+    allowDecimals = true,
     autoMinValue = false,
     minValue,
     maxValue,
-    allowDecimals = true,
-    className,
+    showGridLines = true,
+    showLegend = true,
+    legendPosition = 'bottom',
+    showTooltip = true,
+    customTooltipContent,
     onValueChange,
     barCategoryGap,
-    tickGap = 5,
-    xAxisLabel,
-    yAxisLabel,
-    layout = 'horizontal',
     type = 'default',
-    legendPosition = 'bottom',
-    tooltipCallback,
-    customTooltipContent,
+    layout = 'horizontal',
+    className,
     ...other
   } = props;
   const TooltipContent = customTooltipContent ?? ChartTooltipContent;

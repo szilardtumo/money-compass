@@ -5,13 +5,12 @@
 
 import React, { useMemo } from 'react';
 import { Pie, PieChart as ReChartsDonutChart, Sector } from 'recharts';
-import { ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
 import { cn } from '@/lib/cn';
 
 import { ChartContainer } from './chart-container';
 import { ChartTooltip, ChartTooltipContent } from './chart-tooltip';
-import { BaseChartValueChangeParams } from './chart.types';
+import { BaseChartProps, TooltipProps, ValueChangeProps } from './chart.types';
 import { chartColors } from './chart.utils';
 
 const renderInactiveShape = (props: any) => {
@@ -33,43 +32,28 @@ const renderInactiveShape = (props: any) => {
   );
 };
 
-type DonutChartVariant = 'donut' | 'pie';
-
-interface DonutChartValueChangeParams<TPayload> extends BaseChartValueChangeParams<TPayload> {
-  eventType: 'sector';
-}
-
-type ChartTooltipProps = React.ComponentProps<typeof ChartTooltip>;
-
-interface DonutChartProps<TPayload extends Record<string, unknown>>
-  extends React.HTMLAttributes<HTMLDivElement> {
-  data: TPayload[];
-  category: keyof TPayload & string;
-  value: keyof TPayload & string;
-  colors?: string[];
-  variant?: DonutChartVariant;
-  valueFormatter?: (value: ValueType) => string;
+interface DonutChartProps<TPayload>
+  extends BaseChartProps<TPayload>,
+    TooltipProps,
+    ValueChangeProps<TPayload, 'sector'> {
+  categories: [BaseChartProps<TPayload>['categories'][number]]; // one-element array
+  variant?: 'donut' | 'pie';
   label?: string;
   showLabel?: boolean;
-  showTooltip?: boolean;
-  onValueChange?: (value: DonutChartValueChangeParams<TPayload> | null) => void;
-  tooltipCallback?: (tooltipCallbackContent: ChartTooltipProps) => void;
-  customTooltipContent?: React.ComponentType<ChartTooltipProps>;
 }
 
 const DonutChart = <TPayload extends Record<string, unknown>>({
   data = [],
-  value,
-  category,
+  index,
+  categories: [category],
   colors = chartColors,
-  variant = 'donut',
   valueFormatter,
+  showTooltip = true,
+  customTooltipContent,
+  onValueChange,
+  variant = 'donut',
   label,
   showLabel = false,
-  showTooltip = true,
-  onValueChange,
-  tooltipCallback,
-  customTooltipContent,
   ...other
 }: DonutChartProps<TPayload>) => {
   const TooltipContent = customTooltipContent ?? ChartTooltipContent;
@@ -77,10 +61,10 @@ const DonutChart = <TPayload extends Record<string, unknown>>({
   const isDonut = variant === 'donut';
 
   const parsedLabelInput = useMemo(() => {
-    const defaultLabel = data.reduce((sum, item) => sum + (item[value] as number), 0);
+    const defaultLabel = data.reduce((sum, item) => sum + (item[index] as number), 0);
 
     return label ?? valueFormatter?.(defaultLabel) ?? defaultLabel.toLocaleString();
-  }, [data, label, value, valueFormatter]);
+  }, [data, label, index, valueFormatter]);
 
   const dataWithColor = useMemo(
     () =>
@@ -143,7 +127,7 @@ const DonutChart = <TPayload extends Record<string, unknown>>({
           outerRadius="100%"
           stroke=""
           strokeLinejoin="round"
-          dataKey={value}
+          dataKey={index}
           nameKey={category}
           onClick={handleShapeClick}
           activeIndex={activeIndex}

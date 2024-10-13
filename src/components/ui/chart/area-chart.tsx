@@ -14,7 +14,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { CurveType } from 'recharts/types/shape/Curve';
 import { AxisDomain } from 'recharts/types/util/types';
 
@@ -23,7 +22,14 @@ import { cn } from '@/lib/cn';
 import { ChartContainer } from './chart-container';
 import { ChartLegend, ChartLegendContent } from './chart-legend';
 import { ChartTooltip, ChartTooltipContent } from './chart-tooltip';
-import { BaseChartValueChangeParams } from './chart.types';
+import {
+  AxisProps,
+  BaseChartProps,
+  GridProps,
+  LegendProps,
+  TooltipProps,
+  ValueChangeProps,
+} from './chart.types';
 import { chartColors, getYAxisDomain, hasOnlyOneValueForKey } from './chart.utils';
 
 interface ActiveDot {
@@ -31,76 +37,49 @@ interface ActiveDot {
   dataKey?: string;
 }
 
-interface AreaChartValueChangeParams<TPayload> extends BaseChartValueChangeParams<TPayload> {
-  eventType: 'dot' | 'category';
-  categoryClicked: string;
-}
-
-type ChartTooltipProps = React.ComponentProps<typeof ChartTooltip>;
-
-interface AreaChartProps<TPayload> extends React.HTMLAttributes<HTMLDivElement> {
-  data: TPayload[];
-  index: string;
-  categories: string[];
-  colors?: string[];
-  valueFormatter?: (value: ValueType) => string;
-  startEndOnly?: boolean;
-  showXAxis?: boolean;
-  showYAxis?: boolean;
-  showGridLines?: boolean;
-  yAxisWidth?: number;
-  intervalType?: 'preserveStartEnd' | 'equidistantPreserveStart';
-  showTooltip?: boolean;
-  showLegend?: boolean;
-  autoMinValue?: boolean;
-  minValue?: number;
-  maxValue?: number;
-  allowDecimals?: boolean;
-  onValueChange?: (value: AreaChartValueChangeParams<TPayload> | null) => void;
-  enableLegendSlider?: boolean;
-  tickGap?: number;
+export interface AreaChartProps<TPayload>
+  extends BaseChartProps<TPayload>,
+    AxisProps,
+    GridProps,
+    LegendProps,
+    TooltipProps,
+    ValueChangeProps<TPayload, 'dot' | 'category'> {
   connectNulls?: boolean;
-  xAxisLabel?: string;
-  yAxisLabel?: string;
-  legendPosition?: 'top' | 'bottom';
   type?: 'default' | 'stacked' | 'percent';
   fill?: 'gradient' | 'solid' | 'none';
   curveType?: CurveType;
-  tooltipCallback?: (tooltipCallbackContent: ChartTooltipProps) => void;
-  customTooltipContent?: React.ComponentType<ChartTooltipProps>;
 }
 
 const AreaChart = <TPayload extends Record<string, unknown>>(props: AreaChartProps<TPayload>) => {
   const {
     data = [],
-    categories = [],
     index,
+    categories = [],
     colors = chartColors,
     valueFormatter,
-    startEndOnly = false,
     showXAxis = true,
     showYAxis = true,
-    showGridLines = true,
     yAxisWidth = 56,
+    xAxisLabel,
+    yAxisLabel,
+    startEndOnly = false,
     intervalType = 'equidistantPreserveStart',
-    showTooltip = true,
-    showLegend = true,
+    tickGap = 5,
+    allowDecimals = true,
     autoMinValue = false,
     minValue,
     maxValue,
-    allowDecimals = true,
-    connectNulls = false,
-    className,
-    onValueChange,
-    tickGap = 5,
-    xAxisLabel,
-    yAxisLabel,
+    showGridLines = true,
+    showLegend = true,
     legendPosition = 'bottom',
+    showTooltip = true,
+    customTooltipContent,
+    connectNulls = false,
+    onValueChange,
     type = 'default',
     fill = 'none',
-    tooltipCallback,
-    customTooltipContent,
     curveType = 'linear',
+    className,
     ...other
   } = props;
   const TooltipContent = customTooltipContent ?? ChartTooltipContent;

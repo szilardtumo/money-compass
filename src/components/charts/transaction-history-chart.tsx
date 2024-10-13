@@ -25,26 +25,37 @@ export function TransactionHistoryChart({
   const currency = data[0]?.mainCurrency ?? 'eur';
 
   const parsedData = useMemo(() => {
-    const parsedTransactionHistory = data.map((item) => ({
-      Date: item.date,
-      Month: formatDate(item.date, 'MMMM yyyy'),
-      // Generate an entry for the total value
-      Total: Object.values(item.accountBalances).reduce((acc, item) => acc + item.totalBalance, 0),
-      // Generate an entry for every account and subaccount
-      ...Object.fromEntries(
-        accounts.flatMap((account) => [
-          [account.name, item.accountBalances[account.id].totalBalance] as const,
-          ...account.subaccounts.map(
-            (subaccount) =>
-              [
-                subaccount.name,
-                item.accountBalances[account.id].subaccountBalances[subaccount.id]
-                  .mainCurrencyValue,
-              ] as const,
+    const parsedTransactionHistory = data.map(
+      (item) =>
+        ({
+          Date: item.date,
+          Month: formatDate(item.date, 'MMMM yyyy'),
+          // Generate an entry for the total value
+          Total: Object.values(item.accountBalances).reduce(
+            (acc, item) => acc + item.totalBalance,
+            0,
           ),
-        ]),
-      ),
-    }));
+          // Generate an entry for every account and subaccount
+          ...Object.fromEntries(
+            accounts.flatMap((account) => [
+              [account.name, item.accountBalances[account.id].totalBalance] as const,
+              ...account.subaccounts.map(
+                (subaccount) =>
+                  [
+                    subaccount.name,
+                    item.accountBalances[account.id].subaccountBalances[subaccount.id]
+                      .mainCurrencyValue,
+                  ] as const,
+              ),
+            ]),
+          ),
+        }) as {
+          Date: string;
+          Month: string;
+          Total: number;
+          [key: string]: string | number;
+        },
+    );
 
     // If there is only one data point, duplicate it so that the chart renders a horizontal line
     if (parsedTransactionHistory.length === 1) {

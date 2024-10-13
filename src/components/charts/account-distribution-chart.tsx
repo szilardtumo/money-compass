@@ -49,8 +49,8 @@ export function AccountDistributionChart({
     <div>
       <DonutChart
         data={data}
-        category="name"
-        value="balance"
+        categories={['name']}
+        index="balance"
         showTooltip
         showLabel
         label={formatCurrency(selectedSlice?.balance ?? totalBalance, mainCurrency)}
