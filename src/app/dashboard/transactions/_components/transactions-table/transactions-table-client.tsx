@@ -28,7 +28,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 import { NavLink } from '@/components/ui/nav-link';
 import { Account } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
-import { ActionErrorCode, Paginated } from '@/lib/types/transport.types';
+import { Paginated } from '@/lib/types/transport.types';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
 import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
@@ -137,10 +137,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     toast.promise(createToastPromise(promise), {
       loading: 'Deleting transaction...',
       success: 'Transaction deleted!',
-      error: (error) =>
-        error?.code === ActionErrorCode.NotLatestTransactions
-          ? 'Failed to delete transaction. Only the most recent transactions can be deleted'
-          : 'Failed to delete transaction. Please try again later.',
+      error: 'Failed to delete transaction. Please try again later.',
     });
 
     await promise;
@@ -209,10 +206,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     toast.promise(createToastPromise(promise), {
       loading: 'Deleting selected transactions...',
       success: 'Transactions deleted!',
-      error: (error) =>
-        error?.code === ActionErrorCode.NotLatestTransactions
-          ? 'Failed to delete transactions. Only the most recent transactions can be deleted'
-          : 'Failed to delete transactions. Please try again later.',
+      error: 'Failed to delete transaction. Please try again later.',
     });
 
     await promise;

@@ -1,12 +1,16 @@
 'use server';
 
 import { PostgrestError } from '@supabase/supabase-js';
+import { and, asc, eq, gt, gte, inArray, lt, lte, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
+import { groupBy } from '@/lib/utils/group-by';
 import { apiQueries } from '@/server/api/queries';
+import { getDb } from '@/server/db';
+import { transactions } from '@/server/db/schema';
 
 export interface CreateTransactionParams {
   subaccountId: string;
@@ -36,7 +40,6 @@ export async function createTransaction(params: CreateTransactionParams): Promis
       description: params.description,
       started_date: params.date,
       completed_date: params.date,
-      order: latestTransaction ? latestTransaction.order + 1 : 0,
     });
 
     if (error) {
@@ -155,31 +158,56 @@ export async function updateTransaction(
 }
 
 export async function deleteTransactions(transactionIds: string[]): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
+  const db = await getDb();
 
   try {
-    const latestTransactions = await apiQueries.transactions.getTransactions({
-      pageSize: transactionIds.length,
+    await db.transaction(async (tx) => {
+      // Get all transactions to be deleted (oldest first)
+      const transactionsToDelete = await tx
+        .select()
+        .from(transactions)
+        .where(inArray(transactions.id, transactionIds))
+        .orderBy(asc(transactions.startedDate), asc(transactions.createdAt));
+
+      // Group by subaccount and calculate cumulative amounts
+      const updateOperations = Object.entries(
+        groupBy(transactionsToDelete, (t) => t.subaccountId),
+      ).flatMap(([subaccountId, deletedTransactions]) =>
+        // For each subaccount, create update operations with running totals
+        deletedTransactions.map((transaction, index) => {
+          const nextTransaction = deletedTransactions[index + 1];
+          const cumulativeAmount = deletedTransactions
+            .slice(0, index + 1)
+            .reduce((sum, t) => sum + t.amount, 0);
+
+          return tx
+            .update(transactions)
+            .set({
+              balance: sql`${transactions.balance} - ${cumulativeAmount}`,
+            })
+            .where(
+              and(
+                eq(transactions.subaccountId, subaccountId),
+                gte(transactions.startedDate, transaction.startedDate),
+                gt(transactions.createdAt, transaction.createdAt),
+                // If there's a next transaction to delete, only update until that point
+                ...(nextTransaction
+                  ? [
+                      lte(transactions.startedDate, nextTransaction.startedDate),
+                      lt(transactions.createdAt, nextTransaction.createdAt),
+                    ]
+                  : []),
+              ),
+            );
+        }),
+      );
+
+      // Execute all balance updates in parallel
+      await Promise.all(updateOperations);
+
+      // Delete the transactions
+      await tx.delete(transactions).where(inArray(transactions.id, transactionIds));
     });
-
-    const areLatestTransactions = transactionIds.every((id) =>
-      latestTransactions.data.some((transaction) => transaction.id === id),
-    );
-    if (!areLatestTransactions) {
-      return {
-        success: false,
-        error: {
-          code: ActionErrorCode.NotLatestTransactions,
-          message: 'Only the latest transactions can be deleted.',
-        },
-      };
-    }
-
-    const { error } = await supabase.from('transactions').delete().in('id', transactionIds);
-
-    if (error) {
-      return { success: false, error: { code: error.code, message: error.message } };
-    }
 
     revalidateTag('transactions');
     return { success: true };

@@ -19,7 +19,6 @@ export enum ActionErrorCode {
   UniqueViolation = '23505',
   ForeignKeyViolation = '23503',
   NotFound = '404',
-  NotLatestTransactions = 'not_latest_transactions',
 }
 
 export interface Paginated<T> {
