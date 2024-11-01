@@ -78,7 +78,6 @@ export async function createTransactions(
         description: transaction.description,
         started_date: now,
         completed_date: now,
-        order: 0,
       })),
     );
 

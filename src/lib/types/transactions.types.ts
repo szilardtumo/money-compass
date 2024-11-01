@@ -11,8 +11,8 @@ export interface Transaction {
   originalCurrency: string;
   mainCurrency: string;
   startedDate: string;
-  order: number;
   description: string;
+  createdAt: Date;
 }
 
 export interface TransactionWithAccount extends Transaction {

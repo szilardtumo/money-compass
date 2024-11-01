@@ -13,7 +13,6 @@ export const transactions = pgTable(
     amount: numericCasted('amount', { precision: 65, scale: 30 }).notNull(),
     startedDate: timestamp('started_date').notNull(),
     completedDate: timestamp('completed_date').notNull(),
-    order: numeric('order').notNull(),
     description: text('description').default('').notNull(),
     type: transactionType('type').notNull(),
     subaccountId: uuid('subaccount_id')
@@ -23,6 +22,7 @@ export const transactions = pgTable(
     userId: uuid('user_id')
       .notNull()
       .default(sql`auth.uid()`),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => {
     return {

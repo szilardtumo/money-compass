@@ -62,8 +62,8 @@ function parseTransaction(
     originalCurrency,
     mainCurrency,
     startedDate: data.startedDate.toISOString(),
-    order: Number(data.order),
     description: data.description,
+    createdAt: data.createdAt,
   };
 }
 
@@ -90,7 +90,7 @@ export async function getTransactions({
           toDate ? lte(transactions.startedDate, new Date(toDate)) : undefined,
         ),
       )
-      .orderBy(desc(transactions.startedDate), desc(transactions.order))
+      .orderBy(desc(transactions.startedDate), desc(transactions.createdAt))
       .offset(page * pageSize)
       .limit(pageSize),
   );
