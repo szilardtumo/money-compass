@@ -1,5 +1,8 @@
-import { DotsHorizontalIcon } from '@radix-ui/react-icons';
+import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu';
+import { DotsHorizontalIcon, TrashIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
+import { useCallback } from 'react';
+import { toast } from 'sonner';
 
 import { useUpdateTransactionDialog } from '@/components/providers/update-transaction-dialog-provider';
 import { Avatar } from '@/components/ui/avatar';
@@ -8,11 +11,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NavLink } from '@/components/ui/nav-link';
 import { TransactionWithAccount } from '@/lib/types/transactions.types';
+import { ActionErrorCode } from '@/lib/types/transport.types';
 import { formatCurrency, formatTime } from '@/lib/utils/formatters';
+import { createToastPromise } from '@/lib/utils/toasts';
+import { apiActions } from '@/server/api/actions';
 
 interface TransactionItemProps {
   transaction: TransactionWithAccount;
@@ -20,6 +27,20 @@ interface TransactionItemProps {
 
 export function TransactionItem({ transaction }: TransactionItemProps) {
   const { openDialog: openUpdateTransactionDialog } = useUpdateTransactionDialog();
+  const deleteTransaction = useCallback(async (transactionId: string) => {
+    const promise = apiActions.transactions.deleteTransactions([transactionId]);
+
+    toast.promise(createToastPromise(promise), {
+      loading: 'Deleting transaction...',
+      success: 'Transaction deleted!',
+      error: (error) =>
+        error?.code === ActionErrorCode.NotLatestTransactions
+          ? 'Failed to delete transaction. Only the most recent transactions can be deleted'
+          : 'Failed to delete transaction. Please try again later.',
+    });
+
+    await promise;
+  }, []);
 
   return (
     <div className="flex items-start gap-4">
@@ -60,9 +81,17 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
           >
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard/transactions">Details</Link>
+          <DropdownMenuItem onClick={() => deleteTransaction(transaction.id)}>
+            Delete
+            <DropdownMenuShortcut>
+              <TrashIcon />
+            </DropdownMenuShortcut>
           </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/transactions">Details</Link>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
