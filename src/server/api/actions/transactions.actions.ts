@@ -14,33 +14,30 @@ import { transactions } from '@/server/db/schema';
 
 type TransactionForQueryHelper = Pick<
   typeof transactions.$inferSelect,
-  'subaccountId' | 'startedDate' | 'createdAt'
+  'subaccountId' | 'startedDate' | 'sequence'
 >;
 
 /**
  * Drizzle query helper for ordering transactions in ascending order
  */
 function ascTransactions() {
-  return [asc(transactions.startedDate), asc(transactions.createdAt)];
+  return [asc(transactions.startedDate), asc(transactions.sequence)];
 }
 
 /**
  * Drizzle query helper for ordering transactions in descending order
  */
 function descTransactions() {
-  return [desc(transactions.startedDate), desc(transactions.createdAt)];
+  return [desc(transactions.startedDate), desc(transactions.sequence)];
 }
 
 /**
  * Drizzle query helper for filtering transactions after a transaction
  */
 function afterTransaction(transaction: TransactionForQueryHelper) {
-  // FIXME: PostgreSQL stores timestamps in microseconds, but JS Date can only store it in milliseconds
-  //        Because of this inconsistency, we need to add 1ms to avoid selecting the current transaction
-  //        Possible solution: set the precision to milliseconds in PostgreSQL
   return and(
     eq(transactions.subaccountId, transaction.subaccountId),
-    sql`(${transactions.startedDate}, ${transactions.createdAt}) > (${transaction.startedDate.toISOString()}, ${new Date(transaction.createdAt.getTime() + 1).toISOString()})`,
+    sql`(${transactions.startedDate}, ${transactions.sequence}) > (${transaction.startedDate.toISOString()}, ${transaction.sequence})`,
   );
 }
 
@@ -50,7 +47,7 @@ function afterTransaction(transaction: TransactionForQueryHelper) {
 function beforeTransaction(transaction: TransactionForQueryHelper) {
   return and(
     eq(transactions.subaccountId, transaction.subaccountId),
-    sql`(${transactions.startedDate}, ${transactions.createdAt}) < (${transaction.startedDate.toISOString()}, ${transaction.createdAt.toISOString()})`,
+    sql`(${transactions.startedDate}, ${transactions.sequence}) < (${transaction.startedDate.toISOString()}, ${transaction.sequence})`,
   );
 }
 
@@ -304,4 +301,53 @@ export async function deleteTransactions(transactionIds: string[]): Promise<Acti
       error: { code: postgrestError.code, message: postgrestError.message },
     };
   }
+}
+
+export async function _recalculateBalances() {
+  const tx = await getDb();
+
+  // Get all transactions ordered by subaccount, then by date and sequence
+  const allTransactions = await tx
+    .select()
+    .from(transactions)
+    .orderBy(
+      asc(transactions.subaccountId),
+      asc(transactions.startedDate),
+      asc(transactions.sequence),
+    );
+
+  // Group transactions by subaccount
+  const bySubaccount = groupBy(allTransactions, (t) => t.subaccountId);
+
+  // For each subaccount, update balances sequentially
+  await Promise.all(
+    Object.values(bySubaccount).map(async (subaccountTransactions) => {
+      let runningBalance = 0;
+
+      // Update each transaction's balance based on the running total
+      for (const transaction of subaccountTransactions) {
+        runningBalance += transaction.amount;
+
+        if (Math.abs(transaction.balance - runningBalance) > 0.0001) {
+          // eslint-disable-next-line no-console
+          console.log([
+            'balance not correct (date, prev, curr)',
+            transaction.startedDate,
+            transaction.balance,
+            runningBalance,
+          ]);
+
+          // await tx
+          //   .update(transactions)
+          //   .set({ balance: runningBalance })
+          //   .where(eq(transactions.id, transaction.id));
+        }
+      }
+
+      // eslint-disable-next-line no-console
+      console.log(['done', subaccountTransactions[0]?.subaccountId]);
+    }),
+  );
+
+  revalidateTag('transactions');
 }

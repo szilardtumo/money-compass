@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { numericCasted } from './custom-types/numericCasted';
 import { transactionType } from './enums.schema';
@@ -23,6 +23,7 @@ export const transactions = pgTable(
       .notNull()
       .default(sql`auth.uid()`),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    sequence: integer('sequence').generatedAlwaysAsIdentity().notNull().unique(),
   },
   (table) => {
     return {

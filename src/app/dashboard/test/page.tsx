@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 
-import { DataTableTest } from '@/app/dashboard/test/_components/data-table-test';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { AccountsCard } from '@/components/cards/accounts-card';
 import { AssetDistributionCard } from '@/components/cards/asset-distribution-card';
@@ -10,6 +9,9 @@ import { QuickActionsCard } from '@/components/cards/quick-actions-card/quick-ac
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
 import { apiQueries } from '@/server/api/queries';
+
+import { DataTableTest } from './_components/data-table-test';
+import { RecalculateBalances } from './_components/recalculate-balances';
 
 export default async function TestPage() {
   if (process.env.NODE_ENV !== 'development') {
@@ -30,6 +32,8 @@ export default async function TestPage() {
       </PageHeader>
 
       <PageContent>
+        <RecalculateBalances />
+
         <NetWorthHistoryCard data={transactionHistory} accounts={accounts} />
 
         {!!accounts[0] && <AccountHistoryCard data={transactionHistory} account={accounts[0]} />}

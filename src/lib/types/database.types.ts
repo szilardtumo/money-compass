@@ -155,6 +155,7 @@ export type Database = {
           description: string
           external_ref: string | null
           id: string
+          sequence: number
           started_date: string
           subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
@@ -168,6 +169,7 @@ export type Database = {
           description?: string
           external_ref?: string | null
           id?: string
+          sequence?: number
           started_date: string
           subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
@@ -181,6 +183,7 @@ export type Database = {
           description?: string
           external_ref?: string | null
           id?: string
+          sequence?: number
           started_date?: string
           subaccount_id?: string
           type?: Database["public"]["Enums"]["transaction_type"]
