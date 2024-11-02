@@ -2,12 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ReloadIcon } from '@radix-ui/react-icons';
+import { isFuture } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Form,
   FormControl,
@@ -43,6 +45,9 @@ const formSchema = z.object({
   type: z.string({ required_error: 'A transaction type must be selected.' }),
   amount: z.number(),
   description: z.string().min(1, 'Description is required.'),
+  startedDate: z.date().refine((date) => date <= new Date(), {
+    message: 'Date cannot be in the future',
+  }),
 });
 
 type FormFields = z.infer<typeof formSchema>;
@@ -62,6 +67,7 @@ export function UpdateTransactionForm({
       type: values.type as Enums<'transaction_type'>,
       amount: values.amount,
       description: values.description,
+      startedDate: values.startedDate,
     });
 
     toast.promise(createToastPromise(promise), {
@@ -118,6 +124,20 @@ export function UpdateTransactionForm({
                 <Input {...field} />
               </FormControl>
               <FormDescription>This will be seen in the transaction history.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="startedDate"
+          render={({ field: { onChange, ...field } }) => (
+            <FormItem>
+              <FormLabel>Date</FormLabel>
+              <FormControl>
+                <DatePicker disabled={isFuture} onValueChange={onChange} {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
