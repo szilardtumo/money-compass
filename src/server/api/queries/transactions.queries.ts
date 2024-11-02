@@ -4,7 +4,6 @@ import { and, desc, eq, gte, lte } from 'drizzle-orm';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
-import { Enums } from '@/lib/types/database.types';
 import { TimeInterval } from '@/lib/types/time.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
@@ -14,12 +13,6 @@ import { getDb } from '@/server/db';
 import { subaccounts, transactions } from '@/server/db/schema';
 
 import { getMainCurrencyWithMapper } from './currencies.queries';
-
-export interface CreateTransactionParams {
-  subaccountId: string;
-  type: Enums<'transaction_type'>;
-  amount: number;
-}
 
 interface GetTransactionsParams {
   accountId?: string;
@@ -61,7 +54,7 @@ function parseTransaction(
     },
     originalCurrency,
     mainCurrency,
-    startedDate: data.startedDate.toISOString(),
+    startedDate: data.startedDate,
     description: data.description,
     createdAt: data.createdAt,
   };
@@ -197,7 +190,7 @@ export async function getTransactionHistory(
     // update the balance of the subaccounts for the current date
     currentBalances = { ...currentBalances, ...dateMap[date.getTime()] };
     return {
-      date: date.toISOString(),
+      date: date,
       accountBalances: Object.fromEntries(
         accounts.map(
           (account) =>

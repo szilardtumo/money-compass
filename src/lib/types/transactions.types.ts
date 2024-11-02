@@ -10,7 +10,7 @@ export interface Transaction {
   balance: CurrencyValue;
   originalCurrency: string;
   mainCurrency: string;
-  startedDate: string;
+  startedDate: Date;
   description: string;
   createdAt: Date;
 }
@@ -21,7 +21,7 @@ export interface TransactionWithAccount extends Transaction {
 }
 
 export interface TransactionHistory {
-  date: string;
+  date: Date;
   accountBalances: Record<
     string,
     {

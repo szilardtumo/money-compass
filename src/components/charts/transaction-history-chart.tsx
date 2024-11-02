@@ -50,10 +50,10 @@ export function TransactionHistoryChart({
             ]),
           ),
         }) as {
-          Date: string;
+          Date: Date;
           Month: string;
           Total: number;
-          [key: string]: string | number;
+          [key: string]: Date | string | number;
         },
     );
 
