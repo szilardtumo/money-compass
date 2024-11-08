@@ -31,15 +31,7 @@ export type Database = {
           name?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "accounts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       currencies: {
         Row: {
@@ -107,13 +99,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "public_profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "public_profiles_main_currency_fkey"
             columns: ["main_currency"]
             isOneToOne: false
@@ -166,10 +151,11 @@ export type Database = {
           amount: number
           balance: number
           completed_date: string
+          created_at: string
           description: string
           external_ref: string | null
           id: string
-          order: number
+          sequence: number
           started_date: string
           subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
@@ -179,10 +165,11 @@ export type Database = {
           amount: number
           balance: number
           completed_date: string
+          created_at?: string
           description?: string
           external_ref?: string | null
           id?: string
-          order: number
+          sequence?: number
           started_date: string
           subaccount_id: string
           type: Database["public"]["Enums"]["transaction_type"]
@@ -192,10 +179,11 @@ export type Database = {
           amount?: number
           balance?: number
           completed_date?: string
+          created_at?: string
           description?: string
           external_ref?: string | null
           id?: string
-          order?: number
+          sequence?: number
           started_date?: string
           subaccount_id?: string
           type?: Database["public"]["Enums"]["transaction_type"]
@@ -353,4 +341,19 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

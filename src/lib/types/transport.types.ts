@@ -16,10 +16,10 @@ type ActionResponseError = {
 export type ActionResponse<T = undefined> = ActionResponseSuccess<T> | ActionResponseError;
 
 export enum ActionErrorCode {
+  Unknown = 'unknown',
   UniqueViolation = '23505',
   ForeignKeyViolation = '23503',
   NotFound = '404',
-  NotLatestTransactions = 'not_latest_transactions',
 }
 
 export interface Paginated<T> {

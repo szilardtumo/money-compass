@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
-import { index, numeric, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
+import { numericCasted } from './custom-types/numericCasted';
 import { transactionType } from './enums.schema';
 import { subaccounts } from './subaccounts.schema';
 
@@ -9,19 +10,20 @@ export const transactions = pgTable(
   {
     id: uuid('id').notNull().defaultRandom().primaryKey(),
     externalRef: text('external_ref'),
-    amount: numeric('amount').notNull(),
-    startedDate: timestamp('started_date').notNull(),
-    completedDate: timestamp('completed_date').notNull(),
-    order: numeric('order').notNull(),
+    amount: numericCasted('amount', { precision: 65, scale: 30 }).notNull(),
+    startedDate: timestamp('started_date', { withTimezone: true }).notNull(),
+    completedDate: timestamp('completed_date', { withTimezone: true }).notNull(),
     description: text('description').default('').notNull(),
     type: transactionType('type').notNull(),
     subaccountId: uuid('subaccount_id')
       .notNull()
       .references(() => subaccounts.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-    balance: numeric('balance').notNull(),
+    balance: numericCasted('balance').notNull(),
     userId: uuid('user_id')
       .notNull()
       .default(sql`auth.uid()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    sequence: integer('sequence').generatedAlwaysAsIdentity().notNull().unique(),
   },
   (table) => {
     return {

@@ -1,14 +1,57 @@
 'use server';
 
 import { PostgrestError } from '@supabase/supabase-js';
+import { and, asc, desc, eq, inArray, not, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
+import { groupBy } from '@/lib/utils/group-by';
 import { apiQueries } from '@/server/api/queries';
+import { getDb } from '@/server/db';
+import { transactions } from '@/server/db/schema';
 
-export interface CreateTransactionParams {
+type TransactionForQueryHelper = Pick<
+  typeof transactions.$inferSelect,
+  'subaccountId' | 'startedDate' | 'sequence'
+>;
+
+/**
+ * Drizzle query helper for ordering transactions in ascending order
+ */
+function ascTransactions() {
+  return [asc(transactions.startedDate), asc(transactions.sequence)];
+}
+
+/**
+ * Drizzle query helper for ordering transactions in descending order
+ */
+function descTransactions() {
+  return [desc(transactions.startedDate), desc(transactions.sequence)];
+}
+
+/**
+ * Drizzle query helper for filtering transactions after a transaction
+ */
+function afterTransaction(transaction: TransactionForQueryHelper) {
+  return and(
+    eq(transactions.subaccountId, transaction.subaccountId),
+    sql`(${transactions.startedDate}, ${transactions.sequence}) > (${transaction.startedDate.toISOString()}, ${transaction.sequence})`,
+  );
+}
+
+/**
+ * Drizzle query helper for filtering transactions before a transaction
+ */
+function beforeTransaction(transaction: TransactionForQueryHelper) {
+  return and(
+    eq(transactions.subaccountId, transaction.subaccountId),
+    sql`(${transactions.startedDate}, ${transactions.sequence}) < (${transaction.startedDate.toISOString()}, ${transaction.sequence})`,
+  );
+}
+
+interface CreateTransactionParams {
   subaccountId: string;
   type: Enums<'transaction_type'>;
   amount: number;
@@ -36,7 +79,6 @@ export async function createTransaction(params: CreateTransactionParams): Promis
       description: params.description,
       started_date: params.date,
       completed_date: params.date,
-      order: latestTransaction ? latestTransaction.order + 1 : 0,
     });
 
     if (error) {
@@ -78,7 +120,6 @@ export async function createTransactions(
         description: transaction.description,
         started_date: now,
         completed_date: now,
-        order: 0,
       })),
     );
 
@@ -101,48 +142,155 @@ interface UpdateTransactionParams {
   type?: Enums<'transaction_type'>;
   amount?: number;
   description?: string;
+  startedDate?: Date;
 }
 
 export async function updateTransaction(
   transactionId: string,
   params: UpdateTransactionParams,
 ): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
-
-  const transaction = await apiQueries.transactions.getTransactionById(transactionId);
-
-  if (!transaction) {
-    return {
-      success: false,
-      error: { code: ActionErrorCode.NotFound, message: 'Transaction not found.' },
-    };
-  }
-
-  const amountToAdd =
-    (params.amount ?? transaction.amount.originalValue) - transaction.amount.originalValue;
+  const db = await getDb();
 
   try {
-    const { error } = await supabase
-      .from('transactions')
-      .update({
-        type: params.type,
-        amount: params.amount,
-        description: params.description,
-        balance: transaction.balance.originalValue + amountToAdd,
-      })
-      .eq('id', transactionId);
+    await db.transaction(async (tx) => {
+      // Get the transaction to update
+      const [transaction] = await tx
+        .select()
+        .from(transactions)
+        .where(eq(transactions.id, transactionId));
 
-    if (error) {
-      return { success: false, error: { code: error.code, message: error.message } };
-    }
+      if (!transaction) {
+        throw new Error('Transaction not found.');
+      }
 
-    if (amountToAdd) {
-      await supabase.rpc('update_transaction_balances', {
-        _subaccount_id: transaction.subaccountId,
-        fromdate: transaction.startedDate,
-        amounttoadd: amountToAdd,
-      });
-    }
+      const amountToAdd = (params.amount ?? transaction.amount) - transaction.amount;
+      const dateChanged =
+        params.startedDate && params.startedDate.getTime() !== transaction.startedDate.getTime();
+
+      // If date is changing, we need to handle reordering
+      if (dateChanged) {
+        // First, revert the impact of this transaction on later transactions
+        await tx
+          .update(transactions)
+          .set({
+            balance: sql`${transactions.balance} - ${transaction.amount}`,
+          })
+          .where(afterTransaction(transaction));
+
+        // Get the previous transaction at the new date to calculate the correct balance
+        const [previousTransaction] = await tx
+          .select()
+          .from(transactions)
+          .where(
+            and(
+              not(eq(transactions.id, transaction.id)),
+              beforeTransaction({ ...transaction, startedDate: params.startedDate! }),
+            ),
+          )
+          .orderBy(...descTransactions())
+          .limit(1);
+
+        // Update the transaction itself with the correct balance
+        await tx
+          .update(transactions)
+          .set({
+            type: params.type ?? transaction.type,
+            amount: params.amount ?? transaction.amount,
+            description: params.description ?? transaction.description,
+            startedDate: params.startedDate,
+            completedDate: params.startedDate,
+            balance: (previousTransaction?.balance ?? 0) + (params.amount ?? transaction.amount),
+          })
+          .where(eq(transactions.id, transactionId));
+
+        // Recalculate all balances after the new date
+        await tx
+          .update(transactions)
+          .set({
+            balance: sql`${transactions.balance} + ${params.amount ?? transaction.amount}`,
+          })
+          .where(afterTransaction({ ...transaction, startedDate: params.startedDate! }));
+      } else {
+        // Simple update without date change
+        await tx
+          .update(transactions)
+          .set({
+            type: params.type ?? transaction.type,
+            amount: params.amount ?? transaction.amount,
+            description: params.description ?? transaction.description,
+            balance: transaction.balance + amountToAdd,
+          })
+          .where(eq(transactions.id, transactionId));
+
+        // Update subsequent transactions if amount changed
+        if (amountToAdd) {
+          await tx
+            .update(transactions)
+            .set({
+              balance: sql`${transactions.balance} + ${amountToAdd}`,
+            })
+            .where(afterTransaction(transaction));
+        }
+      }
+    });
+
+    revalidateTag('transactions');
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: error instanceof Error ? ActionErrorCode.Unknown : (error as PostgrestError).code,
+        message: error instanceof Error ? error.message : (error as PostgrestError).message,
+      },
+    };
+  }
+}
+
+export async function deleteTransactions(transactionIds: string[]): Promise<ActionResponse> {
+  const db = await getDb();
+
+  try {
+    await db.transaction(async (tx) => {
+      // Get all transactions to be deleted (oldest first)
+      const transactionsToDelete = await tx
+        .select()
+        .from(transactions)
+        .where(inArray(transactions.id, transactionIds))
+        .orderBy(...ascTransactions());
+
+      // Group by subaccount and calculate cumulative amounts
+      const updateOperations = Object.values(
+        groupBy(transactionsToDelete, (t) => t.subaccountId),
+      ).flatMap((deletedTransactions) =>
+        // For each subaccount, create update operations with running totals
+        deletedTransactions.map((transaction, index) => {
+          const nextTransaction = deletedTransactions[index + 1];
+          const cumulativeAmount = deletedTransactions
+            .slice(0, index + 1)
+            .reduce((sum, t) => sum + t.amount, 0);
+
+          return tx
+            .update(transactions)
+            .set({
+              balance: sql`${transactions.balance} - ${cumulativeAmount}`,
+            })
+            .where(
+              and(
+                afterTransaction(transaction),
+                // If there's a next transaction to delete, only update until that point
+                nextTransaction ? beforeTransaction(nextTransaction) : undefined,
+              ),
+            );
+        }),
+      );
+
+      // Execute all balance updates in parallel
+      await Promise.all(updateOperations);
+
+      // Delete the transactions
+      await tx.delete(transactions).where(inArray(transactions.id, transactionIds));
+    });
 
     revalidateTag('transactions');
     return { success: true };
@@ -155,40 +303,51 @@ export async function updateTransaction(
   }
 }
 
-export async function deleteTransactions(transactionIds: string[]): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
+export async function _recalculateBalances() {
+  const tx = await getDb();
 
-  try {
-    const latestTransactions = await apiQueries.transactions.getTransactions({
-      pageSize: transactionIds.length,
-    });
-
-    const areLatestTransactions = transactionIds.every((id) =>
-      latestTransactions.data.some((transaction) => transaction.id === id),
+  // Get all transactions ordered by subaccount, then by date and sequence
+  const allTransactions = await tx
+    .select()
+    .from(transactions)
+    .orderBy(
+      asc(transactions.subaccountId),
+      asc(transactions.startedDate),
+      asc(transactions.sequence),
     );
-    if (!areLatestTransactions) {
-      return {
-        success: false,
-        error: {
-          code: ActionErrorCode.NotLatestTransactions,
-          message: 'Only the latest transactions can be deleted.',
-        },
-      };
-    }
 
-    const { error } = await supabase.from('transactions').delete().in('id', transactionIds);
+  // Group transactions by subaccount
+  const bySubaccount = groupBy(allTransactions, (t) => t.subaccountId);
 
-    if (error) {
-      return { success: false, error: { code: error.code, message: error.message } };
-    }
+  // For each subaccount, update balances sequentially
+  await Promise.all(
+    Object.values(bySubaccount).map(async (subaccountTransactions) => {
+      let runningBalance = 0;
 
-    revalidateTag('transactions');
-    return { success: true };
-  } catch (error) {
-    const postgrestError = error as PostgrestError;
-    return {
-      success: false,
-      error: { code: postgrestError.code, message: postgrestError.message },
-    };
-  }
+      // Update each transaction's balance based on the running total
+      for (const transaction of subaccountTransactions) {
+        runningBalance += transaction.amount;
+
+        if (Math.abs(transaction.balance - runningBalance) > 0.0001) {
+          // eslint-disable-next-line no-console
+          console.log([
+            'balance not correct (date, prev, curr)',
+            transaction.startedDate,
+            transaction.balance,
+            runningBalance,
+          ]);
+
+          // await tx
+          //   .update(transactions)
+          //   .set({ balance: runningBalance })
+          //   .where(eq(transactions.id, transaction.id));
+        }
+      }
+
+      // eslint-disable-next-line no-console
+      console.log(['done', subaccountTransactions[0]?.subaccountId]);
+    }),
+  );
+
+  revalidateTag('transactions');
 }
