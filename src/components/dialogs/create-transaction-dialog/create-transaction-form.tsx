@@ -133,6 +133,7 @@ export function CreateTransactionForm({
         <FormField
           control={form.control}
           name="subaccount"
+          disabled={!selectedAccountId}
           render={({ field: { onChange, ...field } }) => (
             <FormItem>
               <FormLabel>Subaccount</FormLabel>
