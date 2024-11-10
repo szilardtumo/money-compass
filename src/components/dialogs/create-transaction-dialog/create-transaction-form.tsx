@@ -81,7 +81,7 @@ export function CreateTransactionForm({
       type: values.type as Enums<'transaction_type'>,
       subaccountId: selectedSubaccountId,
       description: values.description,
-      date: values.date.toISOString(),
+      date: values.date,
     });
 
     toast.promise(createToastPromise(promise), {
