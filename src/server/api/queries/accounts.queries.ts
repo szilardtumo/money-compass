@@ -5,21 +5,29 @@ import { Account, Subaccount } from '@/lib/types/accounts.types';
 
 import { getMainCurrencyWithMapper } from './currencies.queries';
 
-export async function getSubaccountBalances(): Promise<Record<string, number>> {
+export async function getSubaccountBalances(): Promise<
+  Record<string, { balance: number; lastTransactionDate: Date }>
+> {
   const supabase = createServerSupabaseClient({
     next: { revalidate: 60, tags: ['subaccounts', 'transactions'] },
   });
 
-  const { data, error } = await supabase.from('balances').select('subaccount_id, balance');
+  const { data, error } = await supabase.from('balances').select();
 
   if (error) {
     throw error;
   }
 
-  const balances = data.reduce<Record<string, number>>((acc, current) => {
-    acc[current.subaccount_id!] = current.balance ?? 0;
-    return acc;
-  }, {});
+  const balances = data.reduce<Record<string, { balance: number; lastTransactionDate: Date }>>(
+    (acc, current) => {
+      acc[current.subaccount_id!] = {
+        balance: current.balance ?? 0,
+        lastTransactionDate: new Date(current.last_transaction_date ?? 0),
+      };
+      return acc;
+    },
+    {},
+  );
 
   return balances;
 }
@@ -54,7 +62,7 @@ export async function getAccounts(): Promise<Account[]> {
   const [
     { data: accounts, error },
     { mainCurrency, mapper: mainCurrencyMapper },
-    subaccontBalances,
+    subaccountBalances,
   ] = await Promise.all([
     supabase.from('accounts').select(`id, name, category, subaccounts(id, name, currency)`),
     getMainCurrencyWithMapper(),
@@ -74,9 +82,10 @@ export async function getAccounts(): Promise<Account[]> {
           originalCurrency: subaccount.currency,
           mainCurrency,
           balance: {
-            originalValue: subaccontBalances[subaccount.id] ?? 0,
+            originalValue: subaccountBalances[subaccount.id]?.balance ?? 0,
             mainCurrencyValue:
-              (subaccontBalances[subaccount.id] ?? 0) * mainCurrencyMapper[subaccount.currency],
+              (subaccountBalances[subaccount.id]?.balance ?? 0) *
+              mainCurrencyMapper[subaccount.currency],
           },
           accountId: account.id,
         }) satisfies Subaccount,
@@ -133,9 +142,10 @@ export async function getAccount(accountId: string): Promise<Account | undefined
         originalCurrency: subaccount.currency,
         mainCurrency,
         balance: {
-          originalValue: subaccountBalances[subaccount.id] ?? 0,
+          originalValue: subaccountBalances[subaccount.id]?.balance ?? 0,
           mainCurrencyValue:
-            (subaccountBalances[subaccount.id] ?? 0) * mainCurrencyMapper[subaccount.currency],
+            (subaccountBalances[subaccount.id]?.balance ?? 0) *
+            mainCurrencyMapper[subaccount.currency],
         },
         accountId: account.id,
       }) satisfies Subaccount,

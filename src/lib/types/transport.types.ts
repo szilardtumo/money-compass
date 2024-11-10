@@ -5,7 +5,7 @@ type ActionResponseSuccess<T> = T extends undefined
       data: T;
     };
 
-type ActionResponseError = {
+export type ActionResponseError = {
   success: false;
   error: {
     code: string;
@@ -20,6 +20,7 @@ export enum ActionErrorCode {
   UniqueViolation = '23505',
   ForeignKeyViolation = '23503',
   NotFound = '404',
+  ValidationError = '400',
 }
 
 export interface Paginated<T> {

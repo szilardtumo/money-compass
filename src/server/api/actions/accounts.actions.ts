@@ -1,10 +1,12 @@
 'use server';
 
+import { isBefore, max } from 'date-fns';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
+import { formatDate } from '@/lib/utils/formatters';
 import { apiQueries } from '@/server/api/queries';
 import { getDb, schema } from '@/server/db';
 
@@ -270,21 +272,48 @@ export async function deleteAccount(accountId: string): Promise<ActionResponse> 
   return { success: true };
 }
 
-export async function updateAccountBalances(
-  balances: Record<string, number>,
-): Promise<ActionResponse> {
+interface UpdateAccountBalancesParams {
+  balances: Record<string, number>;
+  description: string;
+  date: Date;
+}
+
+export async function updateAccountBalances({
+  balances,
+  description,
+  date,
+}: UpdateAccountBalancesParams): Promise<ActionResponse> {
   const subaccountBalances = await apiQueries.accounts.getSubaccountBalances();
-  const now = new Date().toISOString();
 
   const transactions: Parameters<typeof createTransactions>[0] = Object.entries(balances)
     .map(([subaccountId, balance]) => ({
       subaccountId,
-      amount: balance - (subaccountBalances[subaccountId] ?? 0),
+      amount: balance - (subaccountBalances[subaccountId]?.balance ?? 0),
       type: 'correction' as const,
-      description: 'Manual balance correction',
-      date: now,
+      description,
+      date,
     }))
     .filter((transaction) => transaction.amount !== 0);
+
+  if (
+    transactions.some((transaction) =>
+      isBefore(transaction.date, subaccountBalances[transaction.subaccountId]?.lastTransactionDate),
+    )
+  ) {
+    const lastTransactionDate = max(
+      transactions.map(
+        (transaction) => subaccountBalances[transaction.subaccountId]?.lastTransactionDate,
+      ),
+    );
+
+    return {
+      success: false,
+      error: {
+        code: ActionErrorCode.ValidationError,
+        message: `The transaction date can't be before the latest already existing transaction from the updated subaccounts. Earliest possible date is: ${formatDate(lastTransactionDate)}`,
+      },
+    };
+  }
 
   return createTransactions(transactions);
 }
