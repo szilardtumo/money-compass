@@ -204,6 +204,7 @@ export type Database = {
       balances: {
         Row: {
           balance: number | null
+          last_transaction_date: string | null
           subaccount_id: string | null
         }
         Relationships: [
