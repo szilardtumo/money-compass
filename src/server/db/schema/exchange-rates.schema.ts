@@ -3,7 +3,7 @@ import { pgPolicy, pgTable, primaryKey, text } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { currencies } from './currencies.schema';
-import { numericCasted } from './custom-types';
+import { numericCasted } from './utils';
 
 export const exchangeRates = pgTable(
   'exchange_rates',

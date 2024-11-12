@@ -1,10 +1,10 @@
 import { eq } from 'drizzle-orm';
 import { index, integer, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { authenticatedRole, authUid } from 'drizzle-orm/supabase';
+import { authenticatedRole } from 'drizzle-orm/supabase';
 
-import { numericCasted } from './custom-types';
 import { transactionType } from './enums.schema';
 import { subaccounts } from './subaccounts.schema';
+import { numericCasted, authUid } from './utils';
 
 export const transactions = pgTable(
   'transactions',

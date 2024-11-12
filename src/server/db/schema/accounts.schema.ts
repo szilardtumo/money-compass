@@ -1,8 +1,9 @@
 import { eq } from 'drizzle-orm';
 import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { authUid, authUsers, authenticatedRole } from 'drizzle-orm/supabase';
+import { authUsers, authenticatedRole } from 'drizzle-orm/supabase';
 
 import { accountCategory } from './enums.schema';
+import { authUid } from './utils';
 
 export const accounts = pgTable(
   'accounts',
@@ -21,8 +22,8 @@ export const accounts = pgTable(
       as: 'permissive',
       for: 'all',
       to: authenticatedRole,
-      using: eq(authUid, table.id),
-      withCheck: eq(authUid, table.id),
+      using: eq(table.id, authUid),
+      withCheck: eq(table.id, authUid),
     }),
   ],
 );

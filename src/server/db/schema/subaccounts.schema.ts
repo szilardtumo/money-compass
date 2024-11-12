@@ -1,9 +1,10 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { authenticatedRole, authUid } from 'drizzle-orm/supabase';
+import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { accounts } from './accounts.schema';
 import { currencies } from './currencies.schema';
+import { authUid } from './utils';
 
 export const subaccounts = pgTable(
   'subaccounts',

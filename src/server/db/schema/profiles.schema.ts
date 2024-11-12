@@ -1,8 +1,9 @@
 import { eq } from 'drizzle-orm';
 import { pgPolicy, pgTable, text, uuid } from 'drizzle-orm/pg-core';
-import { authenticatedRole, authUid, authUsers } from 'drizzle-orm/supabase';
+import { authenticatedRole, authUsers } from 'drizzle-orm/supabase';
 
 import { currencies } from './currencies.schema';
+import { authUid } from './utils';
 
 export const profiles = pgTable(
   'profiles',
