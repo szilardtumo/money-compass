@@ -11,8 +11,13 @@ interface UpdateProfileParams {
 
 export async function updateProfile(params: UpdateProfileParams): Promise<ActionResponse> {
   const supabase = createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { error } = await supabase.from('profiles').upsert({ main_currency: params.mainCurrency });
+  const { error } = await supabase
+    .from('profiles')
+    .upsert({ id: user!.id, main_currency: params.mainCurrency });
 
   if (error) {
     return { success: false, error: { code: error.code, message: error.message } };
