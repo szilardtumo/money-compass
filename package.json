@@ -17,7 +17,8 @@
     "test:watch-cov": "jest --watch --coverage",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "supa:gen-types": "npx supabase gen types typescript --project-id lgtnunvhxmklyelpqxyw > src/lib/types/database.types.ts"
+    "supa:gen-types": "npx supabase gen types typescript --project-id lgtnunvhxmklyelpqxyw > src/lib/types/database.types.ts",
+    "supa:backup-db": "mkdir -p backups && npx supabase db dump --file \"backups/backup_$(date +%Y%m%d_%H%M%S).sql\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -50,7 +51,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.33.0",
+    "drizzle-orm": "^0.36.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.441.0",
     "next": "^14.2.5",
@@ -88,7 +89,7 @@
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
     "cypress": "^13.13.3",
-    "drizzle-kit": "^0.24.0",
+    "drizzle-kit": "^0.28.0",
     "eslint": "^9.9.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-cypress": "^3.5.0",
