@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - '$default-branch'
-  pull_request: # TODO: remove before merge
 jobs:
   apply-migrations:
     runs-on: ubuntu-latest
