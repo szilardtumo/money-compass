@@ -1,0 +1,21 @@
+name: 'Apply migrations to remote database'
+
+on:
+  push:
+    branches:
+      - '$default-branch'
+  pull_request: # TODO: remove before merge
+jobs:
+  apply-migrations:
+    runs-on: ubuntu-latest
+    environment:
+      name: Production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      # Retrieve <project-id> from dashboard url: https://app.supabase.com/project/<project-id>
+      PROJECT_ID: lgtnunvhxmklyelpqxyw
+    steps:
+      - uses: supabase/setup-cli@v1
+      - run: supabase link --project-ref $PROJECT_ID
+      - run: supabase db push
