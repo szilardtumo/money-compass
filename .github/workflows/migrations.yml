@@ -16,7 +16,7 @@ jobs:
       # Retrieve <project-id> from dashboard url: https://app.supabase.com/project/<project-id>
       PROJECT_ID: lgtnunvhxmklyelpqxyw
     steps:
+      - uses: actions/checkout@v3
       - uses: supabase/setup-cli@v1
-      - run: supabase init
       - run: supabase link --project-ref $PROJECT_ID
       - run: supabase db push
