@@ -70,7 +70,7 @@ export async function getTransactions({
 }: GetTransactionsParams = {}): Promise<Paginated<Transaction>> {
   const db = await getDb();
 
-  const query = db.transaction((tx) =>
+  const query = db.rls((tx) =>
     tx
       .select()
       .from(transactions)

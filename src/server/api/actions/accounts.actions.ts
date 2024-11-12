@@ -31,7 +31,7 @@ async function createSubaccounts(params: CreateSubaccountParams[]): Promise<Acti
 
   const db = await getDb();
 
-  await db.transaction(async (tx) => {
+  await db.rls(async (tx) => {
     await tx.insert(schema.subaccounts).values(
       params.map((item) => ({
         accountId: item.accountId,
@@ -57,7 +57,7 @@ async function createSubaccounts(params: CreateSubaccountParams[]): Promise<Acti
 async function deleteSubaccounts(subaccountIds: string[]): Promise<ActionResponse> {
   const db = await getDb();
 
-  await db.transaction(async (tx) => {
+  await db.rls(async (tx) => {
     await tx.delete(schema.subaccounts).where(inArray(schema.subaccounts.id, subaccountIds));
   });
 
@@ -77,7 +77,7 @@ interface UpdateSubaccountParams {
 async function updateSubaccounts(params: UpdateSubaccountParams[]): Promise<ActionResponse> {
   const db = await getDb();
 
-  const wasCurrencyChanged = await db.transaction(async (tx) => {
+  const wasCurrencyChanged = await db.rls(async (tx) => {
     const dbSubaccounts = await tx
       .select()
       .from(schema.subaccounts)
@@ -160,7 +160,7 @@ interface CreateAccountParams {
 export async function createAccount(params: CreateAccountParams): Promise<ActionResponse> {
   const db = await getDb();
 
-  await db.transaction(async (tx) => {
+  await db.rls(async (tx) => {
     const [{ id }] = await tx
       .insert(schema.accounts)
       .values({ name: params.name, category: params.category })
@@ -225,7 +225,7 @@ export async function updateAccount(
         'id' in subaccount && !subaccount.delete,
     ) ?? [];
 
-  await db.transaction(async (tx) => {
+  await db.rls(async (tx) => {
     // Update account
     await tx
       .update(schema.accounts)
@@ -262,7 +262,7 @@ export async function updateAccount(
 
 export async function deleteAccount(accountId: string): Promise<ActionResponse> {
   const db = await getDb();
-  await db.transaction((tx) => tx.delete(schema.accounts).where(eq(schema.accounts.id, accountId)));
+  await db.rls((tx) => tx.delete(schema.accounts).where(eq(schema.accounts.id, accountId)));
 
   //TODO: error handling
 
