@@ -15,6 +15,9 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       # Retrieve <project-id> from dashboard url: https://app.supabase.com/project/<project-id>
       PROJECT_ID: lgtnunvhxmklyelpqxyw
+      # Required by supabase/config.toml
+      SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT_ID: ''
+      SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET: ''
     steps:
       - uses: actions/checkout@v3
       - uses: supabase/setup-cli@v1
