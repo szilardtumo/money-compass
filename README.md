@@ -108,6 +108,7 @@ Migrations are handled with a codebase first approach ([option 5 from Drizzle Do
 1. The source of truth is the Drizzle schema defined in the codebase
 2. Migration files are generated based on schema changes with Drizzle Kit: `yarn db:generate`
 3. Migrations are applied to the local database with Supabase CLI: `yarn db:migrate`
+4. Migrations are applied to production database in a GitHub Workflow
 
 ## Testing
 
