@@ -22,8 +22,8 @@ export const accounts = pgTable(
       as: 'permissive',
       for: 'all',
       to: authenticatedRole,
-      using: eq(table.id, authUid),
-      withCheck: eq(table.id, authUid),
+      using: eq(table.userId, authUid),
+      withCheck: eq(table.userId, authUid),
     }),
   ],
 );

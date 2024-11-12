@@ -25,7 +25,7 @@ export const exchangeRates = pgTable(
       as: 'permissive',
       for: 'select',
       to: authenticatedRole,
-      using: sql``,
+      using: sql`true`,
     }),
   ],
 );

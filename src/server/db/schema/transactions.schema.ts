@@ -30,6 +30,7 @@ export const transactions = pgTable(
       for: 'all',
       to: authenticatedRole,
       using: eq(table.userId, authUid),
+      withCheck: eq(table.userId, authUid),
     }),
     index('transactions_started_date_idx').on(
       table.subaccountId,

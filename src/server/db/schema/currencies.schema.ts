@@ -15,7 +15,7 @@ export const currencies = pgTable(
       as: 'permissive',
       for: 'select',
       to: authenticatedRole,
-      using: sql``,
+      using: sql`true`,
     }),
   ],
 );
