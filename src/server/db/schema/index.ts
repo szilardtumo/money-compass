@@ -1,4 +1,4 @@
-export * from './accounts.shema';
+export * from './accounts.schema';
 export * from './balances.schema';
 export * from './currencies.schema';
 export * from './enums.schema';
