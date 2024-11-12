@@ -17,8 +17,13 @@
     "test:watch-cov": "jest --watch --coverage",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "supa:gen-types": "npx supabase gen types typescript --project-id lgtnunvhxmklyelpqxyw > src/lib/types/database.types.ts",
-    "supa:backup-db": "mkdir -p backups && npx supabase db dump --file \"backups/backup_$(date +%Y%m%d_%H%M%S).sql\""
+    "supa:start": "supabase start",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "supabase migration up && supabase gen types --schema=public --local > src/lib/types/database.types.ts",
+    "db:migrate:remote": "supabase db push",
+    "db:backup": "mkdir -p backups && supabase db dump --local --file \"backups/backup_local_$(date +%Y%m%d_%H%M%S).sql\"",
+    "db:backup:remote": "mkdir -p backups && supabase db dump --linked --file \"backups/backup_remote_$(date +%Y%m%d_%H%M%S).sql\"",
+    "db:reset": "supabase db reset"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

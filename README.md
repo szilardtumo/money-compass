@@ -26,17 +26,38 @@ This project uses:
 
 1. Install the dependencies:
 
-```bash
-yarn install --frozen-lockfile
-```
+   ```bash
+   yarn install --frozen-lockfile
+   ```
 
-2. Run the development server:
+2. Configure GitHub OAuth:
 
-```bash
-yarn dev
-```
+   Register a new OAuth App [on GitHub](https://github.com/settings/developers) with the following callback URL: `http://localhost:54321/auth/v1/callback`
 
-3. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+   Create a `.env.local` file in the root of your project and define your GitHub Client ID and Secret.
+
+   _More info about GitHub OAuth Apps can be found in the [official docs](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app)._
+
+3. Set up and run Supabase:
+
+   ```bash
+   yarn db:reset
+   yarn supa:start
+   ```
+
+   The Supabase Studio will be available at http://localhost:54323.
+
+   _More info about running Supabase locally can be found in the [official docs](https://supabase.com/docs/guides/local-development/cli/getting-started#running-supabase-locally)._
+
+4. Define your local Supabase credentials in `.env.local`
+
+5. Run the Next.js development server:
+
+   ```bash
+   yarn dev --turbo
+   ```
+
+   The application will be available at http://localhost:3000.
 
 ## Scripts Overview
 
@@ -80,19 +101,13 @@ The following scripts are available in `package.json`:
 └──middleware.ts
 ```
 
-## Supabase
+## Database migrations
 
-This project uses [Supabase](https://supabase.io/) for authentication and database.
+Migrations are handled with a codebase first approach ([option 5 from Drizzle Docs](https://orm.drizzle.team/docs/migrations)):
 
-### Database migrations
-
-To pull the latest schema from the remote Supabase database, run:
-
-```bash
-npx supabase db pull
-npx supabase migration squash
-npx supabase migration repair --status reverted '<old_migration_name>'
-```
+1. The source of truth is the Drizzle schema defined in the codebase
+2. Migration files are generated based on schema changes with Drizzle Kit: `yarn db:generate`
+3. Migrations are applied to the local database with Supabase CLI: `yarn db:migrate`
 
 ## Testing
 
