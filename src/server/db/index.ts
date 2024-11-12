@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { sql } from 'drizzle-orm';
 import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { jwtDecode } from 'jwt-decode';
