@@ -1,12 +1,14 @@
 'use server';
 
 import { PostgrestError } from '@supabase/supabase-js';
+import { isBefore, max } from 'date-fns';
 import { and, asc, desc, eq, inArray, not, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
+import { formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
 import { apiQueries } from '@/server/api/queries';
 import { getDb } from '@/server/db';
@@ -56,19 +58,20 @@ interface CreateTransactionParams {
   type: Enums<'transaction_type'>;
   amount: number;
   description: string;
-  date: string;
+  date: Date;
 }
 
 export async function createTransaction(params: CreateTransactionParams): Promise<ActionResponse> {
   const supabase = createServerSupabaseClient();
 
   try {
+    const dateString = params.date.toISOString();
     const {
       data: [latestTransaction],
     } = await apiQueries.transactions.getTransactions({
       pageSize: 1,
       subaccountId: params.subaccountId,
-      toDate: params.date,
+      toDate: dateString,
     });
 
     const { error } = await supabase.from('transactions').insert({
@@ -77,8 +80,8 @@ export async function createTransaction(params: CreateTransactionParams): Promis
       balance: (latestTransaction?.balance.originalValue ?? 0) + params.amount,
       subaccount_id: params.subaccountId,
       description: params.description,
-      started_date: params.date,
-      completed_date: params.date,
+      started_date: dateString,
+      completed_date: dateString,
     });
 
     if (error) {
@@ -87,7 +90,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
 
     await supabase.rpc('update_transaction_balances', {
       _subaccount_id: params.subaccountId,
-      fromdate: params.date,
+      fromdate: dateString,
       amounttoadd: params.amount,
     });
 
@@ -111,15 +114,38 @@ export async function createTransactions(
     const subaccountBalances = await apiQueries.accounts.getSubaccountBalances();
     const now = new Date().toISOString();
 
+    if (
+      transactions.some((transaction) =>
+        isBefore(
+          transaction.date,
+          subaccountBalances[transaction.subaccountId]?.lastTransactionDate,
+        ),
+      )
+    ) {
+      const lastTransactionDate = max(
+        transactions.map(
+          (transaction) => subaccountBalances[transaction.subaccountId]?.lastTransactionDate,
+        ),
+      );
+
+      return {
+        success: false,
+        error: {
+          code: ActionErrorCode.ValidationError,
+          message: `The transaction date can't be before the latest already existing transaction from the updated subaccounts. Earliest possible date is: ${formatDate(lastTransactionDate)}`,
+        },
+      };
+    }
+
     const { error } = await supabase.from('transactions').insert(
       transactions.map((transaction) => ({
         type: transaction.type,
         amount: transaction.amount,
-        balance: (subaccountBalances[transaction.subaccountId] ?? 0) + transaction.amount,
+        balance: (subaccountBalances[transaction.subaccountId]?.balance ?? 0) + transaction.amount,
         subaccount_id: transaction.subaccountId,
         description: transaction.description,
-        started_date: now,
-        completed_date: now,
+        started_date: transaction.date.toISOString() ?? now,
+        completed_date: transaction.date.toISOString() ?? now,
       })),
     );
 

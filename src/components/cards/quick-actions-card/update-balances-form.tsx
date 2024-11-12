@@ -2,12 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ReloadIcon } from '@radix-ui/react-icons';
+import { isFuture, startOfDay } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Form,
   FormControl,
@@ -17,7 +19,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Account } from '@/lib/types/accounts.types';
+import { ActionErrorCode, ActionResponseError } from '@/lib/types/transport.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
@@ -29,6 +33,8 @@ interface UpdateBalancesFormProps {
 
 export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormProps) {
   const formSchema = z.object({
+    description: z.string().min(1, 'Description is required.'),
+    date: z.date().max(new Date(), 'Date cannot be in the future.'),
     balances: z.record(z.number()),
   });
 
@@ -37,6 +43,8 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
   const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      description: 'Manual balance correction',
+      date: startOfDay(new Date()),
       balances: Object.fromEntries(
         accounts.flatMap((account) =>
           account.subaccounts.map((subaccount) => [
@@ -49,12 +57,15 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
   });
 
   async function onSubmit(values: FormFields) {
-    const promise = apiActions.accounts.updateAccountBalances(values.balances);
+    const promise = apiActions.accounts.updateAccountBalances(values);
 
     toast.promise(createToastPromise(promise), {
       loading: 'Updating account balances...',
       success: 'Account balances updated!',
-      error: () => 'Failed to update account balances.',
+      error: (error: ActionResponseError['error']) =>
+        error.code === ActionErrorCode.ValidationError
+          ? error.message
+          : 'Failed to update account balances.',
     });
 
     const response = await promise;
@@ -66,6 +77,32 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-8">
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field: { onChange, ...field } }) => (
+            <FormItem>
+              <FormLabel>Date</FormLabel>
+              <FormControl>
+                <DatePicker disabled={isFuture} onValueChange={onChange} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         {accounts
           .filter((account) => account.subaccounts.length)
           .map((account) => (
