@@ -66,16 +66,23 @@ The following scripts are available in `package.json`:
 - `dev`: Starts the development server
 - `build`: Builds the application for production
 - `start`: Starts the production server
-- `lint`: Lints the code
+- `lint`: Lints the code with ESLint
+- `check-styles`: Checks the code styles with Prettier
 - `check-types`: Checks the code for type errors
-- `validate`: Runs `lint` and `check-types`
+- `validate`: Runs ESLint, Prettier and TS type check
 - `test`: Runs the unit tests
 - `test:watch`: Runs the unit tests in watch mode
 - `test:cov`: Runs the unit tests and generates coverage report
 - `test:watch-cov`: Runs the unit tests in watch mode and generates coverage report
 - `cy:open`: Opens the Cypress Test Runner
 - `cy:run`: Runs the Cypress tests
-- `supa:gen-types`: Generates TypeScript types for the Supabase database schema
+- `supa:start`: Starts the local Supabase service
+- `db:generate`: Generates database migrations based on schema changes
+- `db:migrate`: Applies database migrations to the local database
+- `db:migrate:remote`: Applies database migrations to the remote database
+- `db:backup`: Creates a local backup of the local database
+- `db:backup:remote`: Creates a local backup of the remote database
+- `db:reset`: Resets the local database
 
 ## Project structure
 
