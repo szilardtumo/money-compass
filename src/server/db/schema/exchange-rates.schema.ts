@@ -1,24 +1,31 @@
-import { numeric, pgTable, primaryKey, text } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { pgPolicy, pgTable, primaryKey, text } from 'drizzle-orm/pg-core';
+import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { currencies } from './currencies.schema';
+import { numericCasted } from './utils';
 
 export const exchangeRates = pgTable(
   'exchange_rates',
   {
-    from: text('from')
+    from: text()
       .notNull()
       .references(() => currencies.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
-    to: text('to')
+    to: text()
       .notNull()
       .references(() => currencies.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
-    rate: numeric('rate').notNull(),
+    rate: numericCasted('rate').notNull(),
   },
-  (table) => {
-    return {
-      exchangeRatesPkey: primaryKey({
-        columns: [table.from, table.to],
-        name: 'exchange_rates_pkey',
-      }),
-    };
-  },
+  (table) => [
+    primaryKey({
+      name: 'exchange_rates_pkey',
+      columns: [table.from, table.to],
+    }),
+    pgPolicy('exchange_rates_allow_select_for_all_policy', {
+      as: 'permissive',
+      for: 'select',
+      to: authenticatedRole,
+      using: sql`true`,
+    }),
+  ],
 );

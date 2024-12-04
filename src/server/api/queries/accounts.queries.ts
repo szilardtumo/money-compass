@@ -22,7 +22,7 @@ export async function getSubaccountBalances(): Promise<
     (acc, current) => {
       acc[current.subaccount_id!] = {
         balance: current.balance ?? 0,
-        lastTransactionDate: new Date(current.last_transaction_date ?? 0),
+        lastTransactionDate: new Date(current.started_date ?? 0),
       };
       return acc;
     },

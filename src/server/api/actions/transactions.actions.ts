@@ -178,7 +178,7 @@ export async function updateTransaction(
   const db = await getDb();
 
   try {
-    await db.transaction(async (tx) => {
+    await db.rls(async (tx) => {
       // Get the transaction to update
       const [transaction] = await tx
         .select()
@@ -277,7 +277,7 @@ export async function deleteTransactions(transactionIds: string[]): Promise<Acti
   const db = await getDb();
 
   try {
-    await db.transaction(async (tx) => {
+    await db.rls(async (tx) => {
       // Get all transactions to be deleted (oldest first)
       const transactionsToDelete = await tx
         .select()
@@ -330,10 +330,11 @@ export async function deleteTransactions(transactionIds: string[]): Promise<Acti
 }
 
 export async function _recalculateBalances() {
-  const tx = await getDb();
+  const db = await getDb();
 
   // Get all transactions ordered by subaccount, then by date and sequence
-  const allTransactions = await tx
+  // WARNING: This bypasses RLS
+  const allTransactions = await db.admin
     .select()
     .from(transactions)
     .orderBy(
@@ -363,7 +364,7 @@ export async function _recalculateBalances() {
             runningBalance,
           ]);
 
-          // await tx
+          // await db.admin
           //   .update(transactions)
           //   .set({ balance: runningBalance })
           //   .where(eq(transactions.id, transaction.id));
