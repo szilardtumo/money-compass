@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { redirect } from 'next/navigation';
+
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Profile } from '@/lib/types/profiles.types';
 
@@ -22,7 +24,7 @@ export async function getProfile(): Promise<Profile> {
   }
 
   if (userError || !user) {
-    throw new Error('User not found');
+    redirect('/auth');
   }
 
   return {

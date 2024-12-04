@@ -10,7 +10,7 @@ export default function AuthForm() {
 
   let redirectUrl = '/api/auth/callback';
   if (typeof window !== 'undefined') {
-    redirectUrl = `${location.origin}/api/auth/callback`;
+    redirectUrl = `${location.origin}/api/auth/callback${location.search}`;
   }
 
   const signInWithGoogle = () => {
