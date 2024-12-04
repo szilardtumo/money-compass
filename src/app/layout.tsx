@@ -1,7 +1,6 @@
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import { Inter } from 'next/font/google';
 import './globals.css';
 
@@ -20,12 +19,6 @@ export const metadata: Metadata = {
   },
 };
 
-let CacheToolbar: React.ComponentType = () => null;
-
-if (process.env.NODE_ENV === 'development') {
-  CacheToolbar = dynamic(() => import('./_components/cache-toolbar'));
-}
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -33,7 +26,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GlobalProviders>
           <Analytics />
           <SpeedInsights />
-          <CacheToolbar />
           <GlobalProgress />
           <Toaster />
           {children}
