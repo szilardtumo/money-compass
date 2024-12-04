@@ -364,7 +364,7 @@ export async function _recalculateBalances() {
             runningBalance,
           ]);
 
-          // await tx
+          // await db.admin
           //   .update(transactions)
           //   .set({ balance: runningBalance })
           //   .where(eq(transactions.id, transaction.id));
