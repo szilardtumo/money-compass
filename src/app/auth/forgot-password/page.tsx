@@ -31,6 +31,9 @@ export default function ForgotPasswordPage() {
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+    },
   });
 
   const {

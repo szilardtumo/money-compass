@@ -37,6 +37,10 @@ export default function LoginPage() {
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
   });
 
   const {

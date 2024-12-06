@@ -43,6 +43,11 @@ export default function RegisterPage() {
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
   });
 
   const {
