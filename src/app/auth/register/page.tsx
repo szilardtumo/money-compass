@@ -19,13 +19,18 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { PasswordInput, strengthRequirements } from '@/components/ui/password-input';
 import { SeparatorWithText } from '@/components/ui/separator-with-text';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 const formSchema = z
   .object({
     email: z.string().email('Invalid email'),
-    password: z.string().min(8, { message: 'Password must be at least 8 characters long' }),
+    password: z
+      .string()
+      .refine((data) => strengthRequirements.every((req) => req.regex.test(data)), {
+        message: 'Password must meet all strength requirements',
+      }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -101,7 +106,7 @@ export default function RegisterPage() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" {...field} />
+                  <PasswordInput placeholder="Password" showStrengthIndicator {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -114,7 +119,7 @@ export default function RegisterPage() {
               <FormItem>
                 <FormLabel>Confirm Password</FormLabel>
                 <FormControl>
-                  <Input type="password" {...field} />
+                  <PasswordInput placeholder="Password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -37,7 +37,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
     // no user, respond by redirecting the user to the login page
-    const redirectUrl = new URL('/auth', request.url);
+    const redirectUrl = new URL('/auth/login', request.url);
     redirectUrl.searchParams.set('next', request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }

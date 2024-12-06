@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { SeparatorWithText } from '@/components/ui/separator-with-text';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
@@ -103,7 +104,7 @@ export default function LoginPage() {
                   </Link>
                 </div>
                 <FormControl>
-                  <Input type="password" {...field} />
+                  <PasswordInput placeholder="Password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
