@@ -24,7 +24,7 @@ export async function getProfile(): Promise<Profile> {
   }
 
   if (userError || !user) {
-    redirect('/auth');
+    redirect('/auth/login');
   }
 
   return {
