@@ -9,6 +9,7 @@ import { z } from 'zod';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -56,48 +57,53 @@ export default function ForgotPasswordPage() {
   );
 
   return (
-    <div className="mx-auto flex flex-col w-[350px] min-h-[50%] gap-8">
-      <h1 className="text-2xl text-center font-semibold tracking-tight">Forgot Password</h1>
-      {isSubmitSuccessful && !errors.root && (
-        <Alert variant="success">
-          <CheckCircledIcon className="size-4" />
-          <AlertDescription>
-            If an account exists for this email, you will receive password reset instructions.
-          </AlertDescription>
-        </Alert>
-      )}
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-          <FormField
-            control={control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="email@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <Card className="mx-auto w-[400px] min-h-[50%]">
+      <CardHeader>
+        <CardTitle className="text-xl">Forgot Password</CardTitle>
+        <CardDescription>Enter your email below to reset your password</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-8">
+        {isSubmitSuccessful && !errors.root && (
+          <Alert variant="success">
+            <CheckCircledIcon className="size-4" />
+            <AlertDescription>
+              If an account exists for this email, you will receive password reset instructions.
+            </AlertDescription>
+          </Alert>
+        )}
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+            <FormField
+              control={control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="email@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <p className="h-5 text-sm text-red-500" role="alert">
-            {errors.root?.message}
-          </p>
+            <p className="h-5 text-sm text-red-500" role="alert">
+              {errors.root?.message}
+            </p>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting && <ReloadIcon className="mr-2 size-4 animate-spin" />}
-            Reset Password
-          </Button>
-        </form>
-      </Form>
-      <div className="mt-4 text-center text-sm">
-        Remember your password?{' '}
-        <Link href="/auth/login" className="underline">
-          Back to login
-        </Link>
-      </div>
-    </div>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <ReloadIcon className="mr-2 size-4 animate-spin" />}
+              Reset Password
+            </Button>
+          </form>
+        </Form>
+        <div className="mt-4 text-center text-sm">
+          Remember your password?{' '}
+          <Link href="/auth/login" className="underline">
+            Back to login
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

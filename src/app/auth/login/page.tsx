@@ -10,6 +10,7 @@ import { z } from 'zod';
 
 import { OAuthButtons } from '@/app/auth/_components/oauth-buttons';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -71,64 +72,69 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="mx-auto flex flex-col w-[350px] min-h-[50%] gap-8">
-      <h1 className="text-2xl text-center font-semibold tracking-tight">Login</h1>
+    <Card className="mx-auto w-[400px] min-h-[50%]">
+      <CardHeader>
+        <CardTitle className="text-xl">Login</CardTitle>
+        <CardDescription>Enter your email below to login to your account</CardDescription>
+      </CardHeader>
 
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-          <FormField
-            control={control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="email@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center">
-                  <FormLabel>Password</FormLabel>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <FormControl>
-                  <PasswordInput placeholder="Password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <CardContent className="flex flex-col gap-8">
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+            <FormField
+              control={control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="email@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center">
+                    <FormLabel>Password</FormLabel>
+                    <Link
+                      href="/auth/forgot-password"
+                      className="ml-auto inline-block text-sm underline"
+                    >
+                      Forgot your password?
+                    </Link>
+                  </div>
+                  <FormControl>
+                    <PasswordInput placeholder="Password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <p className="h-5 text-sm text-red-500" role="alert">
-            {errors.root?.message}
-          </p>
+            <p className="h-5 text-sm text-red-500" role="alert">
+              {errors.root?.message}
+            </p>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting || isPending}>
-            {(isSubmitting || isPending) && <ReloadIcon className="mr-2 size-4 animate-spin" />}
-            Log in
-          </Button>
-        </form>
-      </Form>
-      <SeparatorWithText>Or continue with</SeparatorWithText>
-      <OAuthButtons />
-      <div className="mt-4 text-center text-sm">
-        Don&apos;t have an account?{' '}
-        <Link href="/auth/register" className="underline">
-          Register here
-        </Link>
-      </div>
-    </div>
+            <Button type="submit" className="w-full" disabled={isSubmitting || isPending}>
+              {(isSubmitting || isPending) && <ReloadIcon className="mr-2 size-4 animate-spin" />}
+              Log in
+            </Button>
+          </form>
+        </Form>
+        <SeparatorWithText>Or continue with</SeparatorWithText>
+        <OAuthButtons />
+        <div className="mt-4 text-center text-sm">
+          Don&apos;t have an account?{' '}
+          <Link href="/auth/register" className="underline">
+            Register here
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

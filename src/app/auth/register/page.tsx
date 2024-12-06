@@ -10,6 +10,7 @@ import { z } from 'zod';
 
 import { OAuthButtons } from '@/app/auth/_components/oauth-buttons';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -82,68 +83,73 @@ export default function RegisterPage() {
   );
 
   return (
-    <div className="mx-auto flex flex-col w-[350px] min-h-[50%] gap-8">
-      <h1 className="text-2xl text-center font-semibold tracking-tight">Register</h1>
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-          <FormField
-            control={control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="email@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <PasswordInput placeholder="Password" showStrengthIndicator {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
-                <FormControl>
-                  <PasswordInput placeholder="Password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <Card className="mx-auto w-[400px] min-h-[50%]">
+      <CardHeader>
+        <CardTitle className="text-xl">Register</CardTitle>
+        <CardDescription>Enter your information to create an account</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-8">
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+            <FormField
+              control={control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="email@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <PasswordInput placeholder="Password" showStrengthIndicator {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <PasswordInput placeholder="Password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <p className="h-5 text-sm text-red-500" role="alert">
-            {errors.root?.message}
-          </p>
+            <p className="h-5 text-sm text-red-500" role="alert">
+              {errors.root?.message}
+            </p>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting || isPending}>
-            {(isSubmitting || isPending) && <ReloadIcon className="mr-2 size-4 animate-spin" />}
-            Register
-          </Button>
-        </form>
-      </Form>
-      <SeparatorWithText>Or register with</SeparatorWithText>
-      <OAuthButtons />
-      <div className="mt-4 text-center text-sm">
-        Already registered?{' '}
-        <Link href="/auth/login" className="underline">
-          Log in here
-        </Link>
-      </div>
-    </div>
+            <Button type="submit" className="w-full" disabled={isSubmitting || isPending}>
+              {(isSubmitting || isPending) && <ReloadIcon className="mr-2 size-4 animate-spin" />}
+              Register
+            </Button>
+          </form>
+        </Form>
+        <SeparatorWithText>Or register with</SeparatorWithText>
+        <OAuthButtons />
+        <div className="mt-4 text-center text-sm">
+          Already registered?{' '}
+          <Link href="/auth/login" className="underline">
+            Log in here
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
