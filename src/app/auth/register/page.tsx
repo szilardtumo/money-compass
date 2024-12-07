@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useTransition } from 'react';
@@ -135,8 +135,15 @@ export default function RegisterPage() {
               {errors.root?.message}
             </p>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting || isPending}>
-              {(isSubmitting || isPending) && <ReloadIcon className="mr-2 size-4 animate-spin" />}
+            <Button
+              type="submit"
+              className="w-full"
+              icon={ArrowRight}
+              iconPlacement="right"
+              iconAnimation="expand"
+              disabled={isSubmitting || isPending}
+              isLoading={isSubmitting || isPending}
+            >
               Register
             </Button>
           </form>
@@ -145,9 +152,9 @@ export default function RegisterPage() {
         <OAuthButtons />
         <div className="mt-4 text-center text-sm">
           Already registered?{' '}
-          <Link href="/auth/login" className="underline">
-            Log in here
-          </Link>
+          <Button asChild variant="linkUnderlined">
+            <Link href="/auth/login">Log in here</Link>
+          </Button>
         </div>
       </CardContent>
     </Card>

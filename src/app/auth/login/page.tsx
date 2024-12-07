@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useTransition } from 'react';
@@ -101,12 +101,9 @@ export default function LoginPage() {
                 <FormItem>
                   <div className="flex items-center">
                     <FormLabel>Password</FormLabel>
-                    <Link
-                      href="/auth/forgot-password"
-                      className="ml-auto inline-block text-sm underline"
-                    >
-                      Forgot your password?
-                    </Link>
+                    <Button asChild variant="linkUnderlined" className="ml-auto">
+                      <Link href="/auth/forgot-password">Forgot your password?</Link>
+                    </Button>
                   </div>
                   <FormControl>
                     <PasswordInput placeholder="Password" {...field} />
@@ -120,8 +117,15 @@ export default function LoginPage() {
               {errors.root?.message}
             </p>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting || isPending}>
-              {(isSubmitting || isPending) && <ReloadIcon className="mr-2 size-4 animate-spin" />}
+            <Button
+              type="submit"
+              className="w-full"
+              icon={ArrowRight}
+              iconPlacement="right"
+              iconAnimation="expand"
+              disabled={isSubmitting || isPending}
+              isLoading={isSubmitting || isPending}
+            >
               Log in
             </Button>
           </form>
@@ -130,9 +134,9 @@ export default function LoginPage() {
         <OAuthButtons />
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register" className="underline">
-            Register here
-          </Link>
+          <Button asChild variant="linkUnderlined">
+            <Link href="/auth/register">Register here</Link>
+          </Button>
         </div>
       </CardContent>
     </Card>

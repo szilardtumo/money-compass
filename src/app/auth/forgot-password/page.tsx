@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircledIcon, ReloadIcon } from '@radix-ui/react-icons';
+import { CheckCircledIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
 import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
@@ -91,17 +91,21 @@ export default function ForgotPasswordPage() {
               {errors.root?.message}
             </p>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting && <ReloadIcon className="mr-2 size-4 animate-spin" />}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting}
+              isLoading={isSubmitting}
+            >
               Reset Password
             </Button>
           </form>
         </Form>
         <div className="mt-4 text-center text-sm">
           Remember your password?{' '}
-          <Link href="/auth/login" className="underline">
-            Back to login
-          </Link>
+          <Button asChild variant="linkUnderlined">
+            <Link href="/auth/login">Back to login</Link>
+          </Button>
         </div>
       </CardContent>
     </Card>

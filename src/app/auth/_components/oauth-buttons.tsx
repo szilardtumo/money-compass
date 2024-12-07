@@ -39,12 +39,10 @@ export function OAuthButtons() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Button variant="outline" onClick={signInWithGoogle} disabled={isLoading}>
-        <RiGoogleFill className="size-4 mr-2" />
+      <Button variant="outline" icon={RiGoogleFill} onClick={signInWithGoogle} disabled={isLoading}>
         Google
       </Button>
-      <Button variant="outline" onClick={signInWithGithub} disabled={isLoading}>
-        <RiGithubFill className="size-4 mr-2" />
+      <Button variant="outline" icon={RiGithubFill} onClick={signInWithGithub} disabled={isLoading}>
         GitHub
       </Button>
     </div>
