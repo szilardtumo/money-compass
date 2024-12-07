@@ -44,9 +44,9 @@ const iconVariants = cva('shrink-0', {
     },
     size: {
       default: 'size-4',
-      sm: 'size-3',
+      sm: 'size-3.5',
       lg: 'size-4',
-      icon: 'size-4',
+      icon: 'size-4 ml-0 mr-0',
       card: 'size-4',
     },
     iconAnimation: {

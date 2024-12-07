@@ -17,9 +17,15 @@ export function DataTableResetFilters<TData>({ table }: DataTableResetFiltersPro
   }
 
   return (
-    <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2">
+    <Button
+      variant="ghost"
+      size="sm"
+      icon={Cross2Icon}
+      iconPlacement="right"
+      onClick={() => table.resetColumnFilters()}
+      className="h-8 px-2"
+    >
       Reset
-      <Cross2Icon className="ml-2" />
     </Button>
   );
 }

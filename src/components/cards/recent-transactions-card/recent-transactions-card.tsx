@@ -48,7 +48,9 @@ export function RecentTransactionsCard({
       .filter((transaction) => selectedAccountIds.includes(transaction.accountId))
       .map((transaction) => {
         const account = accounts.find((account) => account.id === transaction.accountId);
-        const subaccount = account?.subaccounts.find((subaccount) => subaccount.id === transaction.subaccountId);
+        const subaccount = account?.subaccounts.find(
+          (subaccount) => subaccount.id === transaction.subaccountId,
+        );
 
         return { ...transaction, account, subaccount };
       })
@@ -84,8 +86,7 @@ export function RecentTransactionsCard({
         {accounts.length > 1 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <MixerVerticalIcon className="w-4 h-4 mr-2" />
+              <Button variant="outline" icon={MixerVerticalIcon}>
                 Accounts
               </Button>
             </DropdownMenuTrigger>
