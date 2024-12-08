@@ -83,7 +83,7 @@ export default function RegisterPage() {
   );
 
   return (
-    <Card className="mx-auto w-[400px] min-h-[50%]">
+    <Card className="mx-auto w-[400px]">
       <CardHeader>
         <CardTitle className="text-xl">Register</CardTitle>
         <CardDescription>Enter your information to create an account</CardDescription>
@@ -131,7 +131,7 @@ export default function RegisterPage() {
               )}
             />
 
-            <p className="h-5 text-sm text-red-500" role="alert">
+            <p className="min-h-5 text-sm text-red-500" role="alert">
               {errors.root?.message}
             </p>
 

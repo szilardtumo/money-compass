@@ -44,20 +44,27 @@ export default function ForgotPasswordPage() {
     formState: { errors, isSubmitting, isSubmitSuccessful },
   } = form;
 
+  let redirectUrl = '/auth/reset-password';
+  if (typeof window !== 'undefined') {
+    redirectUrl = `${location.origin}/auth/reset-password${location.search}`;
+  }
+
   const onSubmit = useCallback(
     async (formFields: FormFields) => {
-      const { error } = await supabase.auth.resetPasswordForEmail(formFields.email);
+      const { error } = await supabase.auth.resetPasswordForEmail(formFields.email, {
+        redirectTo: redirectUrl,
+      });
 
       if (error) {
         setError('root', { message: error.message });
         return;
       }
     },
-    [setError, supabase.auth],
+    [redirectUrl, setError, supabase.auth],
   );
 
   return (
-    <Card className="mx-auto w-[400px] min-h-[50%]">
+    <Card className="mx-auto w-[400px]">
       <CardHeader>
         <CardTitle className="text-xl">Forgot Password</CardTitle>
         <CardDescription>Enter your email below to reset your password</CardDescription>
@@ -87,7 +94,7 @@ export default function ForgotPasswordPage() {
               )}
             />
 
-            <p className="h-5 text-sm text-red-500" role="alert">
+            <p className="min-h-5 text-sm text-red-500" role="alert">
               {errors.root?.message}
             </p>
 

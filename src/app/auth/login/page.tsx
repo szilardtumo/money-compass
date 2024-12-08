@@ -72,7 +72,7 @@ export default function LoginPage() {
   );
 
   return (
-    <Card className="mx-auto w-[400px] min-h-[50%]">
+    <Card className="mx-auto w-[400px]">
       <CardHeader>
         <CardTitle className="text-xl">Login</CardTitle>
         <CardDescription>Enter your email below to login to your account</CardDescription>
@@ -113,7 +113,7 @@ export default function LoginPage() {
               )}
             />
 
-            <p className="h-5 text-sm text-red-500" role="alert">
+            <p className="min-h-5 text-sm text-red-500" role="alert">
               {errors.root?.message}
             </p>
 
