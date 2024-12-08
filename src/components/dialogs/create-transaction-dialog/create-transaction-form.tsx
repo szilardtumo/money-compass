@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ReloadIcon } from '@radix-ui/react-icons';
 import { isFuture, startOfDay } from 'date-fns';
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
@@ -205,8 +204,8 @@ export function CreateTransactionForm({
           type="submit"
           className="self-stretch sm:self-end"
           disabled={form.formState.isSubmitting}
+          isLoading={form.formState.isSubmitting}
         >
-          {form.formState.isSubmitting && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
           Add
         </Button>
       </form>

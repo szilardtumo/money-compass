@@ -63,7 +63,12 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="w-full flex justify-between">
+        <Button
+          variant="outline"
+          icon={CaretDownIcon}
+          iconPlacement="right"
+          className="w-full flex justify-between"
+        >
           <Avatar className="w-6 h-6 mr-2">
             <AvatarImage src={profile.picture} alt="avatar" />
             <AvatarFallback delayMs={600} className="text-xs">
@@ -72,7 +77,6 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
           </Avatar>
 
           <span className="truncate">{displayedName}</span>
-          <CaretDownIcon className="shrink-0 ml-2" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[var(--radix-popper-anchor-width)] min-w-56">

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Cross1Icon, PlusIcon, ReloadIcon, ResetIcon } from '@radix-ui/react-icons';
+import { Cross1Icon, PlusIcon, ResetIcon } from '@radix-ui/react-icons';
 import { useCallback, useMemo } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -267,10 +267,11 @@ export function UpsertAccountForm({
           <Button
             type="button"
             className="self-start mx-4"
+            icon={PlusIcon}
             onClick={() => subaccountFieldArray.append({ name: '', originalCurrency: '' })}
             disabled={form.formState.isSubmitting}
+            isLoading={form.formState.isSubmitting}
           >
-            <PlusIcon className="mr-2" />
             Add more
           </Button>
         </div>
@@ -279,8 +280,8 @@ export function UpsertAccountForm({
           type="submit"
           className="self-stretch sm:self-end"
           disabled={form.formState.isSubmitting}
+          isLoading={form.formState.isSubmitting}
         >
-          {form.formState.isSubmitting && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
           Submit
         </Button>
       </form>

@@ -26,8 +26,12 @@ export function DataTableViewOptions<TData>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className={cn('h-8', className)}>
-          <MixerHorizontalIcon className="mr-2" />
+        <Button
+          variant="outline"
+          size="sm"
+          icon={MixerHorizontalIcon}
+          className={cn('h-8', className)}
+        >
           View
         </Button>
       </DropdownMenuTrigger>

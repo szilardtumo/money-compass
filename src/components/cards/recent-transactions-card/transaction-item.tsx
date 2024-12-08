@@ -60,9 +60,8 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" icon={DotsHorizontalIcon}>
             <span className="sr-only">Open menu</span>
-            <DotsHorizontalIcon className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

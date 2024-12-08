@@ -1,6 +1,7 @@
 'use client';
 
-import { Pencil1Icon, ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
+import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
+import { Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MouseEvent, useState } from 'react';
 import { toast } from 'sonner';
@@ -53,8 +54,7 @@ export function AccountActionButtons({ account }: AccountActionButtonsProps) {
 
   return (
     <div className="flex gap-2">
-      <Button onClick={() => openEditDialog(account)}>
-        <Pencil1Icon className="mr-2" />
+      <Button icon={Pencil1Icon} onClick={() => openEditDialog(account)}>
         Edit
       </Button>
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -79,7 +79,7 @@ export function AccountActionButtons({ account }: AccountActionButtonsProps) {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction disabled={isDeleting} variant="destructive" onClick={handleDelete}>
-              {isDeleting && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {isDeleting && <Loader className="mr-2 size-4" />}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ReloadIcon } from '@radix-ui/react-icons';
 import { isFuture, startOfDay } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -148,9 +147,9 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
         <Button
           type="submit"
           disabled={form.formState.isSubmitting}
+          isLoading={form.formState.isSubmitting}
           className="self-stretch sm:self-end"
         >
-          {form.formState.isSubmitting && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
           Update
         </Button>
       </form>

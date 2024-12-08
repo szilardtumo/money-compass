@@ -1,6 +1,6 @@
 'use client';
 
-import { DotsHorizontalIcon, ReloadIcon, TrashIcon } from '@radix-ui/react-icons';
+import { DotsHorizontalIcon, TrashIcon } from '@radix-ui/react-icons';
 import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -226,15 +226,12 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
         <DataTableResetFilters table={table} />
         <Button
           variant="destructive"
+          icon={TrashIcon}
           className="h-8 px-2.5 sm:ml-auto"
           onClick={deleteSelected}
           disabled={selectedRowCount === 0 || isDeleting}
+          isLoading={isDeleting}
         >
-          {isDeleting ? (
-            <ReloadIcon className="mr-2 animate-spin" />
-          ) : (
-            <TrashIcon className="mr-2" />
-          )}
           Delete ({selectedRowCount})
         </Button>
       </div>
