@@ -62,7 +62,7 @@ interface CreateTransactionParams {
 }
 
 export async function createTransaction(params: CreateTransactionParams): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   try {
     const dateString = params.date.toISOString();
@@ -108,7 +108,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
 export async function createTransactions(
   transactions: CreateTransactionParams[],
 ): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   try {
     const subaccountBalances = await apiQueries.accounts.getSubaccountBalances();

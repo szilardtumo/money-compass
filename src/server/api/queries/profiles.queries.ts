@@ -6,7 +6,9 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Profile } from '@/lib/types/profiles.types';
 
 export async function getProfile(): Promise<Profile> {
-  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['profiles'] } });
+  const supabase = await createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['profiles'] },
+  });
 
   const [
     {
