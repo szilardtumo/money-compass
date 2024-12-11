@@ -7,7 +7,7 @@ import { SubaccountsCard } from '@/components/cards/subaccounts-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
 import { apiQueries } from '@/server/api/queries';
 
-import { AccountActionButtons } from './components/account-action-buttons';
+import { AccountActionButtons } from './_components/account-action-buttons';
 
 interface AccountDetailsPageProps {
   params: Promise<{ id: string }>;
