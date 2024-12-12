@@ -1,4 +1,5 @@
 'use client';
+'use no memo';
 
 import { DotsHorizontalIcon, TrashIcon } from '@radix-ui/react-icons';
 import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
