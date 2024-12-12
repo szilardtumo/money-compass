@@ -10,7 +10,7 @@ interface UpdateProfileParams {
 }
 
 export async function updateProfile(params: UpdateProfileParams): Promise<ActionResponse> {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

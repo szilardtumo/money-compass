@@ -1,4 +1,5 @@
 'use client';
+'use no memo';
 
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import { Table } from '@tanstack/react-table';

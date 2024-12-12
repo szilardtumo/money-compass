@@ -111,7 +111,9 @@ export async function getTransactions({
 }
 
 export async function getTransactionById(id: string): Promise<Transaction | undefined> {
-  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['transactions'] } });
+  const supabase = await createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['transactions'] },
+  });
 
   const [{ data, error }, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
     supabase
@@ -137,7 +139,9 @@ export async function getTransactionHistory(
   dateRange: TimeInterval,
   interval: TimeInterval,
 ): Promise<TransactionHistory[]> {
-  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['transactions'] } });
+  const supabase = await createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['transactions'] },
+  });
 
   const [accounts, { mainCurrency, mapper: mainCurrencyMapper }, { data: buckets, error }] =
     await Promise.all([

@@ -6,7 +6,9 @@ import { Currency, CurrencyMapper } from '@/lib/types/currencies.types';
 import { getProfile } from './profiles.queries';
 
 export async function getCurrencies(): Promise<Currency[]> {
-  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['currencies'] } });
+  const supabase = await createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['currencies'] },
+  });
 
   const { data, error } = await supabase.from('currencies').select();
 
@@ -18,7 +20,9 @@ export async function getCurrencies(): Promise<Currency[]> {
 }
 
 export async function getCurrencyMapper(toCurrency: string): Promise<CurrencyMapper> {
-  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['currencies'] } });
+  const supabase = await createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['currencies'] },
+  });
 
   const { data, error } = await supabase
     .from('exchange_rates')

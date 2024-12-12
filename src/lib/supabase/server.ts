@@ -5,8 +5,10 @@ import { cookies } from 'next/headers';
 
 import { Database } from '@/lib/types/database.types';
 
-export function createServerSupabaseClient(nextOptions: Pick<RequestInit, 'next' | 'cache'> = {}) {
-  const cookieStore = cookies();
+export async function createServerSupabaseClient(
+  nextOptions: Pick<RequestInit, 'next' | 'cache'> = {},
+) {
+  const cookieStore = await cookies();
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -1,4 +1,5 @@
 'use client';
+'use no memo';
 
 import { CaretSortIcon, CaretUpIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { Table as TableType, flexRender } from '@tanstack/react-table';

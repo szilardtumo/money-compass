@@ -8,7 +8,7 @@ import { getMainCurrencyWithMapper } from './currencies.queries';
 export async function getSubaccountBalances(): Promise<
   Record<string, { balance: number; lastTransactionDate: Date }>
 > {
-  const supabase = createServerSupabaseClient({
+  const supabase = await createServerSupabaseClient({
     next: { revalidate: 60, tags: ['subaccounts', 'transactions'] },
   });
 
@@ -33,7 +33,7 @@ export async function getSubaccountBalances(): Promise<
 }
 
 export async function getSubaccountBalance(subaccountId: string): Promise<number> {
-  const supabase = createServerSupabaseClient({
+  const supabase = await createServerSupabaseClient({
     next: { revalidate: 60, tags: ['subaccounts', 'transactions'] },
   });
 
@@ -57,7 +57,9 @@ export async function getSubaccountBalance(subaccountId: string): Promise<number
  * @returns
  */
 export async function getAccounts(): Promise<Account[]> {
-  const supabase = createServerSupabaseClient({ next: { revalidate: 60, tags: ['accounts'] } });
+  const supabase = await createServerSupabaseClient({
+    next: { revalidate: 60, tags: ['accounts'] },
+  });
 
   const [
     { data: accounts, error },
@@ -111,7 +113,7 @@ export async function getAccounts(): Promise<Account[]> {
  * @returns
  */
 export async function getAccount(accountId: string): Promise<Account | undefined> {
-  const supabase = createServerSupabaseClient({
+  const supabase = await createServerSupabaseClient({
     next: { revalidate: 60, tags: ['accounts', accountId] },
   });
 
