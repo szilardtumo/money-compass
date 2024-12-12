@@ -9,6 +9,7 @@ import importTypescript from 'eslint-plugin-import/config/typescript.js';
 import pluginJestDom from 'eslint-plugin-jest-dom';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginReact from 'eslint-plugin-react';
+import pluginReactCompiler from 'eslint-plugin-react-compiler';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
 import pluginTestingLibrary from 'eslint-plugin-testing-library';
 import globals from 'globals';
@@ -57,6 +58,15 @@ export default tseslint.config(
       'react-hooks': pluginReactHooks,
     },
     rules: pluginReactHooks.configs.recommended.rules,
+  },
+  {
+    files: ['**/*.{j,t}sx'],
+    plugins: {
+      'react-compiler': pluginReactCompiler,
+    },
+    rules: {
+      'react-compiler/react-compiler': 'error',
+    },
   },
   {
     plugins: {

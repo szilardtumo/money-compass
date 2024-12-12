@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
+  experimental: {
+    reactCompiler: true,
+  },
 };
 
 module.exports = nextConfig;
