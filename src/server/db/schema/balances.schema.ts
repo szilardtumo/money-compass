@@ -1,5 +1,7 @@
-import { desc, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { pgView } from 'drizzle-orm/pg-core';
+
+import { descTransactions } from '@/server/db/query-utils';
 
 import { transactions } from './transactions.schema';
 
@@ -14,5 +16,5 @@ export const balances = pgView('balances')
         lastTransactionDate: sql`"started_date"`.as('started_date'),
       })
       .from(transactions)
-      .orderBy(transactions.subaccountId, desc(transactions.startedDate), transactions.sequence),
+      .orderBy(transactions.subaccountId, ...descTransactions()),
   );

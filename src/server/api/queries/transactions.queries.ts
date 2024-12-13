@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, desc, eq, gte, lte } from 'drizzle-orm';
+import { and, asc, eq, gte, lte, sql } from 'drizzle-orm';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
@@ -9,7 +9,8 @@ import { Transaction, TransactionHistory } from '@/lib/types/transactions.types'
 import { Paginated } from '@/lib/types/transport.types';
 import { generateTimeBuckets } from '@/lib/utils/time-buckets';
 import { getAccounts } from '@/server/api/queries/accounts.queries';
-import { getDb } from '@/server/db';
+import { getDb, schema } from '@/server/db';
+import { descTransactions } from '@/server/db/query-utils';
 import { subaccounts, transactions } from '@/server/db/schema';
 
 import { getMainCurrencyWithMapper } from './currencies.queries';
@@ -83,7 +84,7 @@ export async function getTransactions({
           toDate ? lte(transactions.startedDate, new Date(toDate)) : undefined,
         ),
       )
-      .orderBy(desc(transactions.startedDate), desc(transactions.createdAt))
+      .orderBy(...descTransactions())
       .offset(page * pageSize)
       .limit(pageSize),
   );
@@ -139,23 +140,37 @@ export async function getTransactionHistory(
   dateRange: TimeInterval,
   interval: TimeInterval,
 ): Promise<TransactionHistory[]> {
-  const supabase = await createServerSupabaseClient({
-    next: { revalidate: 60, tags: ['transactions'] },
-  });
+  const db = await getDb();
 
-  const [accounts, { mainCurrency, mapper: mainCurrencyMapper }, { data: buckets, error }] =
-    await Promise.all([
-      getAccounts(),
-      getMainCurrencyWithMapper(),
-      supabase.rpc('query_transaction_history', {
-        date_range: dateRange,
-        bucket_interval: interval,
-      }),
-    ]);
+  const [accounts, { mainCurrency, mapper: mainCurrencyMapper }, buckets] = await Promise.all([
+    getAccounts(),
+    getMainCurrencyWithMapper(),
+    db.rls((tx) => {
+      const sorted = tx.$with('sorted').as((qb) =>
+        qb
+          .select()
+          .from(schema.transactions)
+          .where(gte(schema.transactions.startedDate, sql`now() - ${dateRange}::interval`))
+          .orderBy(...descTransactions()),
+      );
 
-  if (error) {
-    throw error;
-  }
+      return tx
+        .with(sorted)
+        .select({
+          subaccountId: sorted.subaccountId,
+          intervalStart: sql<string>`time_bucket(${interval}::interval, ${sorted.startedDate})`.as(
+            'intervalStart',
+          ),
+          lastBalance: sql`last(${sorted.balance}, ${sorted.startedDate} )`
+            .mapWith(Number)
+            .as('lastBalance'),
+        })
+        .from(sorted)
+        .groupBy((table) => [table.subaccountId, table.intervalStart])
+        .orderBy((table) => asc(table.intervalStart));
+    }),
+  ]);
+
   const subaccounts = accounts.flatMap((account) => account.subaccounts);
   const subaccountMap = Object.fromEntries(
     subaccounts.map((subaccount) => [subaccount.id, subaccount]),
@@ -172,13 +187,13 @@ export async function getTransactionHistory(
 
   const dateMap = buckets!.reduce(
     (acc, item) => {
-      const date = new Date(item.interval_start).getTime();
-      const subaccount = subaccountMap[item.subaccount_id];
+      const date = new Date(item.intervalStart).getTime();
+      const subaccount = subaccountMap[item.subaccountId];
       acc[date] ||= {};
-      acc[date][item.subaccount_id] = item.last_balance;
+      acc[date][item.subaccountId] = item.lastBalance;
       acc[date][subaccount.accountId] ||= 0;
       acc[date][subaccount.accountId] +=
-        item.last_balance * mainCurrencyMapper[subaccount.originalCurrency];
+        item.lastBalance * mainCurrencyMapper[subaccount.originalCurrency];
       return acc;
     },
     {} as Record<number, Record<string, number>>,
@@ -187,7 +202,7 @@ export async function getTransactionHistory(
   // Generate time buckets for the date range and only keep the ones after the first transaction
   // This is needed to fill in the gaps in the data, in case there are no transactions for a specific date bucket
   const timeBuckets = generateTimeBuckets(dateRange, interval).filter(
-    (date) => date >= new Date(buckets![0]?.interval_start),
+    (date) => date >= new Date(buckets![0]?.intervalStart),
   );
 
   const gapfilledData = timeBuckets.map((date) => {

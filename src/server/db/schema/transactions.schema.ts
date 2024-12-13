@@ -35,7 +35,7 @@ export const transactions = pgTable(
     index('transactions_started_date_idx').on(
       table.subaccountId,
       table.startedDate.desc(),
-      table.sequence,
+      table.sequence.desc(),
     ),
   ],
 );

@@ -2,7 +2,7 @@
 
 import { PostgrestError } from '@supabase/supabase-js';
 import { isBefore, max } from 'date-fns';
-import { and, asc, desc, eq, inArray, not, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, not, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
@@ -12,46 +12,13 @@ import { formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
 import { apiQueries } from '@/server/api/queries';
 import { getDb } from '@/server/db';
+import {
+  afterTransaction,
+  ascTransactions,
+  beforeTransaction,
+  descTransactions,
+} from '@/server/db/query-utils';
 import { transactions } from '@/server/db/schema';
-
-type TransactionForQueryHelper = Pick<
-  typeof transactions.$inferSelect,
-  'subaccountId' | 'startedDate' | 'sequence'
->;
-
-/**
- * Drizzle query helper for ordering transactions in ascending order
- */
-function ascTransactions() {
-  return [asc(transactions.startedDate), asc(transactions.sequence)];
-}
-
-/**
- * Drizzle query helper for ordering transactions in descending order
- */
-function descTransactions() {
-  return [desc(transactions.startedDate), desc(transactions.sequence)];
-}
-
-/**
- * Drizzle query helper for filtering transactions after a transaction
- */
-function afterTransaction(transaction: TransactionForQueryHelper) {
-  return and(
-    eq(transactions.subaccountId, transaction.subaccountId),
-    sql`(${transactions.startedDate}, ${transactions.sequence}) > (${transaction.startedDate.toISOString()}, ${transaction.sequence})`,
-  );
-}
-
-/**
- * Drizzle query helper for filtering transactions before a transaction
- */
-function beforeTransaction(transaction: TransactionForQueryHelper) {
-  return and(
-    eq(transactions.subaccountId, transaction.subaccountId),
-    sql`(${transactions.startedDate}, ${transactions.sequence}) < (${transaction.startedDate.toISOString()}, ${transaction.sequence})`,
-  );
-}
 
 interface CreateTransactionParams {
   subaccountId: string;
@@ -332,16 +299,12 @@ export async function deleteTransactions(transactionIds: string[]): Promise<Acti
 export async function _recalculateBalances() {
   const db = await getDb();
 
-  // Get all transactions ordered by subaccount, then by date and sequence
+  // Get all transactions ordered by subaccount, then by transaction date
   // WARNING: This bypasses RLS
   const allTransactions = await db.admin
     .select()
     .from(transactions)
-    .orderBy(
-      asc(transactions.subaccountId),
-      asc(transactions.startedDate),
-      asc(transactions.sequence),
-    );
+    .orderBy(asc(transactions.subaccountId), ...ascTransactions());
 
   // Group transactions by subaccount
   const bySubaccount = groupBy(allTransactions, (t) => t.subaccountId);
