@@ -7,16 +7,15 @@ import { SubaccountsCard } from '@/components/cards/subaccounts-card';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
 import { apiQueries } from '@/server/api/queries';
 
-import { AccountActionButtons } from './components/account-action-buttons';
+import { AccountActionButtons } from './_components/account-action-buttons';
 
 interface AccountDetailsPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 export default async function AccountDetailsPage({ params }: AccountDetailsPageProps) {
-  const account = await apiQueries.accounts.getAccount(params.id);
+  const { id } = await params;
+  const account = await apiQueries.accounts.getAccount(id);
 
   if (!account) {
     notFound();

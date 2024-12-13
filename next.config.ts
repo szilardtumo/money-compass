@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -10,6 +11,9 @@ const nextConfig = {
     fetches: {
       fullUrl: true,
     },
+  },
+  experimental: {
+    reactCompiler: true,
   },
 };
 

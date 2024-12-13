@@ -36,7 +36,7 @@ const drizzleClient =
 if (process.env.NODE_ENV !== 'production') global.drizzleClient = drizzleClient;
 
 export const getDb = React.cache(async () => {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const session = await supabase.auth.getSession();
   const token = session.data.session?.access_token;
   const decodedToken: SupabaseToken = token ? jwtDecode<SupabaseToken>(token) : { role: 'anon' };

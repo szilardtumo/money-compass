@@ -1,16 +1,17 @@
 /* eslint-disable import/no-named-as-default-member */
 import { fixupPluginRules } from '@eslint/compat';
-import eslint from '@eslint/js';
-import nextPlugin from '@next/eslint-plugin-next';
-import cypressPlugin from 'eslint-plugin-cypress/flat';
-import importPlugin from 'eslint-plugin-import';
+import pluginJs from '@eslint/js';
+import pluginNext from '@next/eslint-plugin-next';
+import pluginCypress from 'eslint-plugin-cypress/flat';
+import pluginImport from 'eslint-plugin-import';
 import importRecommented from 'eslint-plugin-import/config/recommended.js';
 import importTypescript from 'eslint-plugin-import/config/typescript.js';
-import jestDomPlugin from 'eslint-plugin-jest-dom';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
-import reactPlugin from 'eslint-plugin-react';
-import hooksPlugin from 'eslint-plugin-react-hooks';
-import testingLibraryPlugin from 'eslint-plugin-testing-library';
+import pluginJestDom from 'eslint-plugin-jest-dom';
+import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
+import pluginReact from 'eslint-plugin-react';
+import pluginReactCompiler from 'eslint-plugin-react-compiler';
+import pluginReactHooks from 'eslint-plugin-react-hooks';
+import pluginTestingLibrary from 'eslint-plugin-testing-library';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -27,25 +28,11 @@ export default tseslint.config(
   {
     ignores: ['node_modules/*', '.next/*', 'src/lib/types/database.types.ts'],
   },
-  // js, ts, next
-  eslint.configs.recommended,
-  jsxA11y.flatConfigs.recommended,
+  // js, ts
+  pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    plugins: {
-      react: reactPlugin,
-      'react-hooks': fixupPluginRules(hooksPlugin),
-      '@next/next': fixupPluginRules(nextPlugin),
-    },
-    settings: {
-      react: { version: 'detect' },
-    },
     rules: {
-      ...reactPlugin.configs.recommended.rules,
-      ...reactPlugin.configs['jsx-runtime'].rules,
-      ...hooksPlugin.configs.recommended.rules,
-      ...nextPlugin.configs.recommended.rules,
-      ...nextPlugin.configs['core-web-vitals'].rules,
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -59,8 +46,43 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
-      'react/prop-types': 'off',
       'no-console': 'warn',
+    },
+  },
+  // react, next
+  pluginJsxA11y.flatConfigs.recommended,
+  pluginReact.configs.flat.recommended,
+  pluginReact.configs.flat['jsx-runtime'],
+  {
+    plugins: {
+      'react-hooks': pluginReactHooks,
+    },
+    rules: pluginReactHooks.configs.recommended.rules,
+  },
+  {
+    files: ['**/*.{j,t}sx'],
+    plugins: {
+      'react-compiler': pluginReactCompiler,
+    },
+    rules: {
+      'react-compiler/react-compiler': 'error',
+    },
+  },
+  {
+    plugins: {
+      '@next/next': fixupPluginRules(pluginNext),
+    },
+    settings: {
+      react: { version: 'detect' },
+    },
+    rules: {
+      ...pluginNext.configs.recommended.rules,
+      ...pluginNext.configs['core-web-vitals'].rules,
+    },
+  },
+  {
+    rules: {
+      'react/prop-types': 'off',
     },
   },
   // import
@@ -73,7 +95,7 @@ export default tseslint.config(
       },
     },
     plugins: {
-      import: fixupPluginRules(importPlugin),
+      import: fixupPluginRules(pluginImport),
     },
     settings: {
       'import/parsers': {
@@ -116,18 +138,19 @@ export default tseslint.config(
   // unit tests
   {
     files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
+
     plugins: {
-      'testing-library': fixupPluginRules(testingLibraryPlugin),
-      'jest-dom': jestDomPlugin,
+      'jest-dom': pluginJestDom,
+      'testing-library': pluginTestingLibrary,
     },
     rules: {
-      ...testingLibraryPlugin.configs['flat/react'].rules,
-      ...jestDomPlugin.configs['flat/recommended'].rules,
+      ...pluginJestDom.configs['flat/recommended'].rules,
+      ...pluginTestingLibrary.configs['flat/react'].rules,
     },
   },
   // cypress tests
   {
     files: ['cypress/**/*'],
-    ...cypressPlugin.configs.recommended,
+    ...pluginCypress.configs.recommended,
   },
 );

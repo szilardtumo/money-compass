@@ -4,30 +4,12 @@ Money Compass is a web application that helps you manage your finances. It is bu
 
 Check out the live demo [here](https://money-compass-seven.vercel.app/)!
 
-This project uses:
-
-- **[Next.js](https://nextjs.org/)** (with **App Directory** and **Server Actions**) - React framework for creating high-quality web applications
-- **[Supabase](https://supabase.io/)** - An open-source alternative to Firebase
-- **[Tailwind CSS](https://tailwindcss.com/)** - A utility-first CSS framework for rapid UI development
-- **[ShadCN](https://ui.shadcn.com/)** - A collection of beautiful, free, and open-source components for Tailwind CSS
-- **[Tremor Raw](https://www.tremor.so/)** - React components to build charts
-- **[React Hook Form](https://react-hook-form.com/)** - Performant, flexible, and extensible forms with easy-to-use validation
-- **[ESlint](https://eslint.org/)** and **[Prettier](https://prettier.io/)** - For clean, consistent, and error-free code
-- **[TypeScript](https://www.typescriptlang.org/)** with **[ts-reset](https://github.com/total-typescript/ts-reset)** - For type safety
-- **[GitHub Actions](https://github.com/features/actions)** - Pre-configured actions for smooth workflows
-- **[Vercel](https://vercel.com/)** - For deployment and hosting
-- **[Husky](https://typicode.github.io/husky/)** - For pre-commit hooks
-- **[Jest](https://jestjs.io/)** and **[React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)**- For unit-testing components and utilities
-- **[Cypress](https://www.cypress.io/)** - For end-to-end testing
-
-**Note**: This project is inspired by [Next.js Enterprise Boilerplate](https://github.com/Blazity/next-enterprise/tree/main) and [bulletproof-react](https://github.com/alan2207/bulletproof-react.)
-
 ## Getting Started
 
 1. Install the dependencies:
 
    ```bash
-   yarn install --frozen-lockfile
+   yarn install
    ```
 
 2. Configure GitHub OAuth:
@@ -54,7 +36,7 @@ This project uses:
 5. Run the Next.js development server:
 
    ```bash
-   yarn dev --turbo
+   yarn dev
    ```
 
    The application will be available at http://localhost:3000.
@@ -101,10 +83,18 @@ The following scripts are available in `package.json`:
 │  ├──dialogs
 │  ├──providers
 │  └──ui
+├──hooks                // Reusable hooks
 ├──lib
-│  ├──db                // Database queries and mutations
+│  ├──middleware        // Middleware functions
+│  ├──supabase
 │  ├──types             // Global types
 │  └──utils             // Utility functions
+├──server
+│  ├──api
+│  │  ├──actions        // Server actions
+│  │  └──queries        // Queries
+│  └──db
+│     └──schema         // Drizzle ORM schema
 └──middleware.ts
 ```
 
@@ -116,33 +106,3 @@ Migrations are handled with a codebase first approach ([option 5 from Drizzle Do
 2. Migration files are generated based on schema changes with Drizzle Kit: `yarn db:generate`
 3. Migrations are applied to the local database with Supabase CLI: `yarn db:migrate`
 4. Migrations are applied to production database in a GitHub Workflow
-
-## Testing
-
-This project uses Jest and React Testing Library for unit-testing components and utilities. Cypress is used for end-to-end testing.
-
-### Unit Testing
-
-To run the unit tests, use the following command:
-
-```bash
-yarn test
-```
-
-For other commands related to unit testing, check the [Scripts Overview](#scripts-overview) section.
-
-### End-to-End Testing
-
-To run the Cypress tests, use the following command:
-
-```bash
-yarn cy:run
-```
-
-For other commands related to end-to-end testing, check the [Scripts Overview](#scripts-overview) section.
-
-## Deployment
-
-This project is deployed and hosted on [Vercel](https://vercel.com/). The production build is automatically deployed to Vercel when changes are pushed to the `main` branch.
-
-Preview deployments are created for pull requests. These deployments are automatically updated as new commits are added to the pull request.
