@@ -1,8 +1,10 @@
 'use client';
 
+import { NumberFlowGroup } from '@number-flow/react';
 import { useMemo } from 'react';
 
 import { AreaChart } from '@/components/ui/chart';
+import { Currency } from '@/components/ui/currency';
 import { Metric } from '@/components/ui/metric';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -117,13 +119,20 @@ export function TransactionHistoryChart({
 
   return (
     <div>
-      <Metric>{formatCurrency(metric.value, currency)}</Metric>
-      <div className="flex gap-2 items-center">
-        <p className="text-sm text-muted-foreground">
-          {formatCurrency(metric.difference, currency, { signDisplay: 'always' })}
-        </p>
-        <PriceChangeBadge variant="default" percent={metric.change} />
-      </div>
+      <NumberFlowGroup>
+        <Metric>
+          <Currency value={metric.value} currency={currency} />
+        </Metric>
+        <div className="flex gap-2 items-center">
+          <Currency
+            className="text-sm text-muted-foreground"
+            value={metric.difference}
+            currency={currency}
+            formatOptions={{ signDisplay: 'always' }}
+          />
+          <PriceChangeBadge variant="default" percent={metric.change} />
+        </div>
+      </NumberFlowGroup>
 
       <AreaChart
         data={parsedData}

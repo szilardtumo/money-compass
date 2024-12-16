@@ -1950,6 +1950,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@number-flow/react@npm:^0.4.2":
+  version: 0.4.2
+  resolution: "@number-flow/react@npm:0.4.2"
+  dependencies:
+    esm-env: "npm:^1.1.4"
+    number-flow: "npm:0.4.1"
+  peerDependencies:
+    react: ^18 || ^19.0.0-rc-915b914b3a-20240515
+    react-dom: ^18
+  checksum: 10c0/6e3649ef387b193afdb616f47170edc46d2fff07bcd93ce632433444deba88c0c36eef1d683b01d0e5352f76a85ff6404cd4068349fe2832d55adff223c53718
+  languageName: node
+  linkType: hard
+
 "@pkgjs/parseargs@npm:^0.11.0":
   version: 0.11.0
   resolution: "@pkgjs/parseargs@npm:0.11.0"
@@ -6243,6 +6256,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"esm-env@npm:^1.1.4":
+  version: 1.2.1
+  resolution: "esm-env@npm:1.2.1"
+  checksum: 10c0/3a7efb5943cac44c84359d0bb25a918f90f1002c0cf9fd3c24d57f27068ba3b508a9c19c8603f8c37ea5730ae4a35efad4735447fd91ae760e275cc081702e69
+  languageName: node
+  linkType: hard
+
 "espree@npm:^10.0.1":
   version: 10.1.0
   resolution: "espree@npm:10.1.0"
@@ -9071,6 +9091,7 @@ __metadata:
     "@eslint/js": "npm:^9.16.0"
     "@hookform/resolvers": "npm:^3.9.1"
     "@next/eslint-plugin-next": "npm:^15.1.0"
+    "@number-flow/react": "npm:^0.4.2"
     "@radix-ui/react-alert-dialog": "npm:^1.1.2"
     "@radix-ui/react-avatar": "npm:^1.1.1"
     "@radix-ui/react-checkbox": "npm:^1.1.2"
@@ -9430,6 +9451,15 @@ __metadata:
   version: 0.2.0
   resolution: "nprogress@npm:0.2.0"
   checksum: 10c0/eab9a923a1ad1eed71a455ecfbc358442dd9bcd71b9fa3fa1c67eddf5159360b182c218f76fca320c97541a1b45e19ced04e6dcb044a662244c5419f8ae9e821
+  languageName: node
+  linkType: hard
+
+"number-flow@npm:0.4.1":
+  version: 0.4.1
+  resolution: "number-flow@npm:0.4.1"
+  dependencies:
+    esm-env: "npm:^1.1.4"
+  checksum: 10c0/a359fce5e6d28ab918e0b40ddb86e713a320edf790b716205f304f9ef97704785f9fdf2f6187c6e354fdfb7b2eb772640fbbcfe1fb50744a1dbe341bc79c8ae2
   languageName: node
   linkType: hard
 
