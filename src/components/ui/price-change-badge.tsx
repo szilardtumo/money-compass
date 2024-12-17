@@ -1,9 +1,9 @@
+import NumberFlow from '@number-flow/react';
 import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from '@radix-ui/react-icons';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 
 import { cn } from '@/lib/cn';
-import { formatPercent } from '@/lib/utils/formatters';
 
 const priceChangeBadgeVariants = cva(
   'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
@@ -61,11 +61,16 @@ function PriceChangeBadge({ className, percent, variant, ...props }: PriceChange
   return (
     <div className={cn(priceChangeBadgeVariants({ changeType, variant }), className)} {...props}>
       <Icon className="w-4 h-4 mr-1" />
-      {formatPercent(percent, {
-        signDisplay: 'never',
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      })}
+      <NumberFlow
+        value={percent}
+        format={{
+          style: 'percent',
+          signDisplay: 'never',
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }}
+        continuous
+      />
     </div>
   );
 }
