@@ -8,17 +8,15 @@ import {
 } from '@radix-ui/react-icons';
 import { Suspense } from 'react';
 
+import { AccountSection } from '@/app/dashboard/_components/account-section';
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Button } from '@/components/ui/button';
 import { ResizableHandle, ResizablePanel } from '@/components/ui/resizable';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Currency } from '@/lib/types/currencies.types';
-import { Profile } from '@/lib/types/profiles.types';
 import { apiQueries } from '@/server/api/queries';
 
-import { AccountDropdown } from './account-dropdown';
 import { NavItem } from './nav-item';
 
 function NavbarAccountItemsSkeleton() {
@@ -49,16 +47,13 @@ async function NavbarAccountItems() {
   );
 }
 
-interface NavbarContentProps {
-  profile: Profile;
-  currencies: Currency[];
-}
-
-function NavbarContent({ profile, currencies }: NavbarContentProps) {
+function NavbarContent() {
   return (
     <aside className="w-full">
       <div className="flex h-14 items-center justify-center px-2">
-        <AccountDropdown profile={profile} currencies={currencies} />
+        <Suspense fallback={<Skeleton className="w-full h-9" />}>
+          <AccountSection />
+        </Suspense>
       </div>
       <Separator />
       <nav className="flex flex-col gap-1 p-2">
@@ -98,12 +93,7 @@ function NavbarContent({ profile, currencies }: NavbarContentProps) {
   );
 }
 
-interface NavbarProps {
-  profile: Profile;
-  currencies: Currency[];
-}
-
-export function Navbar({ profile, currencies }: NavbarProps) {
+export function Navbar() {
   return (
     <>
       {/* Mobile */}
@@ -115,14 +105,14 @@ export function Navbar({ profile, currencies }: NavbarProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
-            <NavbarContent profile={profile} currencies={currencies} />
+            <NavbarContent />
           </SheetContent>
         </Sheet>
       </div>
 
       {/* Desktop */}
       <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="hidden sm:flex">
-        <NavbarContent profile={profile} currencies={currencies} />
+        <NavbarContent />
       </ResizablePanel>
       <ResizableHandle withHandle className="hidden sm:flex" />
     </>
