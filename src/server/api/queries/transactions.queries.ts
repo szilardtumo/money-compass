@@ -2,7 +2,7 @@ import 'server-only';
 
 import { and, asc, eq, gte, lte, sql } from 'drizzle-orm';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { TimeInterval } from '@/lib/types/time.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
@@ -112,7 +112,7 @@ export async function getTransactions({
 }
 
 export async function getTransactionById(id: string): Promise<Transaction | undefined> {
-  const supabase = await createServerSupabaseClient({
+  const supabase = await createWritableServerSupabaseClient({
     next: { revalidate: 60, tags: ['transactions'] },
   });
 

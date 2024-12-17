@@ -5,7 +5,7 @@ import { isBefore, max } from 'date-fns';
 import { and, asc, eq, inArray, not, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { formatDate } from '@/lib/utils/formatters';
@@ -29,7 +29,7 @@ interface CreateTransactionParams {
 }
 
 export async function createTransaction(params: CreateTransactionParams): Promise<ActionResponse> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createWritableServerSupabaseClient();
 
   try {
     const dateString = params.date.toISOString();
@@ -75,7 +75,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
 export async function createTransactions(
   transactions: CreateTransactionParams[],
 ): Promise<ActionResponse> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createWritableServerSupabaseClient();
 
   try {
     const subaccountBalances = await apiQueries.accounts.getSubaccountBalances();

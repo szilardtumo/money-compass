@@ -1,12 +1,12 @@
 import 'server-only';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
 import { Currency, CurrencyMapper } from '@/lib/types/currencies.types';
 
 import { getProfile } from './profiles.queries';
 
 export async function getCurrencies(): Promise<Currency[]> {
-  const supabase = await createServerSupabaseClient({
+  const supabase = await createWritableServerSupabaseClient({
     next: { revalidate: 60, tags: ['currencies'] },
   });
 
@@ -20,7 +20,7 @@ export async function getCurrencies(): Promise<Currency[]> {
 }
 
 export async function getCurrencyMapper(toCurrency: string): Promise<CurrencyMapper> {
-  const supabase = await createServerSupabaseClient({
+  const supabase = await createWritableServerSupabaseClient({
     next: { revalidate: 60, tags: ['currencies'] },
   });
 
