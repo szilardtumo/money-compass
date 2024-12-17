@@ -4,10 +4,10 @@ import { redirect } from 'next/navigation';
 
 import { CACHE_TAGS, cacheTag } from '@/lib/cache';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { createApiQuery } from '@/server/api/create-api-query';
+import { createAuthenticatedApiQuery } from '@/server/api/create-api-query';
 import { getDb } from '@/server/db';
 
-export const getProfile = createApiQuery(async ({ ctx }) => {
+export const getProfile = createAuthenticatedApiQuery(async ({ ctx }) => {
   'use cache';
   cacheTag.user(ctx.userId, CACHE_TAGS.profiles);
 

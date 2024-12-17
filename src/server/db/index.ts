@@ -83,6 +83,16 @@ async function getDb(supabaseToken?: SupabaseToken) {
   };
 }
 
+/**
+ * Retrieves the Drizzle DB client with admin access only.
+ */
+async function getAdminDb() {
+  return {
+    admin: drizzleClient,
+  };
+}
+
+const cachedGetAdminDb = cache(getAdminDb);
 const cachedGetDb = cache(getDb);
 
-export { schema, cachedGetDb as getDb };
+export { schema, cachedGetDb as getDb, cachedGetAdminDb as getAdminDb };
