@@ -6,5 +6,5 @@
   },
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "eslint.useFlatConfig": true,
-  "cSpell.words": ["subaccount", "subaccounts", "supabase"]
+  "cSpell.words": ["CBAVE", "sonner", "subaccount", "subaccounts", "supabase"]
 }

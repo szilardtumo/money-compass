@@ -11,6 +11,7 @@ export const profiles = pgTable(
     id: uuid()
       .notNull()
       .primaryKey()
+      .default(authUid)
       .references(() => authUsers.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
     mainCurrency: text()
       .notNull()
