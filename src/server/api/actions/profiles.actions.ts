@@ -1,28 +1,29 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
+import { z } from 'zod';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { ActionResponse } from '@/lib/types/transport.types';
+import { actionClient } from '@/lib/safe-action';
+import { getDb, schema } from '@/server/db';
 
-interface UpdateProfileParams {
-  mainCurrency: string;
-}
+export const updateProfile = actionClient
+  .schema(
+    z.object({
+      mainCurrency: z.string().length(3).toLowerCase(),
+    }),
+  )
+  .action(async ({ parsedInput }) => {
+    const db = await getDb();
 
-export async function updateProfile(params: UpdateProfileParams): Promise<ActionResponse> {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    await db.rls(async (tx) => {
+      await tx
+        .insert(schema.profiles)
+        .values({ mainCurrency: parsedInput.mainCurrency })
+        .onConflictDoUpdate({
+          target: schema.profiles.id,
+          set: { mainCurrency: parsedInput.mainCurrency },
+        });
+    });
 
-  const { error } = await supabase
-    .from('profiles')
-    .upsert({ id: user!.id, main_currency: params.mainCurrency });
-
-  if (error) {
-    return { success: false, error: { code: error.code, message: error.message } };
-  }
-
-  revalidateTag('profiles');
-  return { success: true };
-}
+    revalidateTag('profiles');
+  });
