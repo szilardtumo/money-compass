@@ -39,6 +39,25 @@ const createPublicApiQuery = <I = void, O = void>(
     return apiQueryFn({ input });
   });
 };
+
+interface AuthenticatedApiQuery<I, O> {
+  (input: I): Promise<O>;
+
+  /**
+   * Directly calls the API query function with the provided context.
+   *
+   * Useful when calling the API query inside a function cached with 'use cache'.
+   *
+   * @param opts The options object containing the input and context
+   * @returns The result of the API query function
+   */
+  withContext: (
+    opts: I extends void
+      ? { input?: I; ctx: AuthenticatedApiQueryContext }
+      : { input: I; ctx: AuthenticatedApiQueryContext },
+  ) => Promise<O>;
+}
+
 /**
  * Creates a deduplicated API query function using React.cache.
  * The generated function provides access to the AuthenticatedApiQueryContext, which includes cookies.
@@ -46,15 +65,19 @@ const createPublicApiQuery = <I = void, O = void>(
  * As long as the context is serializable, the API function can be safely cached with 'use cache'.
  *
  * @param  apiQueryFn The function that performs the actual API query
- * @returns A deduplicated API query function
+ * @returns A deduplicated API query function with a 'withContext' method for direct context access
  */
 const createAuthenticatedApiQuery = <I = void, O = void>(
   apiQueryFn: (opts: { input: I; ctx: AuthenticatedApiQueryContext }) => Promise<O>,
-): ((input: I) => Promise<O>) => {
-  return cache(async (input) => {
+) => {
+  const fn = cache(async (input: I) => {
     const ctx = await createAuthenticatedContext();
     return apiQueryFn({ input, ctx });
-  });
+  }) as AuthenticatedApiQuery<I, O>;
+
+  fn.withContext = cache(apiQueryFn) as typeof fn.withContext;
+
+  return fn;
 };
 
 export { createPublicApiQuery, createAuthenticatedApiQuery };
