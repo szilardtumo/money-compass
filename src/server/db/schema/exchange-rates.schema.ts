@@ -19,7 +19,7 @@ export const exchangeRates = pgTable(
   (table) => [
     primaryKey({
       name: 'exchange_rates_pkey',
-      columns: [table.from, table.to],
+      columns: [table.to, table.from],
     }),
     pgPolicy('exchange_rates_allow_select_for_all_policy', {
       as: 'permissive',

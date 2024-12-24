@@ -115,8 +115,8 @@ async function updateSubaccounts(params: UpdateSubaccountParams[]): Promise<Acti
           .from(schema.exchangeRates)
           .where(
             and(
-              eq(schema.exchangeRates.from, prevSubaccount!.currency),
               eq(schema.exchangeRates.to, subaccount.currency!),
+              eq(schema.exchangeRates.from, prevSubaccount!.currency),
             ),
           )
           .execute();

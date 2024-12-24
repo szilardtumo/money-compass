@@ -1,5 +1,5 @@
 import { and, eq, relations, sql } from 'drizzle-orm';
-import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { accounts } from './accounts.schema';
@@ -21,6 +21,7 @@ export const subaccounts = pgTable(
       .references(() => currencies.id, { onUpdate: 'cascade' }),
   },
   (table) => [
+    index().on(table.accountId),
     pgPolicy('subaccounts_allow_all_for_owner_policy', {
       as: 'permissive',
       for: 'all',
