@@ -11,9 +11,9 @@ export const balances = pgView('balances')
     qb
       // https://github.com/drizzle-team/drizzle-orm/issues/3332
       .selectDistinctOn([transactions.subaccountId], {
-        subaccountId: sql`"subaccount_id"`.as('subaccount_id'),
+        subaccountId: sql<string>`"subaccount_id"`.as('subaccount_id'),
         balance: transactions.balance,
-        lastTransactionDate: sql`"started_date"`.as('started_date'),
+        lastTransactionDate: sql<Date>`"started_date"`.as('started_date'),
       })
       .from(transactions)
       .orderBy(transactions.subaccountId, ...descTransactions()),

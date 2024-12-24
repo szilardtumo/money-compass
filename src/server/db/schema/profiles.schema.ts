@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, relations } from 'drizzle-orm';
 import { pgPolicy, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole, authUsers } from 'drizzle-orm/supabase';
 
@@ -26,3 +26,8 @@ export const profiles = pgTable(
     }),
   ],
 );
+
+export const profilesRelations = relations(profiles, ({ one }) => ({
+  user: one(authUsers, { fields: [profiles.id], references: [authUsers.id] }),
+  mainCurrency: one(currencies, { fields: [profiles.mainCurrency], references: [currencies.id] }),
+}));

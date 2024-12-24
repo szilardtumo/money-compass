@@ -1,9 +1,10 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, relations, sql } from 'drizzle-orm';
 import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { accounts } from './accounts.schema';
 import { currencies } from './currencies.schema';
+import { transactions } from './transactions.schema';
 import { authUid } from './utils';
 
 export const subaccounts = pgTable(
@@ -29,3 +30,9 @@ export const subaccounts = pgTable(
     }),
   ],
 );
+
+export const subaccountsRelations = relations(subaccounts, ({ many, one }) => ({
+  account: one(accounts, { fields: [subaccounts.accountId], references: [accounts.id] }),
+  currency: one(currencies, { fields: [subaccounts.accountId], references: [currencies.id] }),
+  transactions: many(transactions),
+}));

@@ -1,8 +1,9 @@
-import { eq } from 'drizzle-orm';
+import { eq, relations } from 'drizzle-orm';
 import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authUsers, authenticatedRole } from 'drizzle-orm/supabase';
 
 import { accountCategory } from './enums.schema';
+import { subaccounts } from './subaccounts.schema';
 import { authUid } from './utils';
 
 export const accounts = pgTable(
@@ -27,3 +28,7 @@ export const accounts = pgTable(
     }),
   ],
 );
+
+export const accountsRelations = relations(accounts, ({ many }) => ({
+  subaccounts: many(subaccounts),
+}));
