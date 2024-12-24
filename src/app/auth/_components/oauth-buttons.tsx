@@ -1,8 +1,8 @@
 import { RiGithubFill, RiGoogleFill } from '@remixicon/react';
 import { useCallback, useState } from 'react';
 
+import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
 import { Button } from '@/components/ui/button';
-import { useBrowserSupabaseClient } from '@/lib/supabase/client';
 
 export function OAuthButtons() {
   const supabase = useBrowserSupabaseClient();

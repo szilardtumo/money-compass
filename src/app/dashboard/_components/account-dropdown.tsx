@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback, useOptimistic } from 'react';
 
+import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +23,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useBrowserSupabaseClient } from '@/lib/supabase/client';
 import { Currency } from '@/lib/types/currencies.types';
 import { Profile } from '@/lib/types/profiles.types';
 import { apiActions } from '@/server/api/actions';
