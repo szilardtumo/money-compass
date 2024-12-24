@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { OAuthButtons } from '@/app/auth/_components/oauth-buttons';
+import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -22,7 +23,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput, strengthRequirements } from '@/components/ui/password-input';
 import { SeparatorWithText } from '@/components/ui/separator-with-text';
-import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 const formSchema = z
   .object({
@@ -44,7 +44,7 @@ type FormFields = z.infer<typeof formSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useBrowserSupabaseClient();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormFields>({

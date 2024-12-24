@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -19,7 +20,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -28,7 +28,7 @@ const formSchema = z.object({
 type FormFields = z.infer<typeof formSchema>;
 
 export default function ForgotPasswordPage() {
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useBrowserSupabaseClient();
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),

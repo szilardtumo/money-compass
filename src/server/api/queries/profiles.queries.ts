@@ -2,28 +2,25 @@ import 'server-only';
 
 import { redirect } from 'next/navigation';
 
+import { CACHE_TAGS, cacheTag } from '@/lib/cache';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { Profile } from '@/lib/types/profiles.types';
+import { createAuthenticatedApiQuery } from '@/server/api/create-api-query';
+import { getDb } from '@/server/db';
 
-export async function getProfile(): Promise<Profile> {
-  const supabase = await createServerSupabaseClient({
-    next: { revalidate: 60, tags: ['profiles'] },
-  });
+export const getProfile = createAuthenticatedApiQuery(async ({ ctx }) => {
+  'use cache';
+  cacheTag.user(ctx.userId, CACHE_TAGS.profiles);
+
+  const supabase = await createServerSupabaseClient(ctx.plainCookies);
+  const db = await getDb(ctx.supabaseToken);
 
   const [
     {
       data: { user },
       error: userError,
     },
-    { data: profile, error: profileError },
-  ] = await Promise.all([
-    supabase.auth.getUser(),
-    supabase.from('profiles').select().maybeSingle(),
-  ]);
-
-  if (profileError) {
-    throw profileError;
-  }
+    profile,
+  ] = await Promise.all([supabase.auth.getUser(), db.rls((tx) => tx.query.profiles.findFirst())]);
 
   if (userError || !user) {
     redirect('/auth/login');
@@ -33,6 +30,13 @@ export async function getProfile(): Promise<Profile> {
     id: user.id,
     email: user.email,
     name: user.user_metadata.full_name,
-    mainCurrency: profile?.main_currency ?? 'eur',
+    mainCurrency: profile?.mainCurrency ?? 'eur',
   };
-}
+});
+
+/**
+ * Retrieves the user's ID from the context.
+ *
+ * @returns The user's ID as a string.
+ */
+export const getUserId = createAuthenticatedApiQuery<void, string>(async ({ ctx }) => ctx.userId);

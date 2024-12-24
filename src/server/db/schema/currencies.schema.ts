@@ -1,6 +1,8 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq, relations, sql } from 'drizzle-orm';
 import { check, pgPolicy, pgTable, text } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
+
+import { exchangeRates } from './exchange-rates.schema';
 
 export const currencies = pgTable(
   'currencies',
@@ -19,3 +21,8 @@ export const currencies = pgTable(
     }),
   ],
 );
+
+export const currenciesRelations = relations(currencies, ({ many }) => ({
+  exchangeRatesFrom: many(exchangeRates, { relationName: 'from' }),
+  exchangeRatesTo: many(exchangeRates, { relationName: 'to' }),
+}));

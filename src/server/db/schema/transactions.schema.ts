@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, relations } from 'drizzle-orm';
 import { index, integer, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
@@ -39,3 +39,7 @@ export const transactions = pgTable(
     ),
   ],
 );
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  subaccount: one(subaccounts),
+}));

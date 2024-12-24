@@ -1,8 +1,7 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
-
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { revalidateTag } from '@/lib/cache';
+import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
 import { ActionResponse } from '@/lib/types/transport.types';
 
 interface UpdateProfileParams {
@@ -10,7 +9,7 @@ interface UpdateProfileParams {
 }
 
 export async function updateProfile(params: UpdateProfileParams): Promise<ActionResponse> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createWritableServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -23,6 +22,6 @@ export async function updateProfile(params: UpdateProfileParams): Promise<Action
     return { success: false, error: { code: error.code, message: error.message } };
   }
 
-  revalidateTag('profiles');
+  revalidateTag({ tag: 'profiles', userId: user!.id });
   return { success: true };
 }

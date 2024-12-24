@@ -20,7 +20,7 @@ export default async function TestPage() {
 
   const [accounts, transactionHistory, transactions, { mainCurrency }] = await Promise.all([
     apiQueries.accounts.getAccounts(),
-    apiQueries.transactions.getTransactionHistory('12 month', '1 month'),
+    apiQueries.transactions.getTransactionHistory({ dateRange: '12 month', interval: '1 month' }),
     apiQueries.transactions.getTransactions(),
     apiQueries.currencies.getMainCurrencyWithMapper(),
   ]);

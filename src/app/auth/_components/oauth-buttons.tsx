@@ -1,11 +1,11 @@
 import { RiGithubFill, RiGoogleFill } from '@remixicon/react';
 import { useCallback, useState } from 'react';
 
+import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
 import { Button } from '@/components/ui/button';
-import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 export function OAuthButtons() {
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useBrowserSupabaseClient();
   const [isLoading, setIsLoading] = useState(false);
 
   let oAuthRedirectUrl = '/api/auth/callback';

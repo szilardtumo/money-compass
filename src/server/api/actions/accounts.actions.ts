@@ -2,12 +2,13 @@
 
 import { isBefore, max } from 'date-fns';
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { revalidateTag } from 'next/cache';
 
+import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { formatDate } from '@/lib/utils/formatters';
 import { apiQueries } from '@/server/api/queries';
+import { getUserId } from '@/server/api/queries/profiles.queries';
 import { getDb, schema } from '@/server/db';
 
 import { createTransactions } from './transactions.actions';
@@ -43,8 +44,7 @@ async function createSubaccounts(params: CreateSubaccountParams[]): Promise<Acti
 
   // TODO: error handling
 
-  revalidateTag('accounts');
-  revalidateTag('subaccounts');
+  revalidateTag({ tag: CACHE_TAGS.accounts, userId: await getUserId() });
   return { success: true };
 }
 
@@ -63,8 +63,7 @@ async function deleteSubaccounts(subaccountIds: string[]): Promise<ActionRespons
 
   // TODO: error handling
 
-  revalidateTag('accounts');
-  revalidateTag('subaccounts');
+  revalidateTag({ tag: CACHE_TAGS.accounts, userId: await getUserId() });
   return { success: true };
 }
 
@@ -138,10 +137,9 @@ async function updateSubaccounts(params: UpdateSubaccountParams[]): Promise<Acti
   // TODO: error handling
 
   if (wasCurrencyChanged) {
-    revalidateTag('transactions');
+    revalidateTag({ tag: CACHE_TAGS.transactions, userId: await getUserId() });
   }
-  revalidateTag('accounts');
-  revalidateTag('subaccounts');
+  revalidateTag({ tag: CACHE_TAGS.accounts, userId: await getUserId() });
   return { success: true };
 }
 
@@ -179,8 +177,7 @@ export async function createAccount(params: CreateAccountParams): Promise<Action
 
   // TODO: error handling
 
-  revalidateTag('accounts');
-  revalidateTag('subaccounts');
+  revalidateTag({ tag: CACHE_TAGS.accounts, userId: await getUserId() });
   return { success: true };
 }
 
@@ -255,8 +252,7 @@ export async function updateAccount(
 
   // TODO: error handling
 
-  revalidateTag('accounts');
-  revalidateTag('subaccounts');
+  revalidateTag({ tag: CACHE_TAGS.accounts, userId: await getUserId() });
   return { success: true };
 }
 
@@ -266,9 +262,8 @@ export async function deleteAccount(accountId: string): Promise<ActionResponse> 
 
   //TODO: error handling
 
-  revalidateTag('accounts');
-  revalidateTag('subaccounts');
-  revalidateTag('transactions');
+  revalidateTag({ tag: CACHE_TAGS.accounts, userId: await getUserId() });
+  revalidateTag({ tag: CACHE_TAGS.transactions, userId: await getUserId() });
   return { success: true };
 }
 

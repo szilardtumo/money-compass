@@ -9,6 +9,7 @@ import { useCallback, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +22,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { PasswordInput, strengthRequirements } from '@/components/ui/password-input';
-import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 const formSchema = z
   .object({
@@ -42,7 +42,7 @@ type FormFields = z.infer<typeof formSchema>;
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useBrowserSupabaseClient();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormFields>({
