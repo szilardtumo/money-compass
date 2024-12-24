@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { PasswordInput, strengthRequirements } from '@/components/ui/password-input';
-import { createBrowserSupabaseClient } from '@/lib/supabase/client';
+import { useBrowserSupabaseClient } from '@/lib/supabase/client';
 
 const formSchema = z
   .object({
@@ -42,7 +42,7 @@ type FormFields = z.infer<typeof formSchema>;
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useBrowserSupabaseClient();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormFields>({

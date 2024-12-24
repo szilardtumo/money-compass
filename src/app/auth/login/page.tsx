@@ -22,7 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { SeparatorWithText } from '@/components/ui/separator-with-text';
-import { createBrowserSupabaseClient } from '@/lib/supabase/client';
+import { useBrowserSupabaseClient } from '@/lib/supabase/client';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -34,7 +34,7 @@ type FormFields = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useBrowserSupabaseClient();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormFields>({

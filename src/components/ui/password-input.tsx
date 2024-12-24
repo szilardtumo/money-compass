@@ -33,7 +33,7 @@ const strengthLabels = [
 ];
 
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ className, onChange, showStrengthIndicator = false, ...props }) => {
+  ({ className, onChange, showStrengthIndicator = false, ...props }, ref) => {
     const [password, setPassword] = React.useState('');
     const [isVisible, setIsVisible] = React.useState(false);
 
@@ -71,6 +71,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
             className={cn('pe-9', className)}
             type={isVisible ? 'text' : 'password'}
             onChange={onPasswordChange}
+            ref={ref}
             {...props}
           />
 

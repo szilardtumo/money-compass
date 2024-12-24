@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { createBrowserSupabaseClient } from '@/lib/supabase/client';
+import { useBrowserSupabaseClient } from '@/lib/supabase/client';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -28,7 +28,7 @@ const formSchema = z.object({
 type FormFields = z.infer<typeof formSchema>;
 
 export default function ForgotPasswordPage() {
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useBrowserSupabaseClient();
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),
