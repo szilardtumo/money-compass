@@ -23,7 +23,7 @@ export default async function AccountDetailsPage({ params }: AccountDetailsPageP
 
   const [transactions, transactionHistory] = await Promise.all([
     apiQueries.transactions.getTransactions({ accountId: account.id, pageSize: 5 }),
-    apiQueries.transactions.getTransactionHistory('12 month', '1 month'),
+    apiQueries.transactions.getTransactionHistory({ dateRange: '12 month', interval: '1 month' }),
   ]);
 
   return (

@@ -33,3 +33,10 @@ export const getProfile = createAuthenticatedApiQuery(async ({ ctx }) => {
     mainCurrency: profile?.mainCurrency ?? 'eur',
   };
 });
+
+/**
+ * Retrieves the user's ID from the context.
+ *
+ * @returns The user's ID as a string.
+ */
+export const getUserId = createAuthenticatedApiQuery<void, string>(async ({ ctx }) => ctx.userId);

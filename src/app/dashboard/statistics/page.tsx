@@ -7,7 +7,7 @@ import { apiQueries } from '@/server/api/queries';
 export default async function StatisticsPage() {
   const [accounts, transactionHistory, { mainCurrency }] = await Promise.all([
     apiQueries.accounts.getAccounts(),
-    apiQueries.transactions.getTransactionHistory('12 month', '1 month'),
+    apiQueries.transactions.getTransactionHistory({ dateRange: '12 month', interval: '1 month' }),
     apiQueries.currencies.getMainCurrencyWithMapper(),
   ]);
 

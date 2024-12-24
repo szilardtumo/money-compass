@@ -3,14 +3,15 @@
 import { PostgrestError } from '@supabase/supabase-js';
 import { isBefore, max } from 'date-fns';
 import { and, asc, eq, inArray, not, sql } from 'drizzle-orm';
-import { revalidateTag } from 'next/cache';
 
+import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
 import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
 import { apiQueries } from '@/server/api/queries';
+import { getUserId } from '@/server/api/queries/profiles.queries';
 import { getDb } from '@/server/db';
 import {
   afterTransaction,
@@ -61,7 +62,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
       amounttoadd: params.amount,
     });
 
-    revalidateTag('transactions');
+    revalidateTag({ tag: CACHE_TAGS.transactions, userId: await getUserId() });
     return { success: true };
   } catch (error) {
     const postgrestError = error as PostgrestError;
@@ -120,7 +121,7 @@ export async function createTransactions(
       return { success: false, error: { code: error.code, message: error.message } };
     }
 
-    revalidateTag('transactions');
+    revalidateTag({ tag: CACHE_TAGS.transactions, userId: await getUserId() });
     return { success: true };
   } catch (error) {
     const postgrestError = error as PostgrestError;
@@ -227,7 +228,7 @@ export async function updateTransaction(
       }
     });
 
-    revalidateTag('transactions');
+    revalidateTag({ tag: CACHE_TAGS.transactions, userId: await getUserId() });
     return { success: true };
   } catch (error) {
     return {
@@ -285,7 +286,7 @@ export async function deleteTransactions(transactionIds: string[]): Promise<Acti
       await tx.delete(transactions).where(inArray(transactions.id, transactionIds));
     });
 
-    revalidateTag('transactions');
+    revalidateTag({ tag: CACHE_TAGS.transactions, userId: await getUserId() });
     return { success: true };
   } catch (error) {
     const postgrestError = error as PostgrestError;
@@ -339,5 +340,5 @@ export async function _recalculateBalances() {
     }),
   );
 
-  revalidateTag('transactions');
+  revalidateTag({ tag: CACHE_TAGS.transactions, userId: await getUserId() });
 }

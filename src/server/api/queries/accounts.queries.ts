@@ -1,54 +1,31 @@
 import 'server-only';
 
-import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
+import { CACHE_TAGS, cacheTag } from '@/lib/cache';
 import { Account, Subaccount } from '@/lib/types/accounts.types';
+import { createAuthenticatedApiQuery } from '@/server/api/create-api-query';
+import { getDb, schema } from '@/server/db';
 
 import { getMainCurrencyWithMapper } from './currencies.queries';
 
-export async function getSubaccountBalances(): Promise<
+export const getSubaccountBalances = createAuthenticatedApiQuery<
+  void,
   Record<string, { balance: number; lastTransactionDate: Date }>
-> {
-  const supabase = await createWritableServerSupabaseClient({
-    next: { revalidate: 60, tags: ['subaccounts', 'transactions'] },
-  });
+>(async ({ ctx }) => {
+  'use cache';
+  cacheTag.user(ctx.userId, CACHE_TAGS.accounts);
+  cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
 
-  const { data, error } = await supabase.from('balances').select();
+  const db = await getDb(ctx.supabaseToken);
 
-  if (error) {
-    throw error;
-  }
+  const balances = await db.rls((tx) => tx.select().from(schema.balances));
 
-  const balances = data.reduce<Record<string, { balance: number; lastTransactionDate: Date }>>(
-    (acc, current) => {
-      acc[current.subaccount_id!] = {
-        balance: current.balance ?? 0,
-        lastTransactionDate: new Date(current.started_date ?? 0),
-      };
-      return acc;
-    },
-    {},
+  return Object.fromEntries(
+    balances.map((item) => [
+      item.subaccountId,
+      { balance: item.balance ?? 0, lastTransactionDate: item.lastTransactionDate ?? new Date(0) },
+    ]),
   );
-
-  return balances;
-}
-
-export async function getSubaccountBalance(subaccountId: string): Promise<number> {
-  const supabase = await createWritableServerSupabaseClient({
-    next: { revalidate: 60, tags: ['subaccounts', 'transactions'] },
-  });
-
-  const { data, error } = await supabase
-    .from('balances')
-    .select('balance')
-    .eq('subaccount_id', subaccountId)
-    .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  return data?.balance ?? 0;
-}
+});
 
 /**
  * Returns the list of accounts with all of their subaccounts.
@@ -56,26 +33,21 @@ export async function getSubaccountBalance(subaccountId: string): Promise<number
  *
  * @returns
  */
-export async function getAccounts(): Promise<Account[]> {
-  const supabase = await createWritableServerSupabaseClient({
-    next: { revalidate: 60, tags: ['accounts'] },
-  });
+export const getAccounts = createAuthenticatedApiQuery<void, Account[]>(async ({ ctx }) => {
+  'use cache';
+  cacheTag.user(ctx.userId, CACHE_TAGS.accounts);
+  cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
 
-  const [
-    { data: accounts, error },
-    { mainCurrency, mapper: mainCurrencyMapper },
-    subaccountBalances,
-  ] = await Promise.all([
-    supabase.from('accounts').select(`id, name, category, subaccounts(id, name, currency)`),
-    getMainCurrencyWithMapper(),
-    getSubaccountBalances(),
-  ]);
+  const db = await getDb(ctx.supabaseToken);
 
-  if (error) {
-    throw error;
-  }
+  const [accounts, { mainCurrency, mapper: mainCurrencyMapper }, subaccountBalances] =
+    await Promise.all([
+      db.rls((tx) => tx.query.accounts.findMany({ with: { subaccounts: true } })),
+      getMainCurrencyWithMapper.withContext({ ctx }),
+      getSubaccountBalances.withContext({ ctx }),
+    ]);
 
-  return (accounts ?? []).map((account) => {
+  return accounts.map((account) => {
     const subaccounts = account.subaccounts.map(
       (subaccount) =>
         ({
@@ -105,60 +77,64 @@ export async function getAccounts(): Promise<Account[]> {
       subaccounts,
     };
   });
-}
+});
 
 /**
  * Returns the account with the specified id, with all of its subaccounts.
  *
  * @returns
  */
-export async function getAccount(accountId: string): Promise<Account | undefined> {
-  const supabase = await createWritableServerSupabaseClient({
-    next: { revalidate: 60, tags: ['accounts', accountId] },
-  });
+export const getAccount = createAuthenticatedApiQuery<string, Account | undefined>(
+  async ({ input: accountId, ctx }) => {
+    'use cache';
+    cacheTag.id(accountId, CACHE_TAGS.accounts);
+    cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
 
-  const { data: account, error: accountError } = await supabase
-    .from('accounts')
-    .select(`id, name, category, subaccounts(id, name, currency)`)
-    .eq('id', accountId)
-    .maybeSingle();
+    const db = await getDb(ctx.supabaseToken);
 
-  if (accountError) {
-    throw accountError;
-  }
+    const [account, { mainCurrency, mapper: mainCurrencyMapper }, subaccountBalances] =
+      await Promise.all([
+        db.rls((tx) =>
+          tx.query.accounts.findFirst({
+            where: (table, { eq }) => eq(table.id, accountId),
+            with: { subaccounts: true },
+          }),
+        ),
+        getMainCurrencyWithMapper.withContext({ ctx }),
+        getSubaccountBalances.withContext({ ctx }),
+      ]);
 
-  if (!account) {
-    return undefined;
-  }
+    if (!account) {
+      return undefined;
+    }
 
-  const [subaccountBalances, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
-    getSubaccountBalances(),
-    getMainCurrencyWithMapper(),
-  ]);
+    const subaccounts = account.subaccounts.map(
+      (subaccount) =>
+        ({
+          id: subaccount.id,
+          name: subaccount.name,
+          originalCurrency: subaccount.currency,
+          mainCurrency,
+          balance: {
+            originalValue: subaccountBalances[subaccount.id]?.balance ?? 0,
+            mainCurrencyValue:
+              (subaccountBalances[subaccount.id]?.balance ?? 0) *
+              mainCurrencyMapper[subaccount.currency],
+          },
+          accountId: account.id,
+        }) satisfies Subaccount,
+    );
 
-  const subaccounts = account.subaccounts.map(
-    (subaccount) =>
-      ({
-        id: subaccount.id,
-        name: subaccount.name,
-        originalCurrency: subaccount.currency,
-        mainCurrency,
-        balance: {
-          originalValue: subaccountBalances[subaccount.id]?.balance ?? 0,
-          mainCurrencyValue:
-            (subaccountBalances[subaccount.id]?.balance ?? 0) *
-            mainCurrencyMapper[subaccount.currency],
-        },
-        accountId: account.id,
-      }) satisfies Subaccount,
-  );
-
-  return {
-    id: account.id,
-    name: account.name,
-    category: account.category,
-    mainCurrency,
-    totalBalance: subaccounts.reduce((acc, current) => acc + current.balance.mainCurrencyValue, 0),
-    subaccounts,
-  };
-}
+    return {
+      id: account.id,
+      name: account.name,
+      category: account.category,
+      mainCurrency,
+      totalBalance: subaccounts.reduce(
+        (acc, current) => acc + current.balance.mainCurrencyValue,
+        0,
+      ),
+      subaccounts,
+    };
+  },
+);
