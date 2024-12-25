@@ -4,7 +4,7 @@ import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { transactionType } from './enums.schema';
 import { subaccounts } from './subaccounts.schema';
-import { numericCasted, authUid } from './utils';
+import { numericCasted, authUid, authUidDefault } from './utils';
 
 export const transactions = pgTable(
   'transactions',
@@ -20,11 +20,12 @@ export const transactions = pgTable(
       .notNull()
       .references(() => subaccounts.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
     balance: numericCasted().notNull(),
-    userId: uuid().notNull().default(authUid),
+    userId: uuid().notNull().default(authUidDefault),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     sequence: integer('sequence').generatedAlwaysAsIdentity().notNull().unique(),
   },
   (table) => [
+    index().on(table.userId, table.subaccountId, table.startedDate.desc(), table.sequence.desc()),
     pgPolicy('transactions_allow_all_for_owner_policy', {
       as: 'permissive',
       for: 'all',
@@ -32,11 +33,6 @@ export const transactions = pgTable(
       using: eq(table.userId, authUid),
       withCheck: eq(table.userId, authUid),
     }),
-    index('transactions_started_date_idx').on(
-      table.subaccountId,
-      table.startedDate.desc(),
-      table.sequence.desc(),
-    ),
   ],
 );
 

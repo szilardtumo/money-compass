@@ -1,10 +1,10 @@
 import { eq, relations } from 'drizzle-orm';
-import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authUsers, authenticatedRole } from 'drizzle-orm/supabase';
 
 import { accountCategory } from './enums.schema';
 import { subaccounts } from './subaccounts.schema';
-import { authUid } from './utils';
+import { authUid, authUidDefault } from './utils';
 
 export const accounts = pgTable(
   'accounts',
@@ -14,11 +14,12 @@ export const accounts = pgTable(
     name: text().notNull(),
     userId: uuid()
       .notNull()
-      .default(authUid)
+      .default(authUidDefault)
       .references(() => authUsers.id, { onDelete: 'cascade' }),
     category: accountCategory().notNull(),
   },
   (table) => [
+    index().on(table.userId),
     pgPolicy('accounts_allow_all_for_owner_policy', {
       as: 'permissive',
       for: 'all',
