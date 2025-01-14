@@ -1,6 +1,7 @@
 'use client';
 
 import { CaretDownIcon, ExitIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback, useOptimistic } from 'react';
@@ -82,6 +83,9 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
       <DropdownMenuContent className="w-[var(--radix-popper-anchor-width)] min-w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard/integrations">Integrations</Link>
+        </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>App Theme</DropdownMenuSubTrigger>
           <DropdownMenuPortal>
