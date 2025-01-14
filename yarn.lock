@@ -4048,6 +4048,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^1.2.1":
+  version: 1.7.9
+  resolution: "axios@npm:1.7.9"
+  dependencies:
+    follow-redirects: "npm:^1.15.6"
+    form-data: "npm:^4.0.0"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 10c0/b7a41e24b59fee5f0f26c1fc844b45b17442832eb3a0fb42dd4f1430eb4abc571fe168e67913e8a1d91c993232bd1d1ab03e20e4d1fee8c6147649b576fc1b0b
+  languageName: node
+  linkType: hard
+
 "axobject-query@npm:^4.1.0":
   version: 4.1.0
   resolution: "axobject-query@npm:4.1.0"
@@ -5301,6 +5312,13 @@ __metadata:
   dependencies:
     webidl-conversions: "npm:^7.0.0"
   checksum: 10c0/774277cd9d4df033f852196e3c0077a34dbd15a96baa4d166e0e47138a80f4c0bdf0d94e4703e6ff5883cec56bb821a6fff84402d8a498e31de7c87eb932a294
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^10.0.0":
+  version: 10.0.0
+  resolution: "dotenv@npm:10.0.0"
+  checksum: 10c0/2d8d4ba64bfaff7931402aa5e8cbb8eba0acbc99fe9ae442300199af021079eafa7171ce90e150821a5cb3d74f0057721fbe7ec201a6044b68c8a7615f8c123f
   languageName: node
   linkType: hard
 
@@ -6634,6 +6652,16 @@ __metadata:
   version: 3.3.1
   resolution: "flatted@npm:3.3.1"
   checksum: 10c0/324166b125ee07d4ca9bcf3a5f98d915d5db4f39d711fba640a3178b959919aae1f7cfd8aabcfef5826ed8aa8a2aa14cc85b2d7d18ff638ddf4ae3df39573eaf
+  languageName: node
+  linkType: hard
+
+"follow-redirects@npm:^1.15.6":
+  version: 1.15.9
+  resolution: "follow-redirects@npm:1.15.9"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: 10c0/5829165bd112c3c0e82be6c15b1a58fa9dcfaede3b3c54697a82fe4a62dd5ae5e8222956b448d2f98e331525f05d00404aba7d696de9e761ef6e42fdc780244f
   languageName: node
   linkType: hard
 
@@ -9154,6 +9182,7 @@ __metadata:
     lucide-react: "npm:^0.468.0"
     next: "npm:15.1.1-canary.18"
     next-themes: "npm:^0.4.4"
+    nordigen-node: "patch:nordigen-node@npm%3A1.4.0#~/.yarn/patches/nordigen-node-npm-1.4.0-c527fb4a7b.patch"
     npm-run-all: "npm:^4.1.5"
     nprogress: "npm:^0.2.0"
     postcss: "npm:^8.4.49"
@@ -9372,6 +9401,26 @@ __metadata:
   bin:
     nopt: bin/nopt.js
   checksum: 10c0/a069c7c736767121242037a22a788863accfa932ab285a1eb569eb8cd534b09d17206f68c37f096ae785647435e0c5a5a0a67b42ec743e481a455e5ae6a6df81
+  languageName: node
+  linkType: hard
+
+"nordigen-node@npm:1.4.0":
+  version: 1.4.0
+  resolution: "nordigen-node@npm:1.4.0"
+  dependencies:
+    axios: "npm:^1.2.1"
+    dotenv: "npm:^10.0.0"
+  checksum: 10c0/a04ec90480e4e65b2169d909ac9ea3044f764d59283162420d287a6b229808754dc78c758637724d63c87aa77f2237bc47543f521b0b4057ed3980d6db137e1a
+  languageName: node
+  linkType: hard
+
+"nordigen-node@patch:nordigen-node@npm%3A1.4.0#~/.yarn/patches/nordigen-node-npm-1.4.0-c527fb4a7b.patch":
+  version: 1.4.0
+  resolution: "nordigen-node@patch:nordigen-node@npm%3A1.4.0#~/.yarn/patches/nordigen-node-npm-1.4.0-c527fb4a7b.patch::version=1.4.0&hash=660c0d"
+  dependencies:
+    axios: "npm:^1.2.1"
+    dotenv: "npm:^10.0.0"
+  checksum: 10c0/b31e6974d513adc7f5096803b69f524d2fb075adcff1e6cd967d8a9a91e31cf1870ca0d3a4a63ecac672f8dd1b9a3ac03f963670a4838578002fb3de0dc2c0c6
   languageName: node
   linkType: hard
 
@@ -10087,6 +10136,13 @@ __metadata:
   version: 1.0.0
   resolution: "proxy-from-env@npm:1.0.0"
   checksum: 10c0/c64df9b21f7f820dc882cd6f7f81671840acd28b9688ee3e3e6af47a56ec7f0edcabe5bc96b32b26218b35eeff377bcc27ac27f89b6b21401003e187ff13256f
+  languageName: node
+  linkType: hard
+
+"proxy-from-env@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "proxy-from-env@npm:1.1.0"
+  checksum: 10c0/fe7dd8b1bdbbbea18d1459107729c3e4a2243ca870d26d34c2c1bcd3e4425b7bcc5112362df2d93cc7fb9746f6142b5e272fd1cc5c86ddf8580175186f6ad42b
   languageName: node
   linkType: hard
 

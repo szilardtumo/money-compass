@@ -6,3 +6,4 @@ export * from './exchange-rates.schema';
 export * from './profiles.schema';
 export * from './subaccounts.schema';
 export * from './transactions.schema';
+export * from './integrations.schema';

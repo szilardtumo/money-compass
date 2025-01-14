@@ -15,6 +15,8 @@ export const CACHE_TAGS = {
   transactions: 'transactions',
   currencies: 'currencies',
   currencyMappers: 'currencyMappers',
+  integrations: 'integrations',
+  gocardlessInstitutions: 'gocardlessInstitutions',
 } as const;
 
 const getGlobalTag = (tag: keyof typeof CACHE_TAGS) => `global:${CACHE_TAGS[tag]}` as const;
