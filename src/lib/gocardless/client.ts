@@ -1,6 +1,8 @@
 import NordigenClient from 'nordigen-node';
 import { cache } from 'react';
 
+import type { GocardlessError } from './response.types';
+
 declare global {
   // eslint-disable-next-line no-var
   var gocardlessClient: NordigenClient | undefined;
@@ -20,3 +22,7 @@ export const getGocardlessClient = cache(async () => {
 
   return gocardlessClient;
 });
+
+export const isGocardlessError = (err: unknown): err is GocardlessError => {
+  return err instanceof Error && 'response' in err;
+};

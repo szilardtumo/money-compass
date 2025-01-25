@@ -1,14 +1,25 @@
-type IntegrationStatus = 'pending' | 'active' | 'expired' | 'unknown';
+type IntegrationStatus = 'unconfirmed' | 'active' | 'expired' | 'unknown';
 
 export interface Integration {
   id: string;
   name: string;
   status: IntegrationStatus;
   expiresAt?: Date;
+  confirmationUrl: string;
   institution: {
     id: string;
     name: string;
     bic?: string;
     logoUrl?: string;
   };
+}
+
+export interface GocardlessInstitution {
+  id: string;
+  name: string;
+  bic?: string;
+  transaction_total_days?: string;
+  countries: string[];
+  logo: string;
+  max_access_valid_for_days?: string;
 }

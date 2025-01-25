@@ -1,4 +1,4 @@
-export interface RequisitionResponse {
+export interface GocardlessRequisition {
   id: string;
   created?: string;
   redirect: string;
@@ -10,21 +10,6 @@ export interface RequisitionResponse {
   ssn?: string;
   account_selection: boolean;
   redirect_immediate: boolean;
-}
-
-export type GetInstitutionsResponse = {
-  id: string;
-  name: string;
-  bic?: string;
-  transaction_total_days?: string;
-  countries: string[];
-  logo: string;
-  max_access_valid_for_days?: string;
-}[];
-
-export interface GetRequisitionsResponse {
-  results: RequisitionResponse[];
-  count: number;
 }
 
 export interface GetAccountBalancesResponse {
@@ -56,5 +41,18 @@ export interface GetAccountTransactionsResponse {
   transactions: {
     booked: TransactionResponse[];
     pending: TransactionResponse[];
+  };
+}
+
+export interface GocardlessError {
+  code: string;
+  response: {
+    data: {
+      status_code: number;
+      reference: {
+        summary: string;
+        detail: string;
+      };
+    };
   };
 }

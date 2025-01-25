@@ -3,51 +3,23 @@ import 'server-only';
 import { addDays } from 'date-fns';
 
 import { CACHE_TAGS, cacheLife, cacheTag } from '@/lib/cache';
-import {
-  GetInstitutionsResponse,
-  GetRequisitionsResponse,
-  RequisitionResponse,
-} from '@/lib/gocardless/response.types';
-import { getGocardlessClient } from '@/lib/gocardless/server';
-import { Integration } from '@/lib/types/integrations.types';
-import { uniqueBy } from '@/lib/utils/unique-by';
+import { gocardlessApi, GocardlessRequisition } from '@/lib/gocardless';
+import { GocardlessInstitution, Integration } from '@/lib/types/integrations.types';
 import { createAuthenticatedApiQuery, createPublicApiQuery } from '@/server/api/create-api-query';
 import { getDb } from '@/server/db';
 
-const gocardlessCountries = ['HU', 'RO'];
-
-export const getGocardlessInstitutions = createPublicApiQuery<void, GetInstitutionsResponse>(
-  async () => {
-    'use cache';
-    cacheTag.global(CACHE_TAGS.gocardlessInstitutions);
-    cacheLife('weeks');
-
-    const gocardless = await getGocardlessClient();
-    const responses = await Promise.all(
-      gocardlessCountries.map(
-        (country) =>
-          gocardless.institution.getInstitutions({ country }) as Promise<GetInstitutionsResponse>,
-      ),
-    );
-
-    return uniqueBy(responses.flat(), (institution) => institution.id);
-  },
-);
-
-const getGocardlessRequisitions = createPublicApiQuery<void, GetRequisitionsResponse>(async () => {
-  'use cache';
-  cacheTag.global(CACHE_TAGS.integrations);
-
-  const gocardless = await getGocardlessClient();
-  return gocardless.requisition.getRequisitions() as Promise<GetRequisitionsResponse>;
-});
-
-const parseGocardlessStatus = (status: RequisitionResponse['status']): Integration['status'] => {
+const parseGocardlessStatus = (status: GocardlessRequisition['status']): Integration['status'] => {
+  // Status codes: https://developer.gocardless.com/bank-account-data/statuses#statuses
   switch (status) {
+    case 'CR':
+    case 'GC':
+    case 'UA':
+    case 'SA':
+    case 'GA':
+    case 'RJ':
+      return 'unconfirmed';
     case 'LN':
       return 'active';
-    case 'CR':
-      return 'pending';
     case 'EX':
       return 'expired';
     default:
@@ -63,13 +35,13 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
 
   const [integrations, requisitions, institutions] = await Promise.all([
     db.rls((tx) => tx.query.integrations.findMany()),
-    getGocardlessRequisitions(),
-    getGocardlessInstitutions(),
+    gocardlessApi.getRequisitions(),
+    gocardlessApi.getInstitutions(),
   ]);
 
   const mergedData = integrations
     .map((integration) => {
-      const requisition = requisitions.results.find(
+      const requisition = requisitions.find(
         (requisition) => requisition.id === integration.externalId,
       );
 
@@ -87,9 +59,12 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
         ...integration,
         status,
         expiresAt:
-          requisition.created && status === 'active' && institution?.max_access_valid_for_days
+          requisition.created &&
+          ['active', 'expired'].includes(status) &&
+          institution?.max_access_valid_for_days
             ? addDays(new Date(requisition.created), Number(institution.max_access_valid_for_days))
             : undefined,
+        confirmationUrl: requisition.link,
         institution: {
           id: requisition.institution_id,
           name: institution?.name ?? requisition.institution_id,
@@ -102,3 +77,13 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
 
   return mergedData;
 });
+
+export const getGocardlessInstitutions = createPublicApiQuery<void, GocardlessInstitution[]>(
+  async () => {
+    'use cache';
+    cacheTag.global(CACHE_TAGS.gocardlessInstitutions);
+    cacheLife('weeks');
+
+    return gocardlessApi.getInstitutions();
+  },
+);
