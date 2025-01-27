@@ -46,10 +46,15 @@ export function AddIntegrationForm({ gocardlessInstitutions, onSuccess }: AddInt
     },
   });
 
+  let integrationRedirectUrl = '/api/integrations/gocardless/callback';
+  if (typeof window !== 'undefined') {
+    integrationRedirectUrl = `${window.location.origin}${integrationRedirectUrl}`;
+  }
+
   async function onSubmit({ institutionId }: FormFields) {
     const promise = apiActions.integrations.createGocardlessIntegration({
       institutionId,
-      redirectUrl: window.location.href,
+      redirectUrl: integrationRedirectUrl,
     });
 
     toast.promise(createToastPromise(promise), {
@@ -69,12 +74,21 @@ export function AddIntegrationForm({ gocardlessInstitutions, onSuccess }: AddInt
   const selectedCountry = form.watch('country');
 
   const institutionOptions = useMemo(() => {
-    return gocardlessInstitutions
+    const options = gocardlessInstitutions
       .filter((institution) => institution.countries.includes(selectedCountry))
       .map((institution) => ({
         label: institution.name,
         value: institution.id,
       }));
+
+    if (process.env.NODE_ENV !== 'production') {
+      options.unshift({
+        label: 'SANDBOX',
+        value: 'SANDBOXFINANCE_SFIN0000',
+      });
+    }
+
+    return options;
   }, [gocardlessInstitutions, selectedCountry]);
 
   return (
