@@ -2,7 +2,7 @@ import { GocardlessInstitution } from '@/lib/types/integrations.types';
 import { uniqueBy } from '@/lib/utils/unique-by';
 
 import { getGocardlessClient } from './client';
-import { GocardlessRequisition } from './response.types';
+import { GocardlessAccountDetails, GocardlessRequisition } from './response.types';
 
 const gocardlessCountries = ['HU', 'RO'];
 
@@ -61,10 +61,20 @@ async function deleteRequisition(id: string): Promise<void> {
   await gocardlessClient.requisition.deleteRequisition(id);
 }
 
+async function getAccountDetails(id: string): Promise<GocardlessAccountDetails | undefined> {
+  const gocardlessClient = await getGocardlessClient();
+  const response = (await gocardlessClient.account(id).getDetails()) as
+    | { account: GocardlessAccountDetails }
+    | undefined;
+
+  return response?.account;
+}
+
 export const gocardlessApi = {
   getInstitutions,
   getRequisitions,
   getRequisition,
   createRequisition,
   deleteRequisition,
+  getAccountDetails,
 };

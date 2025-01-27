@@ -16,12 +16,14 @@ export interface GetAccountBalancesResponse {
   balances: { balanceAmount: { amount: string; currency: string } }[];
 }
 
-export interface GetAccountMetadataResponse {
-  id: string;
+export interface GocardlessAccountDetails {
+  resourceId: string;
   iban: string;
   status: string;
-  owner_name: string;
-  institution_id: string;
+  currency: string;
+  ownerName?: string;
+  name?: string;
+  displayName?: string;
 }
 
 export interface TransactionResponse {

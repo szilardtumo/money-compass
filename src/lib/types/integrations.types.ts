@@ -12,6 +12,13 @@ export interface Integration {
     bic?: string;
     logoUrl?: string;
   };
+  accounts: {
+    id: string;
+    iban: string;
+    currency: string;
+    ownerName?: string;
+    name?: string;
+  }[];
 }
 
 export interface GocardlessInstitution {

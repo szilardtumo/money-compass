@@ -1,5 +1,6 @@
 'use client';
 
+import { isFuture, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { ExternalLink } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -59,20 +60,34 @@ export function IntegrationCardActions({ integration }: IntegrationCardActionsPr
   }, [integration.id]);
 
   return (
-    <div className="w-full flex gap-2 justify-between">
+    <div className="w-full flex gap-4 items-baseline">
       {integration.status === 'unconfirmed' && (
         <Button asChild icon={ExternalLink} iconPlacement="right">
           <a href={integration.confirmationUrl}>Confirm</a>
         </Button>
       )}
-      {['expired', 'active'].includes(integration.status) && (
+
+      {(integration.status === 'expired' ||
+        (integration.status === 'active' &&
+          integration.expiresAt &&
+          differenceInDays(integration.expiresAt, new Date()) <= 5)) && (
         <Button onClick={onRenew} isLoading={isRenewPending} disabled={isRenewPending}>
           Renew
         </Button>
       )}
+
+      {integration.expiresAt && (
+        <p className="text-muted-foreground text-sm">
+          {isFuture(integration.expiresAt) ? 'Expires' : 'Expired'}{' '}
+          {formatDistanceToNow(integration.expiresAt, { addSuffix: true })}
+        </p>
+      )}
+
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="destructive">Delete</Button>
+          <Button variant="destructive" className="ml-auto">
+            Delete
+          </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>

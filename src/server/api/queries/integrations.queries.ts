@@ -27,6 +27,27 @@ const parseGocardlessStatus = (status: GocardlessRequisition['status']): Integra
   }
 };
 
+const getGocardlessAccountDetails = async (
+  id: string,
+): Promise<Integration['accounts'][number] | undefined> => {
+  'use cache';
+  cacheLife('days');
+
+  const account = await gocardlessApi.getAccountDetails(id);
+
+  if (!account) {
+    return undefined;
+  }
+
+  return {
+    id: account.resourceId,
+    name: account.displayName || account.name,
+    ownerName: account.ownerName,
+    iban: account.iban,
+    currency: account.currency,
+  };
+};
+
 export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(async ({ ctx }) => {
   'use cache';
   cacheTag.user(ctx.userId, CACHE_TAGS.integrations);
@@ -39,42 +60,46 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
     gocardlessApi.getInstitutions(),
   ]);
 
-  const mergedData = integrations
-    .map((integration) => {
-      const requisition = requisitions.find(
-        (requisition) => requisition.id === integration.externalId,
-      );
+  const mergedDataPromises = integrations.map(async (integration) => {
+    const requisition = requisitions.find(
+      (requisition) => requisition.id === integration.externalId,
+    );
 
-      if (!requisition) {
-        return undefined;
-      }
+    if (!requisition) {
+      return undefined;
+    }
 
-      const institution = institutions.find(
-        (institution) => institution.id === requisition.institution_id,
-      );
+    const institution = institutions.find(
+      (institution) => institution.id === requisition.institution_id,
+    );
 
-      const status = parseGocardlessStatus(requisition.status);
+    const status = parseGocardlessStatus(requisition.status);
 
-      return {
-        ...integration,
-        status,
-        expiresAt:
-          requisition.created &&
-          ['active', 'expired'].includes(status) &&
-          institution?.max_access_valid_for_days
-            ? addDays(new Date(requisition.created), Number(institution.max_access_valid_for_days))
-            : undefined,
-        confirmationUrl: requisition.link,
-        institution: {
-          id: requisition.institution_id,
-          name: institution?.name ?? requisition.institution_id,
-          bic: institution?.bic,
-          logoUrl: institution?.logo,
-        },
-      } satisfies Integration;
-    })
-    .filter(Boolean);
+    const accounts = (
+      await Promise.all(requisition.accounts.map(getGocardlessAccountDetails))
+    ).filter(Boolean);
 
+    return {
+      ...integration,
+      status,
+      expiresAt:
+        requisition.created &&
+        ['active', 'expired'].includes(status) &&
+        institution?.max_access_valid_for_days
+          ? addDays(new Date(requisition.created), Number(institution.max_access_valid_for_days))
+          : undefined,
+      confirmationUrl: requisition.link,
+      institution: {
+        id: requisition.institution_id,
+        name: institution?.name ?? requisition.institution_id,
+        bic: institution?.bic,
+        logoUrl: institution?.logo,
+      },
+      accounts,
+    } satisfies Integration;
+  });
+
+  const mergedData = (await Promise.all(mergedDataPromises)).filter(Boolean);
   return mergedData;
 });
 
