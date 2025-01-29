@@ -64,7 +64,7 @@ export function LinkIntegrationForm({
     toast.promise(createToastPromise(promise), {
       loading: 'Linking integration...',
       success: 'Integration linked! The transactions will now be synchronized.',
-      error: 'Failed to link integration.',
+      error: (err) => `Failed to link integration! ${err.message}`,
     });
 
     const response = await promise;

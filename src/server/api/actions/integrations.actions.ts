@@ -8,6 +8,7 @@ import { isGocardlessError, gocardlessApi } from '@/lib/gocardless';
 import { ActionResponse } from '@/lib/types/transport.types';
 import { getUserId } from '@/server/api/queries/profiles.queries';
 import { getDb, schema } from '@/server/db';
+import { isUniqueConstraintError } from '@/server/db/errors';
 
 interface CreateGocardlessIntegrationParams {
   institutionId: string;
@@ -164,19 +165,36 @@ interface LinkIntegrationInput {
 export async function linkIntegration(input: LinkIntegrationInput): Promise<ActionResponse> {
   const db = await getDb();
 
-  await db.rls(async (tx) => {
-    await tx.insert(schema.integrationToSubaccounts).values({
-      integrationId: input.integrationId,
-      subaccountId: input.subaccountId,
-      integrationAccountId: input.integrationAccountId,
+  try {
+    await db.rls(async (tx) => {
+      await tx.insert(schema.integrationToSubaccounts).values({
+        integrationId: input.integrationId,
+        subaccountId: input.subaccountId,
+        integrationAccountId: input.integrationAccountId,
+      });
     });
-  });
 
-  revalidateTag({
-    tag: CACHE_TAGS.integrations,
-    userId: await getUserId(),
-    id: input.integrationId,
-  });
+    revalidateTag({
+      tag: CACHE_TAGS.integrations,
+      userId: await getUserId(),
+      id: input.integrationId,
+    });
+  } catch (err) {
+    if (isUniqueConstraintError(err)) {
+      return {
+        success: false,
+        error: {
+          code: err.code,
+          message: 'This subaccount is already linked to another integration.',
+        },
+      };
+    }
+
+    return {
+      success: false,
+      error: { code: 'unknown', message: err instanceof Error ? err.message : '' },
+    };
+  }
 
   return { success: true };
 }
