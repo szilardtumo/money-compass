@@ -2,6 +2,7 @@ import { Loader } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
+import { UnlinkIntegrationAction } from '@/app/dashboard/integrations/_components/UnlinkIntegrationAction';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -66,10 +67,9 @@ export function IntegrationCard({ integration }: IntegrationCardProps) {
             <TableCaption>A list accounts available to link</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead>Account name</TableHead>
-                <TableHead>IBAN</TableHead>
+                <TableHead>Account</TableHead>
                 <TableHead>Currency</TableHead>
-                <TableHead>Link</TableHead>
+                <TableHead colSpan={2}>Link</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -80,9 +80,13 @@ export function IntegrationCard({ integration }: IntegrationCardProps) {
 
                 return (
                   <TableRow key={account.id}>
-                    <TableCell>{account.name || account.iban}</TableCell>
-                    <TableCell>{account.iban}</TableCell>
-                    <TableCell className="uppercase">{account.currency}</TableCell>
+                    <TableCell>
+                      <p>{account.name || account.iban}</p>
+                      {!!account.name && <p className="text-muted-foreground">{account.iban}</p>}
+                    </TableCell>
+                    <TableCell className="uppercase">
+                      <Badge variant="secondary">{account.currency}</Badge>
+                    </TableCell>
 
                     <TableCell>
                       {link ? (
@@ -96,13 +100,23 @@ export function IntegrationCard({ integration }: IntegrationCardProps) {
                           </Link>
                         </p>
                       ) : (
-                        <Suspense fallback={<Loader />}>
+                        <p className="italic">Unlinked</p>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-end">
+                      <Suspense fallback={<Loader />}>
+                        {link ? (
+                          <UnlinkIntegrationAction
+                            integration={integration}
+                            integrationAccountId={account.id}
+                          />
+                        ) : (
                           <LinkIntegrationDialog
                             integration={integration}
                             integrationAccountId={account.id}
                           />
-                        </Suspense>
-                      )}
+                        )}
+                      </Suspense>
                     </TableCell>
                   </TableRow>
                 );

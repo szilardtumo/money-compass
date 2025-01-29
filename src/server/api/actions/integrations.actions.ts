@@ -1,7 +1,7 @@
 'use server';
 
 import { randomUUID } from 'crypto';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
 import { isGocardlessError, gocardlessApi } from '@/lib/gocardless';
@@ -195,6 +195,34 @@ export async function linkIntegration(input: LinkIntegrationInput): Promise<Acti
       error: { code: 'unknown', message: err instanceof Error ? err.message : '' },
     };
   }
+
+  return { success: true };
+}
+
+interface UnlinkIntegrationInput {
+  integrationId: string;
+  integrationAccountId: string;
+}
+
+export async function unlinkIntegration(input: UnlinkIntegrationInput): Promise<ActionResponse> {
+  const db = await getDb();
+
+  await db.rls(async (tx) => {
+    await tx
+      .delete(schema.integrationToSubaccounts)
+      .where(
+        and(
+          eq(schema.integrationToSubaccounts.integrationId, input.integrationId),
+          eq(schema.integrationToSubaccounts.integrationAccountId, input.integrationAccountId),
+        ),
+      );
+  });
+
+  revalidateTag({
+    tag: CACHE_TAGS.integrations,
+    userId: await getUserId(),
+    id: input.integrationId,
+  });
 
   return { success: true };
 }
