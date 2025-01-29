@@ -154,3 +154,29 @@ export async function deleteIntegration(id: string): Promise<ActionResponse> {
   revalidateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
   return { success: true };
 }
+
+interface LinkIntegrationInput {
+  integrationId: string;
+  integrationAccountId: string;
+  subaccountId: string;
+}
+
+export async function linkIntegration(input: LinkIntegrationInput): Promise<ActionResponse> {
+  const db = await getDb();
+
+  await db.rls(async (tx) => {
+    await tx.insert(schema.integrationToSubaccounts).values({
+      integrationId: input.integrationId,
+      subaccountId: input.subaccountId,
+      integrationAccountId: input.integrationAccountId,
+    });
+  });
+
+  revalidateTag({
+    tag: CACHE_TAGS.integrations,
+    userId: await getUserId(),
+    id: input.integrationId,
+  });
+
+  return { success: true };
+}

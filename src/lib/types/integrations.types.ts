@@ -1,3 +1,5 @@
+import { Subaccount } from '@/lib/types/accounts.types';
+
 type IntegrationStatus = 'unconfirmed' | 'active' | 'expired' | 'unknown';
 
 export interface Integration {
@@ -18,6 +20,10 @@ export interface Integration {
     currency: string;
     ownerName?: string;
     name?: string;
+  }[];
+  links: {
+    integrationAccountId: string;
+    subaccount: Omit<Subaccount, 'mainCurrency' | 'balance'>;
   }[];
 }
 

@@ -15,7 +15,7 @@ const gocardlessClient =
     secretKey: process.env.GOCARDLESS_SECRET_KEY!,
     baseUrl: 'https://bankaccountdata.gocardless.com/api/v2',
   });
-if (process.env.NODE_ENV !== 'production') global.drizzleClient = drizzleClient;
+if (process.env.NODE_ENV !== 'production') global.gocardlessClient = gocardlessClient;
 
 export const getGocardlessClient = cache(async () => {
   await gocardlessClient.generateToken();

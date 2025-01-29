@@ -1,8 +1,10 @@
-import { eq } from 'drizzle-orm';
+import { eq, relations } from 'drizzle-orm';
 import { index, pgPolicy, pgTable, text, uuid, timestamp } from 'drizzle-orm/pg-core';
 import { authenticatedRole, authUsers } from 'drizzle-orm/supabase';
 
 import { authUidDefault, authUid } from '@/server/db/schema/utils';
+
+import { integrationToSubaccounts } from './integration-to-subaccounts.schema';
 
 export const integrations = pgTable(
   'integrations',
@@ -27,3 +29,7 @@ export const integrations = pgTable(
     }),
   ],
 );
+
+export const integrationsRelations = relations(integrations, ({ many }) => ({
+  links: many(integrationToSubaccounts),
+}));

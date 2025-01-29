@@ -1,4 +1,7 @@
-import { IntegrationCardActions } from '@/app/dashboard/integrations/_components/IntegrationCardActions';
+import { Loader } from 'lucide-react';
+import Link from 'next/link';
+import { Suspense } from 'react';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,6 +23,9 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/cn';
 import { Integration } from '@/lib/types/integrations.types';
+
+import { IntegrationCardActions } from './IntegrationCardActions';
+import { LinkIntegrationDialog } from './LinkIntegrationDialog';
 
 const statusColor = {
   unconfirmed: 'bg-amber-500',
@@ -67,14 +73,40 @@ export function IntegrationCard({ integration }: IntegrationCardProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {integration.accounts.map((account) => (
-                <TableRow key={account.id}>
-                  <TableCell>{account.name || account.iban}</TableCell>
-                  <TableCell>{account.iban}</TableCell>
-                  <TableCell>{account.currency}</TableCell>
-                  <TableCell>Unlinked</TableCell>
-                </TableRow>
-              ))}
+              {integration.accounts.map((account) => {
+                const link = integration.links.find(
+                  (link) => link.integrationAccountId === account.id,
+                );
+
+                return (
+                  <TableRow key={account.id}>
+                    <TableCell>{account.name || account.iban}</TableCell>
+                    <TableCell>{account.iban}</TableCell>
+                    <TableCell className="uppercase">{account.currency}</TableCell>
+
+                    <TableCell>
+                      {link ? (
+                        <p>
+                          Linked to{' '}
+                          <Link
+                            href={`/dashboard/accounts/${link.subaccount.accountId}`}
+                            className="hover:underline"
+                          >
+                            {link.subaccount.name}
+                          </Link>
+                        </p>
+                      ) : (
+                        <Suspense fallback={<Loader />}>
+                          <LinkIntegrationDialog
+                            integration={integration}
+                            integrationAccountId={account.id}
+                          />
+                        </Suspense>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         ) : (
@@ -91,7 +123,9 @@ export function IntegrationCard({ integration }: IntegrationCardProps) {
         )}
       </CardContent>
       <CardFooter>
-        <IntegrationCardActions integration={integration} />
+        <Suspense>
+          <IntegrationCardActions integration={integration} />
+        </Suspense>
       </CardFooter>
     </Card>
   );

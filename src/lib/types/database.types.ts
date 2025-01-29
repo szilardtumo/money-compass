@@ -78,6 +78,42 @@ export type Database = {
           },
         ];
       };
+      integration_to_subaccounts: {
+        Row: {
+          created_at: string;
+          integration_account_id: string;
+          integration_id: string;
+          subaccount_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          integration_account_id: string;
+          integration_id: string;
+          subaccount_id: string;
+        };
+        Update: {
+          created_at?: string;
+          integration_account_id?: string;
+          integration_id?: string;
+          subaccount_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'integration_to_subaccounts_integration_id_integrations_id_fk';
+            columns: ['integration_id'];
+            isOneToOne: false;
+            referencedRelation: 'integrations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'integration_to_subaccounts_subaccount_id_subaccounts_id_fk';
+            columns: ['subaccount_id'];
+            isOneToOne: true;
+            referencedRelation: 'subaccounts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       integrations: {
         Row: {
           created_at: string;

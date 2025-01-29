@@ -44,7 +44,7 @@ const getGocardlessAccountDetails = async (
     name: account.displayName || account.name,
     ownerName: account.ownerName,
     iban: account.iban,
-    currency: account.currency,
+    currency: account.currency.toLowerCase(),
   };
 };
 
@@ -55,7 +55,11 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
   const db = await getDb(ctx.supabaseToken);
 
   const [integrations, requisitions, institutions] = await Promise.all([
-    db.rls((tx) => tx.query.integrations.findMany()),
+    db.rls((tx) =>
+      tx.query.integrations.findMany({
+        with: { links: { with: { subaccount: { with: { account: true } } } } },
+      }),
+    ),
     gocardlessApi.getRequisitions(),
     gocardlessApi.getInstitutions(),
   ]);
@@ -96,6 +100,15 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
         logoUrl: institution?.logo,
       },
       accounts,
+      links: integration.links.map((link) => ({
+        integrationAccountId: link.integrationAccountId,
+        subaccount: {
+          id: link.subaccountId,
+          name: `${link.subaccount.name} (${link.subaccount.account.name})`,
+          accountId: link.subaccount.accountId,
+          originalCurrency: link.subaccount.currency,
+        },
+      })),
     } satisfies Integration;
   });
 
