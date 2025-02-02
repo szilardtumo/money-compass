@@ -1,27 +1,29 @@
 'use server';
 
-import { revalidateTag } from '@/lib/cache';
-import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
-import { ActionResponse } from '@/lib/types/transport.types';
+import { revalidateTag } from 'next/cache';
+import { z } from 'zod';
 
-interface UpdateProfileParams {
-  mainCurrency: string;
-}
+import { actionClient } from '@/lib/safe-action';
+import { getDb, schema } from '@/server/db';
 
-export async function updateProfile(params: UpdateProfileParams): Promise<ActionResponse> {
-  const supabase = await createWritableServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export const updateProfile = actionClient
+  .schema(
+    z.object({
+      mainCurrency: z.string().length(3).toLowerCase(),
+    }),
+  )
+  .action(async ({ parsedInput }) => {
+    const db = await getDb();
 
-  const { error } = await supabase
-    .from('profiles')
-    .upsert({ id: user!.id, main_currency: params.mainCurrency });
+    await db.rls(async (tx) => {
+      await tx
+        .insert(schema.profiles)
+        .values({ mainCurrency: parsedInput.mainCurrency })
+        .onConflictDoUpdate({
+          target: schema.profiles.id,
+          set: { mainCurrency: parsedInput.mainCurrency },
+        });
+    });
 
-  if (error) {
-    return { success: false, error: { code: error.code, message: error.message } };
-  }
-
-  revalidateTag({ tag: 'profiles', userId: user!.id });
-  return { success: true };
-}
+    revalidateTag('profiles');
+  });
