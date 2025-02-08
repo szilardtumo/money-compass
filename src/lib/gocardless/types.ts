@@ -12,8 +12,9 @@ export interface GocardlessRequisition {
   redirect_immediate: boolean;
 }
 
-export interface GetAccountBalancesResponse {
-  balances: { balanceAmount: { amount: string; currency: string } }[];
+export interface GocardlessAmount {
+  amount: string;
+  currency: string;
 }
 
 export interface GocardlessAccountDetails {
@@ -26,24 +27,22 @@ export interface GocardlessAccountDetails {
   displayName?: string;
 }
 
-export interface TransactionResponse {
+export interface GocardlessTransaction {
   transactionId: string;
-  bookingDateTime: string;
-  transactionAmount: {
-    amount: string;
-    currency: string;
-  };
+  transactionAmount: GocardlessAmount;
+  bookingDate?: string;
+  bookingDateTime?: string;
+  valueDate?: string;
+  valueDateTime?: string;
   debtorName?: string;
   creditorName?: string;
   remittanceInformationUnstructured?: string;
   remittanceInformationUnstructuredArray?: string[];
-}
-
-export interface GetAccountTransactionsResponse {
-  transactions: {
-    booked: TransactionResponse[];
-    pending: TransactionResponse[];
-  };
+  remittanceInformationStructured?: string;
+  remittanceInformationStructuredArray?: string[];
+  additionalInformation?: string;
+  bankTransactionCode?: string;
+  proprietaryBankTransactionCode?: string;
 }
 
 export interface GocardlessError {
@@ -51,7 +50,9 @@ export interface GocardlessError {
   response: {
     data: {
       status_code: number;
-      reference: {
+      summary?: string;
+      detail?: string;
+      reference?: {
         summary: string;
         detail: string;
       };

@@ -2,7 +2,12 @@ import { GocardlessInstitution } from '@/lib/types/integrations.types';
 import { uniqueBy } from '@/lib/utils/unique-by';
 
 import { getGocardlessClient } from './client';
-import { GocardlessAccountDetails, GocardlessRequisition } from './response.types';
+import {
+  GocardlessAmount,
+  GocardlessAccountDetails,
+  GocardlessRequisition,
+  GocardlessTransaction,
+} from './types';
 
 const gocardlessCountries = ['HU', 'RO'];
 
@@ -61,13 +66,50 @@ async function deleteRequisition(id: string): Promise<void> {
   await gocardlessClient.requisition.deleteRequisition(id);
 }
 
+interface GetAccountDetailsResponse {
+  account: GocardlessAccountDetails;
+}
+
 async function getAccountDetails(id: string): Promise<GocardlessAccountDetails | undefined> {
   const gocardlessClient = await getGocardlessClient();
   const response = (await gocardlessClient.account(id).getDetails()) as
-    | { account: GocardlessAccountDetails }
+    | GetAccountDetailsResponse
     | undefined;
 
   return response?.account;
+}
+
+interface GetAccountBalanceResponse {
+  balances: {
+    balanceAmount: GocardlessAmount;
+    balanceType: string;
+    referenceDate: string;
+  }[];
+}
+
+async function getAccountBalance(id: string): Promise<GocardlessAmount | undefined> {
+  const gocardlessClient = await getGocardlessClient();
+  const response = (await gocardlessClient.account(id).getBalances()) as
+    | GetAccountBalanceResponse
+    | undefined;
+
+  return response?.balances[0].balanceAmount;
+}
+
+interface GetTransactionsResponse {
+  transactions: {
+    booked: GocardlessTransaction[];
+    pending?: GocardlessTransaction[];
+  };
+}
+
+async function getTransactions(accountId: string): Promise<GocardlessTransaction[]> {
+  const gocardlessClient = await getGocardlessClient();
+  const response = (await gocardlessClient
+    .account(accountId)
+    .getTransactions()) as GetTransactionsResponse;
+
+  return [...response.transactions.booked, ...(response.transactions.pending ?? [])];
 }
 
 export const gocardlessApi = {
@@ -77,4 +119,6 @@ export const gocardlessApi = {
   createRequisition,
   deleteRequisition,
   getAccountDetails,
+  getAccountBalance,
+  getTransactions,
 };

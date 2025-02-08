@@ -1,5 +1,5 @@
 import { and, eq, relations, sql } from 'drizzle-orm';
-import { pgPolicy, pgTable, timestamp, uuid, primaryKey, text } from 'drizzle-orm/pg-core';
+import { pgPolicy, pgTable, timestamp, uuid, primaryKey, text, integer } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { integrations } from './integrations.schema';
@@ -17,6 +17,8 @@ export const integrationToSubaccounts = pgTable(
       .unique()
       .references(() => subaccounts.id, { onDelete: 'cascade' }),
     integrationAccountId: text().unique().notNull(),
+    lastSyncedAt: timestamp({ withTimezone: true }),
+    syncCount: integer().notNull().default(0),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

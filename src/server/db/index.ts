@@ -92,6 +92,9 @@ async function getAdminDb() {
   };
 }
 
+export type DbClient = ReturnType<typeof getDb>;
+export type DbClientTx = Parameters<Parameters<typeof drizzleClient.transaction>[0]>[0];
+
 const cachedGetAdminDb = cache(getAdminDb);
 const cachedGetDb = cache(getDb);
 

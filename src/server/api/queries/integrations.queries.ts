@@ -40,7 +40,7 @@ const getGocardlessAccountDetails = async (
   }
 
   return {
-    id: account.resourceId,
+    id,
     name: account.displayName || account.name,
     ownerName: account.ownerName,
     iban: account.iban,
