@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 
+import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
 import { createServerAdminSupabaseClient } from '@/lib/supabase/server-admin';
 import { apiQueries } from '@/server/api/queries';
 
@@ -59,5 +60,6 @@ export async function GET(request: NextRequest) {
     return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 
+  revalidateTag({ tag: CACHE_TAGS.currencies });
   return Response.json({ success: true, exchangeRates });
 }

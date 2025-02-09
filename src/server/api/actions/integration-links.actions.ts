@@ -288,12 +288,13 @@ export async function syncIntegrationLink(subaccountId: string): Promise<ActionR
 
 /**
  * Syncs all integrations' transactions.
+ *
+ * This bypasses RLS and should only be used in cron jobs.
  */
-export async function syncAllIntegrations(): Promise<ActionResponse> {
+export async function adminSyncAllIntegrations(): Promise<ActionResponse> {
   const db = await getDb();
-  const userId = await getUserId();
 
-  await db.rls(async (tx) => {
+  await db.admin.transaction(async (tx) => {
     // Select all integrations which have at least one link to a subaccount
     const integrations = await tx.query.integrations.findMany({
       with: { links: { with: { subaccount: true } } },
@@ -313,8 +314,8 @@ export async function syncAllIntegrations(): Promise<ActionResponse> {
     );
   });
 
-  revalidateTag({ tag: CACHE_TAGS.integrations, userId });
-  revalidateTag({ tag: CACHE_TAGS.transactions, userId });
-  revalidateTag({ tag: CACHE_TAGS.accounts, userId });
+  revalidateTag({ tag: CACHE_TAGS.integrations });
+  revalidateTag({ tag: CACHE_TAGS.transactions });
+  revalidateTag({ tag: CACHE_TAGS.accounts });
   return { success: true };
 }
