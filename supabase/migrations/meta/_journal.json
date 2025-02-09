@@ -40,15 +40,8 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1735134611491,
-      "tag": "20241225135011_fine_zaladane",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1738136793980,
-      "tag": "20250129074633_previous_mysterio",
+      "when": 1739123082409,
+      "tag": "20250209174442_tough_red_hulk",
       "breakpoints": true
     }
   ]

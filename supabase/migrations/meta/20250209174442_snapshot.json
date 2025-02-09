@@ -1,6 +1,6 @@
 {
-  "id": "f92832ba-e37b-4131-ac9d-07a0fbdcdfe5",
-  "prevId": "3ffe770b-f83c-4f68-919a-4d65674c7419",
+  "id": "de6f8ffb-31fa-4b68-8685-7e841a7070e2",
+  "prevId": "8f1eead4-9abc-4d7c-9b37-0010fb791370",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -388,10 +388,23 @@
         },
         "type": {
           "name": "type",
-          "type": "transaction_type",
-          "typeSchema": "public",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "counterparty_name": {
+          "name": "counterparty_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "data_source": {
+          "name": "data_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
         },
         "subaccount_id": {
           "name": "subaccount_id",
@@ -586,10 +599,17 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.integration_to_subaccounts": {
-      "name": "integration_to_subaccounts",
+    "public.integration_links": {
+      "name": "integration_links",
       "schema": "",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
         "integration_id": {
           "name": "integration_id",
           "type": "uuid",
@@ -608,6 +628,19 @@
           "primaryKey": false,
           "notNull": true
         },
+        "last_synced_at": {
+          "name": "last_synced_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sync_count": {
+          "name": "sync_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -618,18 +651,18 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "integration_to_subaccounts_integration_id_integrations_id_fk": {
-          "name": "integration_to_subaccounts_integration_id_integrations_id_fk",
-          "tableFrom": "integration_to_subaccounts",
+        "integration_links_integration_id_integrations_id_fk": {
+          "name": "integration_links_integration_id_integrations_id_fk",
+          "tableFrom": "integration_links",
           "tableTo": "integrations",
           "columnsFrom": ["integration_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "integration_to_subaccounts_subaccount_id_subaccounts_id_fk": {
-          "name": "integration_to_subaccounts_subaccount_id_subaccounts_id_fk",
-          "tableFrom": "integration_to_subaccounts",
+        "integration_links_subaccount_id_subaccounts_id_fk": {
+          "name": "integration_links_subaccount_id_subaccounts_id_fk",
+          "tableFrom": "integration_links",
           "tableTo": "subaccounts",
           "columnsFrom": ["subaccount_id"],
           "columnsTo": ["id"],
@@ -637,32 +670,22 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "integration_to_subaccounts_integration_id_subaccount_id_pk": {
-          "name": "integration_to_subaccounts_integration_id_subaccount_id_pk",
-          "columns": ["integration_id", "subaccount_id"]
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "integration_to_subaccounts_subaccountId_unique": {
-          "name": "integration_to_subaccounts_subaccountId_unique",
+        "integration_links_subaccountId_unique": {
+          "name": "integration_links_subaccountId_unique",
           "nullsNotDistinct": false,
           "columns": ["subaccount_id"]
-        },
-        "integration_to_subaccounts_integrationAccountId_unique": {
-          "name": "integration_to_subaccounts_integrationAccountId_unique",
-          "nullsNotDistinct": false,
-          "columns": ["integration_account_id"]
         }
       },
       "policies": {
-        "integration_to_subaccounts_allow_all_for_owner_policy": {
-          "name": "integration_to_subaccounts_allow_all_for_owner_policy",
+        "integration_links_allow_all_for_owner_policy": {
+          "name": "integration_links_allow_all_for_owner_policy",
           "as": "PERMISSIVE",
           "for": "ALL",
           "to": ["authenticated"],
-          "using": "EXISTS (SELECT 1 FROM \"integrations\" WHERE (\"integrations\".\"id\" = \"integration_to_subaccounts\".\"integration_id\" and \"integrations\".\"user_id\" = (select auth.uid())))",
-          "withCheck": "EXISTS (SELECT 1 FROM \"integrations\" WHERE (\"integrations\".\"id\" = \"integration_to_subaccounts\".\"integration_id\" and \"integrations\".\"user_id\" = (select auth.uid())))"
+          "using": "EXISTS (SELECT 1 FROM \"integrations\" WHERE (\"integrations\".\"id\" = \"integration_links\".\"integration_id\" and \"integrations\".\"user_id\" = (select auth.uid())))",
+          "withCheck": "EXISTS (SELECT 1 FROM \"integrations\" WHERE (\"integrations\".\"id\" = \"integration_links\".\"integration_id\" and \"integrations\".\"user_id\" = (select auth.uid())))"
         }
       },
       "checkConstraints": {},
@@ -674,11 +697,6 @@
       "name": "account_category",
       "schema": "public",
       "values": ["checking", "investment"]
-    },
-    "public.transaction_type": {
-      "name": "transaction_type",
-      "schema": "public",
-      "values": ["card_payment", "transfer", "exchange", "topup", "correction", "other"]
     }
   },
   "schemas": {},
