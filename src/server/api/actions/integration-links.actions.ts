@@ -152,6 +152,7 @@ function _parseGocardlessTransactions(
           transaction.proprietaryBankTransactionCode,
         ]),
         counterpartyName: transaction.debtorName || transaction.creditorName,
+        dataSource: 'integration',
         subaccountId: subaccount.id,
       });
 
@@ -250,13 +251,13 @@ async function _syncIntegrationLink(
   }
 }
 
-export async function syncIntegrationLink(subaccountId: string): Promise<ActionResponse> {
+export async function syncIntegrationLink(linkId: string): Promise<ActionResponse> {
   const db = await getDb();
   const userId = await getUserId();
 
-  await db.rls(async (tx) => {
+  const response = await db.rls(async (tx): Promise<ActionResponse> => {
     const link = await tx.query.integrationLinks.findFirst({
-      where: (table, { eq }) => eq(table.subaccountId, subaccountId),
+      where: (table, { eq }) => eq(table.id, linkId),
       with: { subaccount: true },
     });
 
@@ -278,12 +279,14 @@ export async function syncIntegrationLink(subaccountId: string): Promise<ActionR
         },
       };
     }
+
+    return { success: true };
   });
 
   revalidateTag({ tag: CACHE_TAGS.transactions, userId });
   revalidateTag({ tag: CACHE_TAGS.integrations, userId });
   revalidateTag({ tag: CACHE_TAGS.accounts, userId });
-  return { success: true };
+  return response;
 }
 
 /**

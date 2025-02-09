@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, isToday } from 'date-fns';
 import { Loader } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -104,11 +104,13 @@ export function IntegrationCard({ integration }: IntegrationCardProps) {
                             </Link>
                           </p>
                           <p className="text-muted-foreground text-sm">
-                            Last synced{' '}
                             {link.lastSyncedAt
-                              ? formatDistanceToNow(link.lastSyncedAt, { addSuffix: true })
-                              : 'never'}{' '}
-                            ({link.syncCount}/{DAILY_SYNC_COUNT_LIMIT})
+                              ? `Last synced ${formatDistanceToNow(link.lastSyncedAt, {
+                                  addSuffix: true,
+                                })} (${
+                                  isToday(link.lastSyncedAt) ? link.syncCount : 0
+                                }/${DAILY_SYNC_COUNT_LIMIT})`
+                              : 'Never synced'}
                           </p>
                         </>
                       ) : (
