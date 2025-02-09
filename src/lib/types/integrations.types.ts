@@ -22,7 +22,10 @@ export interface Integration {
     name?: string;
   }[];
   links: {
+    id: string;
     integrationAccountId: string;
+    lastSyncedAt?: Date;
+    syncCount: number;
     subaccount: Omit<Subaccount, 'mainCurrency' | 'balance'>;
   }[];
 }

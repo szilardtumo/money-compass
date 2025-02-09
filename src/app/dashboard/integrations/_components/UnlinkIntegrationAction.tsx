@@ -16,28 +16,20 @@ import {
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Integration } from '@/lib/types/integrations.types';
 import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
 interface UnlinkIntegrationActionProps {
-  integration: Integration;
-  integrationAccountId: string;
+  linkId: string;
 }
 
-export function UnlinkIntegrationAction({
-  integration,
-  integrationAccountId,
-}: UnlinkIntegrationActionProps) {
+export function UnlinkIntegrationAction({ linkId }: UnlinkIntegrationActionProps) {
   const [isPending, setIsPending] = useState(false);
 
   const handleUnlink = useCallback(async () => {
     setIsPending(true);
 
-    const promise = apiActions.integrations.unlinkIntegration({
-      integrationId: integration.id,
-      integrationAccountId,
-    });
+    const promise = apiActions.integrationLinks.unlinkIntegration(linkId);
 
     toast.promise(createToastPromise(promise), {
       loading: 'Unlinking integration...',
@@ -48,7 +40,7 @@ export function UnlinkIntegrationAction({
     await promise;
 
     setIsPending(false);
-  }, [integration.id, integrationAccountId]);
+  }, [linkId]);
 
   return (
     <AlertDialog>

@@ -1,4 +1,5 @@
 import * as accounts from './accounts.actions';
+import * as integrationLinks from './integration-links.actions';
 import * as integrations from './integrations.actions';
 import * as profiles from './profiles.actions';
 import * as transactions from './transactions.actions';
@@ -10,4 +11,5 @@ export const apiActions = {
   profiles,
   transactions,
   integrations,
+  integrationLinks,
 } satisfies ApiActions;

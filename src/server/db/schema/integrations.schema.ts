@@ -4,7 +4,7 @@ import { authenticatedRole, authUsers } from 'drizzle-orm/supabase';
 
 import { authUidDefault, authUid } from '@/server/db/schema/utils';
 
-import { integrationToSubaccounts } from './integration-to-subaccounts.schema';
+import { integrationLinks } from './integration-links.schema';
 
 export const integrations = pgTable(
   'integrations',
@@ -31,5 +31,5 @@ export const integrations = pgTable(
 );
 
 export const integrationsRelations = relations(integrations, ({ many }) => ({
-  links: many(integrationToSubaccounts),
+  links: many(integrationLinks),
 }));

@@ -4,7 +4,7 @@ import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { accounts } from './accounts.schema';
 import { currencies } from './currencies.schema';
-import { integrationToSubaccounts } from './integration-to-subaccounts.schema';
+import { integrationLinks } from './integration-links.schema';
 import { transactions } from './transactions.schema';
 import { authUid } from './utils';
 
@@ -37,5 +37,5 @@ export const subaccountsRelations = relations(subaccounts, ({ many, one }) => ({
   account: one(accounts, { fields: [subaccounts.accountId], references: [accounts.id] }),
   currency: one(currencies, { fields: [subaccounts.currency], references: [currencies.id] }),
   transactions: many(transactions),
-  integrations: one(integrationToSubaccounts),
+  integrationLinks: one(integrationLinks),
 }));

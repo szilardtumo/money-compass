@@ -1,8 +1,8 @@
+import { formatDistanceToNow } from 'date-fns';
 import { Loader } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
-import { UnlinkIntegrationAction } from '@/app/dashboard/integrations/_components/UnlinkIntegrationAction';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -23,10 +23,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/cn';
+import { DAILY_SYNC_COUNT_LIMIT } from '@/lib/constants/integrations';
 import { Integration } from '@/lib/types/integrations.types';
 
 import { IntegrationCardActions } from './IntegrationCardActions';
 import { LinkIntegrationDialog } from './LinkIntegrationDialog';
+import { SynchronizeIntegrationLinkAction } from './SynchronizeIntegrationLinkAction';
+import { UnlinkIntegrationAction } from './UnlinkIntegrationAction';
 
 const statusColor = {
   unconfirmed: 'bg-amber-500',
@@ -90,15 +93,24 @@ export function IntegrationCard({ integration }: IntegrationCardProps) {
 
                     <TableCell>
                       {link ? (
-                        <p>
-                          Linked to{' '}
-                          <Link
-                            href={`/dashboard/accounts/${link.subaccount.accountId}`}
-                            className="hover:underline"
-                          >
-                            {link.subaccount.name}
-                          </Link>
-                        </p>
+                        <>
+                          <p>
+                            Linked to{' '}
+                            <Link
+                              href={`/dashboard/accounts/${link.subaccount.accountId}`}
+                              className="hover:underline"
+                            >
+                              {link.subaccount.name}
+                            </Link>
+                          </p>
+                          <p className="text-muted-foreground text-sm">
+                            Last synced{' '}
+                            {link.lastSyncedAt
+                              ? formatDistanceToNow(link.lastSyncedAt, { addSuffix: true })
+                              : 'never'}{' '}
+                            ({link.syncCount}/{DAILY_SYNC_COUNT_LIMIT})
+                          </p>
+                        </>
                       ) : (
                         <p className="italic">Unlinked</p>
                       )}
@@ -106,10 +118,10 @@ export function IntegrationCard({ integration }: IntegrationCardProps) {
                     <TableCell className="text-end">
                       <Suspense fallback={<Loader />}>
                         {link ? (
-                          <UnlinkIntegrationAction
-                            integration={integration}
-                            integrationAccountId={account.id}
-                          />
+                          <div className="flex justify-end gap-2">
+                            <SynchronizeIntegrationLinkAction linkId={link.id} />
+                            <UnlinkIntegrationAction linkId={link.id} />
+                          </div>
                         ) : (
                           <LinkIntegrationDialog
                             integration={integration}

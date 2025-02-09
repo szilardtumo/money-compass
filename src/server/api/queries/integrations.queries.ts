@@ -101,7 +101,10 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
       },
       accounts,
       links: integration.links.map((link) => ({
+        id: link.id,
         integrationAccountId: link.integrationAccountId,
+        lastSyncedAt: link.lastSyncedAt ?? undefined,
+        syncCount: link.syncCount,
         subaccount: {
           id: link.subaccountId,
           name: `${link.subaccount.name} (${link.subaccount.account.name})`,

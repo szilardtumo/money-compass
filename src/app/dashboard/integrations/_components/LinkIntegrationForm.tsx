@@ -55,7 +55,7 @@ export function LinkIntegrationForm({
   });
 
   async function onSubmit({ subaccountId }: FormFields) {
-    const promise = apiActions.integrations.linkIntegration({
+    const promise = apiActions.integrationLinks.linkIntegration({
       integrationId: integration.id,
       integrationAccountId,
       subaccountId,
