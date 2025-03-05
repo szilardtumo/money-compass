@@ -147,14 +147,20 @@ export async function deleteIntegration(id: string): Promise<ActionResponse> {
 
   try {
     await db.rls(async (tx) => {
-      const [deletedIntegration] = await tx
-        .delete(schema.integrations)
-        .where(eq(schema.integrations.id, id))
-        .returning();
+      // First, get the integration details
+      const integration = await tx.query.integrations.findFirst({
+        where: (table, { eq }) => eq(table.id, id),
+      });
 
-      if (deletedIntegration) {
-        await gocardlessApi.deleteRequisition(deletedIntegration.externalId);
+      if (!integration) {
+        return { success: true };
       }
+
+      // Delete the integration from GoCardless
+      await gocardlessApi.deleteRequisition(integration.externalId);
+
+      // Then delete the integration from the database
+      await tx.delete(schema.integrations).where(eq(schema.integrations.id, id));
     });
 
     revalidateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
