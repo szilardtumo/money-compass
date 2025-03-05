@@ -46,7 +46,7 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
-      'no-console': 'warn',
+      'no-console': ['error', { allow: ['warn', 'error'] }],
     },
   },
   // react, next

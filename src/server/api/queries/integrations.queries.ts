@@ -33,19 +33,24 @@ const getGocardlessAccountDetails = async (
   'use cache';
   cacheLife('days');
 
-  const account = await gocardlessApi.getAccountDetails(id);
+  try {
+    const account = await gocardlessApi.getAccountDetails(id);
 
-  if (!account) {
+    if (!account) {
+      return undefined;
+    }
+
+    return {
+      id,
+      name: account.displayName || account.name,
+      ownerName: account.ownerName,
+      iban: account.iban,
+      currency: account.currency.toLowerCase(),
+    };
+  } catch (error) {
+    console.error('Gocardless error:', error);
     return undefined;
   }
-
-  return {
-    id,
-    name: account.displayName || account.name,
-    ownerName: account.ownerName,
-    iban: account.iban,
-    currency: account.currency.toLowerCase(),
-  };
 };
 
 export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(async ({ ctx }) => {

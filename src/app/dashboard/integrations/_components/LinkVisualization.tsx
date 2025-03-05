@@ -29,7 +29,7 @@ function LinkPart({ ref, info }: { info?: LinkPart; ref: React.RefObject<HTMLDiv
         <>
           <Avatar className="mb-2">
             <AvatarImage src={info.logoUrl} />
-            <AvatarFallback>{info.accountName[0]}</AvatarFallback>
+            <AvatarFallback aria-hidden>{info.accountName[0]}</AvatarFallback>
           </Avatar>
           <p className="font-semibold w-full truncate">{info.accountName}</p>
           <p className="text-muted-foreground w-full truncate">{info.subaccountName}</p>

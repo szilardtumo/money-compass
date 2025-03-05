@@ -12,7 +12,7 @@ export const integrations = pgTable(
     id: uuid().notNull().defaultRandom().primaryKey(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     name: text().notNull(),
-    externalId: text().notNull(),
+    externalId: text().notNull().unique(),
     userId: uuid()
       .notNull()
       .default(authUidDefault)

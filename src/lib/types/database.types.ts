@@ -78,35 +78,44 @@ export type Database = {
           },
         ];
       };
-      integration_to_subaccounts: {
+      integration_links: {
         Row: {
           created_at: string;
+          id: string;
           integration_account_id: string;
           integration_id: string;
+          last_synced_at: string | null;
           subaccount_id: string;
+          sync_count: number;
         };
         Insert: {
           created_at?: string;
+          id?: string;
           integration_account_id: string;
           integration_id: string;
+          last_synced_at?: string | null;
           subaccount_id: string;
+          sync_count?: number;
         };
         Update: {
           created_at?: string;
+          id?: string;
           integration_account_id?: string;
           integration_id?: string;
+          last_synced_at?: string | null;
           subaccount_id?: string;
+          sync_count?: number;
         };
         Relationships: [
           {
-            foreignKeyName: 'integration_to_subaccounts_integration_id_integrations_id_fk';
+            foreignKeyName: 'integration_links_integration_id_integrations_id_fk';
             columns: ['integration_id'];
             isOneToOne: false;
             referencedRelation: 'integrations';
             referencedColumns: ['id'];
           },
           {
-            foreignKeyName: 'integration_to_subaccounts_subaccount_id_subaccounts_id_fk';
+            foreignKeyName: 'integration_links_subaccount_id_subaccounts_id_fk';
             columns: ['subaccount_id'];
             isOneToOne: true;
             referencedRelation: 'subaccounts';
@@ -205,42 +214,48 @@ export type Database = {
           amount: number;
           balance: number;
           completed_date: string;
+          counterparty_name: string;
           created_at: string;
+          data_source: string;
           description: string;
           external_ref: string | null;
           id: string;
           sequence: number;
           started_date: string;
           subaccount_id: string;
-          type: Database['public']['Enums']['transaction_type'];
+          type: string;
           user_id: string;
         };
         Insert: {
           amount: number;
           balance: number;
           completed_date: string;
+          counterparty_name?: string;
           created_at?: string;
+          data_source?: string;
           description?: string;
           external_ref?: string | null;
           id?: string;
           sequence?: never;
           started_date: string;
           subaccount_id: string;
-          type: Database['public']['Enums']['transaction_type'];
+          type: string;
           user_id?: string;
         };
         Update: {
           amount?: number;
           balance?: number;
           completed_date?: string;
+          counterparty_name?: string;
           created_at?: string;
+          data_source?: string;
           description?: string;
           external_ref?: string | null;
           id?: string;
           sequence?: never;
           started_date?: string;
           subaccount_id?: string;
-          type?: Database['public']['Enums']['transaction_type'];
+          type?: string;
           user_id?: string;
         };
         Relationships: [
@@ -1020,7 +1035,6 @@ export type Database = {
     };
     Enums: {
       account_category: 'checking' | 'investment';
-      transaction_type: 'card_payment' | 'transfer' | 'exchange' | 'topup' | 'correction' | 'other';
     };
     CompositeTypes: {
       [_ in never]: never;

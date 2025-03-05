@@ -93,7 +93,7 @@ async function getAccountBalance(id: string): Promise<GocardlessAmount | undefin
     | GetAccountBalanceResponse
     | undefined;
 
-  return response?.balances[0].balanceAmount;
+  return response?.balances?.[0].balanceAmount;
 }
 
 interface GetTransactionsResponse {

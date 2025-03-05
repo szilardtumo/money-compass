@@ -41,10 +41,7 @@ export async function createGocardlessIntegration(
     return { success: true, data: { confirmationUrl: requisition.link } };
   } catch (err) {
     if (isGocardlessError(err)) {
-      // eslint-disable-next-line no-console
-      console.error(
-        `Gocardless error: ${err.code}: ${err.response.data.detail ?? err.response.data.reference?.detail}`,
-      );
+      console.error('Gocardless error:', err);
       return {
         success: false,
         error: {
@@ -120,10 +117,7 @@ export async function renewGocardlessIntegration(
     return { success: true, data: { confirmationUrl: newRequisition.link } };
   } catch (err) {
     if (isGocardlessError(err)) {
-      // eslint-disable-next-line no-console
-      console.error(
-        `Gocardless error: ${err.code}: ${err.response.data.detail ?? err.response.data.reference?.detail}`,
-      );
+      console.error('Gocardless error:', err);
       return {
         success: false,
         error: {
@@ -150,17 +144,36 @@ export async function renewGocardlessIntegration(
  */
 export async function deleteIntegration(id: string): Promise<ActionResponse> {
   const db = await getDb();
-  await db.rls(async (tx) => {
-    const [deletedIntegration] = await tx
-      .delete(schema.integrations)
-      .where(eq(schema.integrations.id, id))
-      .returning();
 
-    if (deletedIntegration) {
-      await gocardlessApi.deleteRequisition(deletedIntegration.externalId);
+  try {
+    await db.rls(async (tx) => {
+      const [deletedIntegration] = await tx
+        .delete(schema.integrations)
+        .where(eq(schema.integrations.id, id))
+        .returning();
+
+      if (deletedIntegration) {
+        await gocardlessApi.deleteRequisition(deletedIntegration.externalId);
+      }
+    });
+
+    revalidateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
+    return { success: true };
+  } catch (err) {
+    if (isGocardlessError(err)) {
+      console.error('Gocardless error:', err);
+      return {
+        success: false,
+        error: {
+          code: err.code,
+          message: err.response.data.detail ?? err.response.data.reference?.detail ?? err.code,
+        },
+      };
     }
-  });
 
-  revalidateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
-  return { success: true };
+    return {
+      success: false,
+      error: { code: 'unknown', message: err instanceof Error ? err.message : '' },
+    };
+  }
 }

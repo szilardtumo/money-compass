@@ -8,7 +8,11 @@ export async function GET(request: NextRequest) {
     return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  await apiActions.integrationLinks.adminSyncAllIntegrations();
-
-  return Response.json({ success: true });
+  try {
+    await apiActions.integrationLinks.adminSyncAllIntegrations();
+    return Response.json({ success: true });
+  } catch (error) {
+    console.error('Failed to sync integrations:', error);
+    return Response.json({ success: false, error: 'Failed to sync integrations' }, { status: 500 });
+  }
 }

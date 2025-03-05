@@ -230,7 +230,6 @@ async function _syncIntegrationLink(
     }
   } catch (err) {
     if (isGocardlessError(err)) {
-      // eslint-disable-next-line no-console
       console.error(
         `Gocardless error: ${err.code}: ${err.response.data.detail ?? err.response.data.reference?.detail}`,
       );
