@@ -2,7 +2,6 @@ import { eq, relations } from 'drizzle-orm';
 import { index, integer, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
-import { transactionType } from './enums.schema';
 import { subaccounts } from './subaccounts.schema';
 import { numericCasted, authUid, authUidDefault } from './utils';
 
@@ -15,7 +14,11 @@ export const transactions = pgTable(
     startedDate: timestamp({ withTimezone: true }).notNull(),
     completedDate: timestamp({ withTimezone: true }).notNull(),
     description: text().default('').notNull(),
-    type: transactionType().notNull(),
+    type: text().notNull(),
+    counterpartyName: text().default('').notNull(),
+    dataSource: text({ enum: ['integration', 'manual'] })
+      .default('manual')
+      .notNull(),
     subaccountId: uuid()
       .notNull()
       .references(() => subaccounts.id, { onDelete: 'cascade', onUpdate: 'cascade' }),

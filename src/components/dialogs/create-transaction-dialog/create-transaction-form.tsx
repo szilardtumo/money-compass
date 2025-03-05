@@ -23,7 +23,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
 import { Account } from '@/lib/types/accounts.types';
-import { Enums } from '@/lib/types/database.types';
 import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
@@ -40,7 +39,7 @@ const transactionTypeOptions = [
   { label: 'Transfer', value: 'transfer' },
   { label: 'Exchange', value: 'exchange' },
   { label: 'Top-up', value: 'topup' },
-] satisfies { label: string; value: Enums<'transaction_type'> }[];
+] satisfies { label: string; value: string }[];
 
 const formSchema = z.object({
   account: z.string({ required_error: 'An account must be selected.' }),
@@ -77,7 +76,7 @@ export function CreateTransactionForm({
   async function onSubmit(values: FormFields) {
     const promise = apiActions.transactions.createTransaction({
       amount: values.amount,
-      type: values.type as Enums<'transaction_type'>,
+      type: values.type,
       subaccountId: selectedSubaccountId,
       description: values.description,
       date: values.date,

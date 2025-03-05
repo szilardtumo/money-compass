@@ -6,7 +6,6 @@ import { and, asc, eq, inArray, not, sql } from 'drizzle-orm';
 
 import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
 import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
-import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
@@ -23,7 +22,7 @@ import { transactions } from '@/server/db/schema';
 
 interface CreateTransactionParams {
   subaccountId: string;
-  type: Enums<'transaction_type'>;
+  type: string;
   amount: number;
   description: string;
   date: Date;
@@ -133,7 +132,7 @@ export async function createTransactions(
 }
 
 interface UpdateTransactionParams {
-  type?: Enums<'transaction_type'>;
+  type?: string;
   amount?: number;
   description?: string;
   startedDate?: Date;

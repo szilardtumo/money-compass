@@ -13,7 +13,9 @@ export const balances = pgView('balances')
       .selectDistinctOn([transactions.subaccountId], {
         subaccountId: sql<string>`"subaccount_id"`.as('subaccount_id'),
         balance: transactions.balance,
-        lastTransactionDate: sql<Date>`"started_date"`.as('started_date'),
+        lastTransactionDate: sql`"started_date"`
+          .mapWith(transactions.startedDate)
+          .as('started_date'),
       })
       .from(transactions)
       .orderBy(transactions.subaccountId, ...descTransactions()),

@@ -1,0 +1,1 @@
+ALTER TABLE "integrations" ADD CONSTRAINT "integrations_externalId_unique" UNIQUE("external_id");

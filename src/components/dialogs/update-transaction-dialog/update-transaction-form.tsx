@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
-import { Enums } from '@/lib/types/database.types';
 import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
@@ -37,7 +36,7 @@ const transactionTypeOptions = [
   { label: 'Transfer', value: 'transfer' },
   { label: 'Exchange', value: 'exchange' },
   { label: 'Top-up', value: 'topup' },
-] satisfies { label: string; value: Enums<'transaction_type'> }[];
+] satisfies { label: string; value: string }[];
 
 const formSchema = z.object({
   id: z.string().uuid(),
@@ -63,7 +62,7 @@ export function UpdateTransactionForm({
 
   async function onSubmit(values: FormFields) {
     const promise = apiActions.transactions.updateTransaction(values.id, {
-      type: values.type as Enums<'transaction_type'>,
+      type: values.type,
       amount: values.amount,
       description: values.description,
       startedDate: values.startedDate,
