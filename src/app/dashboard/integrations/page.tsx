@@ -1,7 +1,7 @@
 import { WorkflowIcon } from 'lucide-react';
 import { Suspense } from 'react';
 
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { ComponentErrorFallback, ErrorBoundary } from '@/components/ui/error-boundary';
 import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
 import {
   PlaceholderArea,
@@ -26,7 +26,7 @@ export default async function IntegrationsPage() {
 
       <PageContent>
         <IntegrationErrorToaster />
-        <ErrorBoundary>
+        <ErrorBoundary FallbackComponent={ComponentErrorFallback}>
           <div>
             <Suspense fallback={<Skeleton className="w-36 h-9" />}>
               <AddIntegrationDialog />
