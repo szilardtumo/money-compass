@@ -3,45 +3,41 @@ import 'server-only';
 import { and, asc, eq, gte, lte, sql } from 'drizzle-orm';
 
 import { CACHE_TAGS, cacheTag } from '@/lib/cache';
-import { CurrencyMapper } from '@/lib/types/currencies.types';
-import { TimeInterval } from '@/lib/types/time.types';
-import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
-import { Paginated } from '@/lib/types/transport.types';
-import { generateTimeBuckets } from '@/lib/utils/time-buckets';
-import { createAuthenticatedApiQuery } from '@/server/api/create-api-query';
+import { MissingExchangeRateError, MissingSubaccountError } from '@/lib/errors';
+import { generateTimeBuckets, TimeInterval } from '@/lib/utils/time-buckets';
 import { getDb, schema } from '@/server/db';
 import { descTransactions } from '@/server/db/query-utils';
 import { subaccounts, transactions } from '@/server/db/schema';
 
-import { getMainCurrencyWithMapper } from './currencies.queries';
+import { CurrencyMapper } from '../../../lib/types/currencies.types';
+import { Transaction, TransactionHistory } from '../../../lib/types/transactions.types';
+import { Paginated } from '../../../lib/types/transport.types';
+import { createAuthenticatedApiQuery } from '../create-api-query';
+import { getMainCurrencyWithMapper } from '../currencies/queries';
 
-interface GetTransactionsParams {
-  accountId?: string;
-  subaccountId?: string;
-  fromDate?: string;
-  toDate?: string;
-  page?: number;
-  pageSize?: number;
-}
-
-interface ParseTransactionParams {
-  mainCurrency: string;
-  mainCurrencyMapper: CurrencyMapper;
-}
-
-type DbTransactionWithCurrency = typeof transactions.$inferSelect & {
-  subaccount: typeof subaccounts.$inferSelect | null;
+type DbTransactionWithSubaccount = typeof transactions.$inferSelect & {
+  subaccount: typeof subaccounts.$inferSelect;
 };
 
-function parseTransaction(
-  data: DbTransactionWithCurrency,
-  { mainCurrency, mainCurrencyMapper }: ParseTransactionParams,
-): Transaction | undefined {
-  if (!data.subaccount) {
-    return undefined;
-  }
-
+/**
+ * Maps a database transaction to the Transaction domain model with currency conversion
+ *
+ * @param data The database transaction with its subaccount
+ * @param mainCurrency The main currency of the user
+ * @param mainCurrencyMapper The mapper of the main currency
+ * @returns The mapped Transaction
+ */
+const mapTransactionData = (
+  data: DbTransactionWithSubaccount,
+  mainCurrency: string,
+  mainCurrencyMapper: CurrencyMapper,
+): Transaction => {
   const originalCurrency = data.subaccount.currency;
+  const exchangeRate = mainCurrencyMapper[originalCurrency];
+
+  if (!exchangeRate) {
+    throw new MissingExchangeRateError(originalCurrency);
+  }
 
   return {
     id: data.id,
@@ -49,12 +45,12 @@ function parseTransaction(
     subaccountId: data.subaccountId,
     type: data.type,
     amount: {
-      originalValue: Number(data.amount),
-      mainCurrencyValue: Number(data.amount) * mainCurrencyMapper[originalCurrency],
+      originalValue: data.amount,
+      mainCurrencyValue: data.amount * exchangeRate,
     },
     balance: {
-      originalValue: Number(data.balance),
-      mainCurrencyValue: Number(data.balance) * mainCurrencyMapper[originalCurrency],
+      originalValue: data.balance,
+      mainCurrencyValue: data.balance * exchangeRate,
     },
     originalCurrency,
     mainCurrency,
@@ -62,21 +58,44 @@ function parseTransaction(
     description: data.description,
     createdAt: data.createdAt,
   };
-}
+};
 
+/**
+ * Returns a paginated list of transactions with optional filtering
+ *
+ * The transactions are converted to the user's main currency for consistent display
+ *
+ * @param params The parameters for fetching transactions
+ * @returns The paginated list of transactions
+ */
 export const getTransactions = createAuthenticatedApiQuery<
-  GetTransactionsParams | void,
+  {
+    /** The ID of the account to filter by */
+    accountId?: string;
+    /** The ID of the subaccount to filter by */
+    subaccountId?: string;
+    /** The start date of the date range to filter by */
+    fromDate?: string;
+    /** The end date of the date range to filter by */
+    toDate?: string;
+    /** The page number to fetch */
+    page?: number;
+    /** The number of transactions per page */
+    pageSize?: number;
+  } | void,
   Paginated<Transaction>
 >(
   async ({
     input: { accountId, subaccountId, fromDate, toDate, page = 0, pageSize = 20 } = {},
     ctx,
   }) => {
+    // Cache key for all transactions for the user
     'use cache';
     cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
 
     const db = await getDb(ctx.supabaseToken);
 
+    // Set up the database query
     const query = db.rls((tx) =>
       tx
         .select()
@@ -95,36 +114,47 @@ export const getTransactions = createAuthenticatedApiQuery<
         .limit(pageSize),
     );
 
+    // Run the database query and get the main currency in parallel
     const [data, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
       query,
       getMainCurrencyWithMapper.withContext({ ctx }),
     ]);
 
+    // Map the transactions to the Transaction domain model
     return {
-      data: data
-        .map((transaction) =>
-          parseTransaction(
-            {
-              ...transaction.transactions,
-              subaccount: transaction.subaccounts,
-            },
-            { mainCurrency, mainCurrencyMapper },
-          ),
-        )
-        .filter(Boolean),
+      data: data.map((item) =>
+        mapTransactionData(
+          {
+            ...item.transactions,
+            subaccount: item.subaccounts,
+          },
+          mainCurrency,
+          mainCurrencyMapper,
+        ),
+      ),
       page,
       pageSize,
     };
   },
 );
 
+/**
+ * Returns a single transaction by its ID
+ *
+ * The transaction is converted to the user's main currency for consistent display
+ *
+ * @param id The ID of the transaction to fetch
+ * @returns The transaction
+ */
 export const getTransactionById = createAuthenticatedApiQuery<string, Transaction | undefined>(
   async ({ input: id, ctx }) => {
+    // Cache key for the single transaction
     'use cache';
     cacheTag.id(id, CACHE_TAGS.transactions);
 
     const db = await getDb(ctx.supabaseToken);
 
+    // Run the database query and get the main currency in parallel
     const [transaction, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
       db.rls((tx) =>
         tx.query.transactions.findFirst({
@@ -135,29 +165,49 @@ export const getTransactionById = createAuthenticatedApiQuery<string, Transactio
       getMainCurrencyWithMapper.withContext({ ctx }),
     ]);
 
+    // If the transaction is not found, return undefined
     if (!transaction) {
       return undefined;
     }
 
-    return parseTransaction(transaction, { mainCurrency, mainCurrencyMapper });
+    // If the subaccount is not found, return undefined
+    if (!transaction.subaccount) {
+      throw new MissingSubaccountError(transaction.subaccountId);
+    }
+
+    // Map the transaction to the Transaction domain model
+    return mapTransactionData(
+      // Ensure subaccount is non-null
+      { ...transaction, subaccount: transaction.subaccount },
+      mainCurrency,
+      mainCurrencyMapper,
+    );
   },
 );
 
-interface GetTransactionHistoryInput {
-  dateRange: TimeInterval;
-  interval: TimeInterval;
-}
-
+/**
+ * Returns transaction history aggregated by time intervals
+ *
+ * The history includes account and subaccount balances over time,
+ * with all values converted to the user's main currency
+ */
 export const getTransactionHistory = createAuthenticatedApiQuery<
-  GetTransactionHistoryInput,
+  {
+    /** The date range to fetch the history for */
+    dateRange: TimeInterval;
+    /** The interval to aggregate the history by */
+    interval: TimeInterval;
+  },
   TransactionHistory[]
 >(async ({ input, ctx }) => {
+  // Cache keys for the transactions and accounts for the user
   'use cache';
   cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
   cacheTag.user(ctx.userId, CACHE_TAGS.accounts);
 
   const db = await getDb(ctx.supabaseToken);
 
+  // Run the database queries in parallel
   const [{ mainCurrency, mapper: mainCurrencyMapper }, accounts, buckets] = await Promise.all([
     getMainCurrencyWithMapper.withContext({ ctx }),
     db.rls((tx) => tx.query.accounts.findMany({ with: { subaccounts: true } })),
@@ -188,6 +238,11 @@ export const getTransactionHistory = createAuthenticatedApiQuery<
     }),
   ]);
 
+  // If there are no transactions in the date range, return an empty array
+  if (!buckets || buckets.length === 0) {
+    return [];
+  }
+
   const subaccounts = accounts.flatMap((account) => account.subaccounts);
   const subaccountMap = Object.fromEntries(
     subaccounts.map((subaccount) => [subaccount.id, subaccount]),
@@ -202,14 +257,25 @@ export const getTransactionHistory = createAuthenticatedApiQuery<
     ...accounts.map((account) => [account.id, 0]),
   ]);
 
-  const dateMap = buckets!.reduce(
+  const dateMap = buckets.reduce(
     (acc, item) => {
       const date = new Date(item.intervalStart).getTime();
       const subaccount = subaccountMap[item.subaccountId];
+
+      if (!subaccount) {
+        throw new MissingSubaccountError(item.subaccountId);
+      }
+
+      const exchangeRate = mainCurrencyMapper[subaccount.currency];
+
+      if (!exchangeRate) {
+        throw new MissingExchangeRateError(subaccount.currency);
+      }
+
       acc[date] ||= {};
       acc[date][item.subaccountId] = item.lastBalance;
       acc[date][subaccount.accountId] ||= 0;
-      acc[date][subaccount.accountId] += item.lastBalance * mainCurrencyMapper[subaccount.currency];
+      acc[date][subaccount.accountId] += item.lastBalance * exchangeRate;
       return acc;
     },
     {} as Record<number, Record<string, number>>,
@@ -218,7 +284,7 @@ export const getTransactionHistory = createAuthenticatedApiQuery<
   // Generate time buckets for the date range and only keep the ones after the first transaction
   // This is needed to fill in the gaps in the data, in case there are no transactions for a specific date bucket
   const timeBuckets = generateTimeBuckets(input.dateRange, input.interval).filter(
-    (date) => date >= new Date(buckets![0]?.intervalStart),
+    (date) => date >= new Date(buckets[0]?.intervalStart),
   );
 
   const gapfilledData = timeBuckets.map((date) => {
@@ -227,25 +293,34 @@ export const getTransactionHistory = createAuthenticatedApiQuery<
     return {
       date: date,
       accountBalances: Object.fromEntries(
-        accounts.map(
-          (account) =>
-            [
-              account.id,
-              {
-                totalBalance: currentBalances[account.id],
-                subaccountBalances: Object.fromEntries(
-                  account.subaccounts.map((subaccount) => [
-                    subaccount.id,
-                    {
-                      originalValue: currentBalances[subaccount.id],
-                      mainCurrencyValue:
-                        currentBalances[subaccount.id] * mainCurrencyMapper[subaccount.currency],
-                    },
-                  ]),
-                ),
-              },
-            ] as const,
-        ),
+        accounts.map((account) => {
+          const subaccountBalances = Object.fromEntries(
+            account.subaccounts.map((subaccount) => {
+              const originalValue = currentBalances[subaccount.id] ?? 0;
+              const exchangeRate = mainCurrencyMapper[subaccount.currency];
+
+              if (!exchangeRate) {
+                throw new MissingExchangeRateError(subaccount.currency);
+              }
+
+              return [
+                subaccount.id,
+                {
+                  originalValue,
+                  mainCurrencyValue: originalValue * exchangeRate,
+                },
+              ];
+            }),
+          );
+
+          return [
+            account.id,
+            {
+              totalBalance: currentBalances[account.id] ?? 0,
+              subaccountBalances,
+            },
+          ] as const;
+        }),
       ),
       mainCurrency,
     } satisfies TransactionHistory;

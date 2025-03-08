@@ -9,8 +9,8 @@ import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
+import { getUserId } from '@/server/api/profiles/queries';
 import { apiQueries } from '@/server/api/queries';
-import { getUserId } from '@/server/api/queries/profiles.queries';
 import { getDb } from '@/server/db';
 import {
   afterTransaction,

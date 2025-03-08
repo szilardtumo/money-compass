@@ -1,13 +1,16 @@
-import 'server-only';
-
 import { addDays } from 'date-fns';
 
-import { CACHE_TAGS, cacheLife, cacheTag } from '@/lib/cache';
 import { gocardlessApi, GocardlessRequisition } from '@/lib/gocardless';
 import { GocardlessInstitution, Integration } from '@/lib/types/integrations.types';
-import { createAuthenticatedApiQuery, createPublicApiQuery } from '@/server/api/create-api-query';
-import { getDb } from '@/server/db';
 
+import type { IntegrationProvider } from './queries';
+
+/**
+ * Parses the Gocardless requisition status to our internal integration status format
+ *
+ * @param status The Gocardless requisition status
+ * @returns The mapped internal integration status
+ */
 const parseGocardlessStatus = (status: GocardlessRequisition['status']): Integration['status'] => {
   // Status codes: https://developer.gocardless.com/bank-account-data/statuses#statuses
   switch (status) {
@@ -27,49 +30,49 @@ const parseGocardlessStatus = (status: GocardlessRequisition['status']): Integra
   }
 };
 
+/**
+ * Returns the Gocardless account details for the given account ID
+ *
+ * @param id The Gocardless account ID
+ * @returns The Gocardless account details
+ */
 const getGocardlessAccountDetails = async (
   id: string,
 ): Promise<Integration['accounts'][number] | undefined> => {
-  'use cache';
-  cacheLife('days');
+  const account = await gocardlessApi.getAccountDetails(id);
 
-  try {
-    const account = await gocardlessApi.getAccountDetails(id);
-
-    if (!account) {
-      return undefined;
-    }
-
-    return {
-      id,
-      name: account.displayName || account.name,
-      ownerName: account.ownerName,
-      iban: account.iban,
-      currency: account.currency.toLowerCase(),
-    };
-  } catch (error) {
-    console.error('Gocardless error:', error);
+  if (!account) {
     return undefined;
   }
+
+  return {
+    id,
+    name: account.displayName || account.name,
+    ownerName: account.ownerName,
+    iban: account.iban,
+    currency: account.currency.toLowerCase(),
+  };
 };
 
-export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(async ({ ctx }) => {
-  'use cache';
-  cacheTag.user(ctx.userId, CACHE_TAGS.integrations);
+/**
+ * GoCardless integration provider
+ */
+export const gocardlessProvider: IntegrationProvider<{
+  requisitions: GocardlessRequisition[];
+  institutions: GocardlessInstitution[];
+}> = {
+  fetchInitialData: async () => {
+    const [requisitions, institutions] = await Promise.all([
+      gocardlessApi.getRequisitions(),
+      gocardlessApi.getInstitutions(),
+    ]);
 
-  const db = await getDb(ctx.supabaseToken);
+    return { requisitions, institutions };
+  },
 
-  const [integrations, requisitions, institutions] = await Promise.all([
-    db.rls((tx) =>
-      tx.query.integrations.findMany({
-        with: { links: { with: { subaccount: { with: { account: true } } } } },
-      }),
-    ),
-    gocardlessApi.getRequisitions(),
-    gocardlessApi.getInstitutions(),
-  ]);
+  mapIntegration: async (integration, providerData) => {
+    const { requisitions, institutions } = providerData;
 
-  const mergedDataPromises = integrations.map(async (integration) => {
     const requisition = requisitions.find(
       (requisition) => requisition.id === integration.externalId,
     );
@@ -89,7 +92,8 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
     ).filter(Boolean);
 
     return {
-      ...integration,
+      id: integration.id,
+      name: integration.name,
       status,
       expiresAt:
         requisition.created &&
@@ -118,18 +122,5 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
         },
       })),
     } satisfies Integration;
-  });
-
-  const mergedData = (await Promise.all(mergedDataPromises)).filter(Boolean);
-  return mergedData;
-});
-
-export const getGocardlessInstitutions = createPublicApiQuery<void, GocardlessInstitution[]>(
-  async () => {
-    'use cache';
-    cacheTag.global(CACHE_TAGS.gocardlessInstitutions);
-    cacheLife('weeks');
-
-    return gocardlessApi.getInstitutions();
   },
-);
+};

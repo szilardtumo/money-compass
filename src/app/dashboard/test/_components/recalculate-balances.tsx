@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { _recalculateBalances } from '@/server/api/actions/transactions.actions';
+import { _recalculateBalances } from '@/server/api/transactions/transactions.actions';
 
 export function RecalculateBalances() {
   return (

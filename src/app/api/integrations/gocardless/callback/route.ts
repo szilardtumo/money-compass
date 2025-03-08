@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
-import { getUserId } from '@/server/api/queries/profiles.queries';
+import { apiQueries } from '@/server/api/queries';
 
 export async function GET(request: NextRequest) {
-  revalidateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
+  revalidateTag({ tag: CACHE_TAGS.integrations, userId: await apiQueries.profiles.getUserId() });
 
   const redirectUrl = new URL('/dashboard/integrations', request.url);
 

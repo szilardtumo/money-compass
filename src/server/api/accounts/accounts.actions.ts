@@ -7,11 +7,11 @@ import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { formatDate } from '@/lib/utils/formatters';
+import { getUserId } from '@/server/api/profiles/queries';
 import { apiQueries } from '@/server/api/queries';
-import { getUserId } from '@/server/api/queries/profiles.queries';
 import { getDb, schema } from '@/server/db';
 
-import { createTransactions } from './transactions.actions';
+import { createTransactions } from '../transactions/transactions.actions';
 
 interface CreateSubaccountParams {
   accountId: string;

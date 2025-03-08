@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
 import { gocardlessApi, isGocardlessError } from '@/lib/gocardless';
 import { ActionResponse } from '@/lib/types/transport.types';
-import { getUserId } from '@/server/api/queries/profiles.queries';
+import { getUserId } from '@/server/api/profiles/queries';
 import { getDb, schema } from '@/server/db';
 
 interface CreateGocardlessIntegrationParams {

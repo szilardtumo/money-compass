@@ -8,7 +8,7 @@ import { DAILY_SYNC_COUNT_LIMIT } from '@/lib/constants/integrations';
 import { isGocardlessError, gocardlessApi } from '@/lib/gocardless';
 import { GocardlessTransaction } from '@/lib/gocardless/types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
-import { getUserId } from '@/server/api/queries/profiles.queries';
+import { getUserId } from '@/server/api/profiles/queries';
 import { DbClientTx, getDb, schema } from '@/server/db';
 import { isUniqueConstraintError } from '@/server/db/errors';
 
