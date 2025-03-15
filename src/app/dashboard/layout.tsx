@@ -11,7 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <GlobalDialogs />
       <ResizablePanelGroup direction="horizontal" className="h-full min-h-screen items-stretch">
         <Navbar />
-        <ResizablePanel defaultSize={80}>
+        <ResizablePanel id="main-panel" defaultSize={80}>
           <PageLayout>
             <PageHeaderSlotProvider>
               <PageHeader>
