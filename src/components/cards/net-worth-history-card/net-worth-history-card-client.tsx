@@ -10,11 +10,14 @@ import { Account } from '@/lib/types/accounts.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';
 
 interface NetWorthHistoryCardProps {
-  data: TransactionHistory[];
+  transactionHistory: TransactionHistory[];
   accounts: Account[];
 }
 
-export function NetWorthHistoryCard({ data, accounts }: NetWorthHistoryCardProps) {
+export function NetWorthHistoryCardClient({
+  transactionHistory,
+  accounts,
+}: NetWorthHistoryCardProps) {
   const [stack, setStack] = useState(false);
 
   return (
@@ -27,7 +30,7 @@ export function NetWorthHistoryCard({ data, accounts }: NetWorthHistoryCardProps
         </div>
       </CardHeader>
       <CardContent>
-        <TransactionHistoryChart accounts={accounts} data={data} stack={stack} />
+        <TransactionHistoryChart accounts={accounts} data={transactionHistory} stack={stack} />
       </CardContent>
     </Card>
   );

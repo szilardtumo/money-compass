@@ -1,12 +1,13 @@
 import { NetWorthDifferenceChart } from '@/components/charts/net-worth-difference-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TransactionHistory } from '@/lib/types/transactions.types';
+import { apiQueries } from '@/server/api/queries';
 
-interface NetWorthDifferenceCardProps {
-  data: TransactionHistory[];
-}
+export async function NetWorthDifferenceCard() {
+  const data = await apiQueries.transactions.getTransactionHistory({
+    dateRange: '12 month',
+    interval: '1 month',
+  });
 
-export async function NetWorthDifferenceCard({ data }: NetWorthDifferenceCardProps) {
   return (
     <Card>
       <CardHeader>

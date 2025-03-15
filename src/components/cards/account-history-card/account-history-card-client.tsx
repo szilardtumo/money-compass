@@ -9,17 +9,17 @@ import { Switch } from '@/components/ui/switch';
 import { Account } from '@/lib/types/accounts.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';
 
-interface AccountHistoryCardProps {
-  data: TransactionHistory[];
+interface AccountHistoryCardClientProps {
+  transactionHistory: TransactionHistory[];
   account: Account;
   title?: string;
 }
 
-export function AccountHistoryCard({
-  data,
+export function AccountHistoryCardClient({
+  transactionHistory,
   account,
   title = `${account.name} account`,
-}: AccountHistoryCardProps) {
+}: AccountHistoryCardClientProps) {
   const [stack, setStack] = useState(false);
 
   return (
@@ -34,7 +34,7 @@ export function AccountHistoryCard({
         )}
       </CardHeader>
       <CardContent>
-        <TransactionHistoryChart accounts={[account]} data={data} stack={stack} />
+        <TransactionHistoryChart accounts={[account]} data={transactionHistory} stack={stack} />
       </CardContent>
     </Card>
   );

@@ -1,3 +1,5 @@
+import { PageHeaderSlot, PageHeaderSlotProvider } from '@/components/ui/page-header-slot';
+import { PageContent, PageHeader, PageLayout } from '@/components/ui/page-layout';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 import { GlobalDialogs } from './_components/global-dialogs';
@@ -9,7 +11,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <GlobalDialogs />
       <ResizablePanelGroup direction="horizontal" className="h-full min-h-screen items-stretch">
         <Navbar />
-        <ResizablePanel defaultSize={80}>{children}</ResizablePanel>
+        <ResizablePanel defaultSize={80}>
+          <PageLayout>
+            <PageHeaderSlotProvider>
+              <PageHeader>
+                <PageHeaderSlot />
+              </PageHeader>
+
+              <PageContent>{children}</PageContent>
+            </PageHeaderSlotProvider>
+          </PageLayout>
+        </ResizablePanel>
       </ResizablePanelGroup>
     </>
   );

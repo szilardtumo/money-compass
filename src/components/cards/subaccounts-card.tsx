@@ -9,15 +9,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Subaccount } from '@/lib/types/accounts.types';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
+import { apiQueries } from '@/server/api/queries';
 
 interface SubaccountsCardProps {
-  subaccounts: Subaccount[];
-  accountBalance: number;
+  accountId: string;
 }
 
-export function SubaccountsCard({ subaccounts, accountBalance }: SubaccountsCardProps) {
+export async function SubaccountsCard({ accountId }: SubaccountsCardProps) {
+  const account = await apiQueries.accounts.getAccount(accountId);
+
+  if (!account) return null;
+
+  const { subaccounts, totalBalance } = account;
+
   return (
     <Card>
       <CardHeader>
@@ -45,7 +50,7 @@ export function SubaccountsCard({ subaccounts, accountBalance }: SubaccountsCard
               <TableRow key={item.id}>
                 <TableCell>{item.name}</TableCell>
                 <TableCell>
-                  <Badge>{formatPercent(item.balance.mainCurrencyValue / accountBalance)}</Badge>
+                  <Badge>{formatPercent(item.balance.mainCurrencyValue / totalBalance)}</Badge>
                 </TableCell>
                 <TableCell className="uppercase">{item.originalCurrency}</TableCell>
                 <TableCell className="text-right">
@@ -59,7 +64,7 @@ export function SubaccountsCard({ subaccounts, accountBalance }: SubaccountsCard
               <TableRow>
                 <TableCell>Total</TableCell>
                 <TableCell colSpan={3} className="text-right">
-                  {formatCurrency(accountBalance, subaccounts[0].mainCurrency)}
+                  {formatCurrency(totalBalance, subaccounts[0].mainCurrency)}
                 </TableCell>
               </TableRow>
             </TableFooter>

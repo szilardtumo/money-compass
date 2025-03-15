@@ -1,19 +1,15 @@
-'use client';
-
 import { TabsContent } from '@radix-ui/react-tabs';
 
 import { AccountCategoryDistributionChart } from '@/components/charts/account-category-distribution-chart';
 import { AccountDistributionChart } from '@/components/charts/account-distribution-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Account } from '@/lib/types/accounts.types';
+import { apiQueries } from '@/server/api/queries';
 
-interface AssetDistributionCardProps {
-  accounts: Account[];
-  mainCurrency: string;
-}
+export async function AssetDistributionCard() {
+  const accounts = await apiQueries.accounts.getAccounts();
+  const { mainCurrency } = await apiQueries.currencies.getMainCurrencyWithMapper();
 
-export function AssetDistributionCard({ accounts, mainCurrency }: AssetDistributionCardProps) {
   return (
     <Card>
       <CardHeader>
