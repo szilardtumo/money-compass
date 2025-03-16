@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 
 import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
+import { env } from '@/lib/env';
 import { createServerAdminSupabaseClient } from '@/lib/supabase/server-admin';
 import { apiQueries } from '@/server/api/queries';
 
@@ -24,7 +25,7 @@ interface ExchangeRatesError {
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET!}`) {
+  if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
     return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 

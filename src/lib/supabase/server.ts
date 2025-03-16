@@ -5,6 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import { RequestCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 import { cookies } from 'next/headers';
 
+import { env } from '@/lib/env';
 import { Database } from '@/lib/types/database.types';
 
 /**
@@ -20,8 +21,8 @@ export async function createWritableServerSupabaseClient(
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -55,8 +56,8 @@ export async function createWritableServerSupabaseClient(
  */
 export async function createServerSupabaseClient(plainCookies: RequestCookie[]) {
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {

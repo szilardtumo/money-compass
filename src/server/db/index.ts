@@ -5,6 +5,7 @@ import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { cache } from 'react';
 
+import { env } from '@/lib/env';
 import { getSupabaseToken, SupabaseToken } from '@/lib/supabase/server';
 
 import * as schema from './schema';
@@ -17,7 +18,7 @@ declare global {
 const drizzleClient =
   global.drizzleClient ||
   drizzle({
-    client: postgres(process.env.DATABASE_URL!, { prepare: false }),
+    client: postgres(env.DATABASE_URL, { prepare: false }),
     schema,
     casing: 'snake_case',
   });
