@@ -56,7 +56,7 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
   });
 
   async function onSubmit(values: FormFields) {
-    const promise = apiActions.accounts.updateAccountBalances(values);
+    const promise = apiActions.transactions.updateBalances(values);
 
     toast.promise(createToastPromise(promise), {
       loading: 'Updating account balances...',
