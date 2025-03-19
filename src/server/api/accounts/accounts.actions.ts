@@ -158,24 +158,24 @@ interface CreateAccountParams {
 export async function createAccount(params: CreateAccountParams): Promise<ActionResponse> {
   const db = await getDb();
 
-  await db.rls(async (tx) => {
+  const id = await db.rls(async (tx) => {
     const [{ id }] = await tx
       .insert(schema.accounts)
       .values({ name: params.name, category: params.category })
       .returning({ id: schema.accounts.id });
 
-    if (params.subaccounts?.length) {
-      await createSubaccounts(
-        params.subaccounts.map((subaccount) => ({
-          accountId: id,
-          name: subaccount.name,
-          currency: subaccount.originalCurrency,
-        })),
-      );
-    }
+    return id;
   });
 
-  // TODO: error handling
+  if (params.subaccounts?.length) {
+    await createSubaccounts(
+      params.subaccounts.map((subaccount) => ({
+        accountId: id,
+        name: subaccount.name,
+        currency: subaccount.originalCurrency,
+      })),
+    );
+  }
 
   revalidateTag({ tag: CACHE_TAGS.accounts, userId: await getUserId() });
   return { success: true };
