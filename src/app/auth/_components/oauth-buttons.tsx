@@ -1,11 +1,11 @@
 import { RiGithubFill, RiGoogleFill } from '@remixicon/react';
 import { useCallback, useState } from 'react';
 
-import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
+import { useSupabaseAuth } from '@/components/providers/supabase-client-provider';
 import { Button } from '@/components/ui/button';
 
 export function OAuthButtons() {
-  const supabase = useBrowserSupabaseClient();
+  const supabaseAuth = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   let oAuthRedirectUrl = '/api/auth/callback';
@@ -16,26 +16,26 @@ export function OAuthButtons() {
   const signInWithGoogle = useCallback(async () => {
     setIsLoading(true);
     try {
-      await supabase.auth.signInWithOAuth({
+      await supabaseAuth.signInWithOAuth({
         provider: 'google',
         options: { queryParams: { prompt: 'select_account' }, redirectTo: oAuthRedirectUrl },
       });
     } finally {
       setIsLoading(false);
     }
-  }, [supabase.auth, oAuthRedirectUrl]);
+  }, [supabaseAuth, oAuthRedirectUrl]);
 
   const signInWithGithub = useCallback(async () => {
     setIsLoading(true);
     try {
-      await supabase.auth.signInWithOAuth({
+      await supabaseAuth.signInWithOAuth({
         provider: 'github',
         options: { redirectTo: oAuthRedirectUrl },
       });
     } finally {
       setIsLoading(false);
     }
-  }, [supabase.auth, oAuthRedirectUrl]);
+  }, [supabaseAuth, oAuthRedirectUrl]);
 
   return (
     <div className="flex flex-col gap-4">

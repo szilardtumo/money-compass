@@ -1,9 +1,10 @@
+import { sql } from 'drizzle-orm';
 import type { NextRequest } from 'next/server';
 
 import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
 import { env } from '@/lib/env';
-import { createServerAdminSupabaseClient } from '@/lib/supabase/server-admin';
 import { apiQueries } from '@/server/api/queries';
+import { getAdminDb, schema } from '@/server/db';
 
 interface ExchangeRatesResponse {
   success: true;
@@ -54,13 +55,19 @@ export async function GET(request: NextRequest) {
     })),
   );
 
-  const supabase = createServerAdminSupabaseClient();
-  const { error } = await supabase.from('exchange_rates').upsert(exchangeRates);
+  try {
+    const db = await getAdminDb();
+    await db.admin
+      .insert(schema.exchangeRates)
+      .values(exchangeRates)
+      .onConflictDoUpdate({
+        target: [schema.exchangeRates.from, schema.exchangeRates.to],
+        set: { rate: sql`EXCLUDED.rate` },
+      });
 
-  if (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    revalidateTag({ tag: CACHE_TAGS.currencies });
+    return Response.json({ success: true, exchangeRates });
+  } catch (error) {
+    return Response.json({ success: false, error: (error as Error).message }, { status: 500 });
   }
-
-  revalidateTag({ tag: CACHE_TAGS.currencies });
-  return Response.json({ success: true, exchangeRates });
 }

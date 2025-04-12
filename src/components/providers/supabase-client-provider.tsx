@@ -18,11 +18,25 @@ export function BrowserSupabaseClientProvider({ children }: { children: React.Re
   return <BrowserSupabaseClientContext value={supabase}>{children}</BrowserSupabaseClientContext>;
 }
 
-// Hook to use the Supabase client
+/**
+ * Hook to use the Supabase client
+ *
+ * @returns The Supabase client
+ */
 export function useBrowserSupabaseClient() {
   const context = use(BrowserSupabaseClientContext);
   if (context === undefined) {
     throw new Error('useBrowserSupabaseClient must be used within a BrowserSupabaseClientProvider');
   }
   return context;
+}
+
+/**
+ * Hook to use the Supabase auth client
+ *
+ * @returns The Supabase auth client
+ */
+export function useSupabaseAuth() {
+  const supabase = useBrowserSupabaseClient();
+  return supabase.auth;
 }

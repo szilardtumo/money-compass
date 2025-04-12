@@ -1,27 +1,41 @@
 'use server';
 
-import { revalidateTag } from '@/lib/cache';
-import { createWritableServerSupabaseClient } from '@/lib/supabase/server';
+import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
 import { ActionResponse } from '@/lib/types/transport.types';
+import { getUserId } from '@/server/api/profiles/queries';
+import { getDb, schema } from '@/server/db';
 
 interface UpdateProfileParams {
   mainCurrency: string;
 }
 
 export async function updateProfile(params: UpdateProfileParams): Promise<ActionResponse> {
-  const supabase = await createWritableServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const db = await getDb();
+  const userId = await getUserId();
 
-  const { error } = await supabase
-    .from('profiles')
-    .upsert({ id: user!.id, main_currency: params.mainCurrency });
+  try {
+    await db.rls(async (tx) => {
+      await tx
+        .insert(schema.profiles)
+        .values({
+          id: userId,
+          mainCurrency: params.mainCurrency,
+        })
+        .onConflictDoUpdate({
+          target: schema.profiles.id,
+          set: { mainCurrency: params.mainCurrency },
+        });
+    });
 
-  if (error) {
-    return { success: false, error: { code: error.code, message: error.message } };
+    revalidateTag({ tag: CACHE_TAGS.profiles, userId });
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: 'database_error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+    };
   }
-
-  revalidateTag({ tag: 'profiles', userId: user!.id });
-  return { success: true };
 }

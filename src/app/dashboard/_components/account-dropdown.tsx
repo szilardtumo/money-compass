@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback, useOptimistic } from 'react';
 
-import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
+import { useSupabaseAuth } from '@/components/providers/supabase-client-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,15 +34,15 @@ interface AccountDropdownProps {
 }
 
 export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
-  const supabase = useBrowserSupabaseClient();
+  const supabaseAuth = useSupabaseAuth();
   const router = useRouter();
   const { theme, setTheme, systemTheme } = useTheme();
   const [optimisticMainCurrency, setOptimisticMainCurrency] = useOptimistic(profile.mainCurrency);
 
   const handleLogout = useCallback(async () => {
-    await supabase.auth.signOut();
+    await supabaseAuth.signOut();
     router.refresh();
-  }, [router, supabase.auth]);
+  }, [router, supabaseAuth]);
 
   const handleMainCurrencyChange = useCallback(
     async (currencyId: string) => {

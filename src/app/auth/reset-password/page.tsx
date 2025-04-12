@@ -9,7 +9,7 @@ import { useCallback, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
+import { useSupabaseAuth } from '@/components/providers/supabase-client-provider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,7 +42,7 @@ type FormFields = z.infer<typeof formSchema>;
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = useBrowserSupabaseClient();
+  const supabaseAuth = useSupabaseAuth();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormFields>({
@@ -62,7 +62,7 @@ export default function ResetPasswordPage() {
 
   const onSubmit = useCallback(
     async (formFields: FormFields) => {
-      const { error } = await supabase.auth.updateUser({ password: formFields.password });
+      const { error } = await supabaseAuth.updateUser({ password: formFields.password });
 
       if (error) {
         setError('root', { message: error.message });
@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
         router.replace(searchParams.get('next') ?? '/dashboard');
       });
     },
-    [router, searchParams, setError, supabase.auth],
+    [router, searchParams, setError, supabaseAuth],
   );
 
   return (
