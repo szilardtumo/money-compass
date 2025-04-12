@@ -2,7 +2,7 @@
 
 import { PlusIcon } from '@radix-ui/react-icons';
 
-import { useCreateTransactionDialog } from '@/components/providers/create-transaction-dialog-provider';
+import { useCreateTransactionDialog } from '@/components/dialogs/create-transaction-dialog';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 

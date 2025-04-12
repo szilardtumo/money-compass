@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { MouseEvent, useState } from 'react';
 import { toast } from 'sonner';
 
-import { useUpsertAccountDialog } from '@/components/providers/upsert-account-dialog-provider';
+import { useUpsertAccountDialog } from '@/components/dialogs/upsert-account-dialog';
 import {
   AlertDialog,
   AlertDialogAction,

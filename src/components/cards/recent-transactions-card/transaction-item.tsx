@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
-import { useUpdateTransactionDialog } from '@/components/providers/update-transaction-dialog-provider';
+import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {

@@ -1,9 +1,9 @@
 'use client';
 
-import { useCreateTransactionDialog } from '@/components/providers/create-transaction-dialog-provider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Account } from '@/lib/types/accounts.types';
 
+import { useCreateTransactionDialog } from './create-transaction-dialog-context';
 import { CreateTransactionForm } from './create-transaction-form';
 
 interface CreateTransactionDialogClientProps {

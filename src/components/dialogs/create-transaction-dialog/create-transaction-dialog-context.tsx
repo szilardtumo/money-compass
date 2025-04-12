@@ -2,8 +2,9 @@
 
 import { ComponentProps } from 'react';
 
-import type { CreateTransactionForm } from '@/components/dialogs/create-transaction-dialog/create-transaction-form';
 import { createDialogContext } from '@/lib/create-dialog-context';
+
+import type { CreateTransactionForm } from './create-transaction-form';
 
 type DefaultValues = ComponentProps<typeof CreateTransactionForm>['defaultValues'];
 

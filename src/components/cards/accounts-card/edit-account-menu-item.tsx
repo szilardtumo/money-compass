@@ -1,6 +1,6 @@
 'use client';
 
-import { useUpsertAccountDialog } from '@/components/providers/upsert-account-dialog-provider';
+import { useUpsertAccountDialog } from '@/components/dialogs/upsert-account-dialog';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Account } from '@/lib/types/accounts.types';
 

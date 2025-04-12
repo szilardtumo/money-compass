@@ -2,8 +2,9 @@
 
 import { ComponentProps } from 'react';
 
-import type { UpdateTransactionForm } from '@/components/dialogs/update-transaction-dialog/update-transaction-form';
 import { createDialogContext } from '@/lib/create-dialog-context';
+
+import type { UpdateTransactionForm } from './update-transaction-form';
 
 type DefaultValues = ComponentProps<typeof UpdateTransactionForm>['defaultValues'] & {
   currency: string;

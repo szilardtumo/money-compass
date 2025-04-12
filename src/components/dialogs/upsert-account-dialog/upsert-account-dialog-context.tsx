@@ -2,8 +2,9 @@
 
 import { ComponentProps } from 'react';
 
-import type { UpsertAccountForm } from '@/components/dialogs/upsert-account-dialog/upsert-account-form';
 import { createDialogContext } from '@/lib/create-dialog-context';
+
+import type { UpsertAccountForm } from './upsert-account-form';
 
 type DefaultValues = ComponentProps<typeof UpsertAccountForm>['defaultValues'];
 

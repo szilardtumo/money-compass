@@ -3,7 +3,7 @@
 import { MixerVerticalIcon, PlusIcon } from '@radix-ui/react-icons';
 import { useMemo, useState } from 'react';
 
-import { useCreateTransactionDialog } from '@/components/providers/create-transaction-dialog-provider';
+import { useCreateTransactionDialog } from '@/components/dialogs/create-transaction-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {

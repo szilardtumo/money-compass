@@ -6,7 +6,7 @@ import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/re
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { useUpdateTransactionDialog } from '@/components/providers/update-transaction-dialog-provider';
+import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Button } from '@/components/ui/button';
 import {

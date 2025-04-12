@@ -1,6 +1,5 @@
 'use client';
 
-import { useUpsertAccountDialog } from '@/components/providers/upsert-account-dialog-provider';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Currency } from '@/lib/types/currencies.types';
 
+import { useUpsertAccountDialog } from './upsert-account-dialog-context';
 import { UpsertAccountForm } from './upsert-account-form';
 
 interface UpsertAccountDialogClientProps {

@@ -2,7 +2,7 @@
 
 import { PlusIcon } from '@radix-ui/react-icons';
 
-import { useUpsertAccountDialog } from '@/components/providers/upsert-account-dialog-provider';
+import { useUpsertAccountDialog } from '@/components/dialogs/upsert-account-dialog';
 import { Button } from '@/components/ui/button';
 
 export function CreateAccountButton() {
