@@ -2,16 +2,13 @@
 import { fixupPluginRules } from '@eslint/compat';
 import pluginJs from '@eslint/js';
 import pluginNext from '@next/eslint-plugin-next';
-import pluginCypress from 'eslint-plugin-cypress/flat';
 import pluginImport from 'eslint-plugin-import';
 import importRecommented from 'eslint-plugin-import/config/recommended.js';
 import importTypescript from 'eslint-plugin-import/config/typescript.js';
-import pluginJestDom from 'eslint-plugin-jest-dom';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactCompiler from 'eslint-plugin-react-compiler';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
-import pluginTestingLibrary from 'eslint-plugin-testing-library';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -134,23 +131,5 @@ export default tseslint.config(
         },
       ],
     },
-  },
-  // unit tests
-  {
-    files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
-
-    plugins: {
-      'jest-dom': pluginJestDom,
-      'testing-library': pluginTestingLibrary,
-    },
-    rules: {
-      ...pluginJestDom.configs['flat/recommended'].rules,
-      ...pluginTestingLibrary.configs['flat/react'].rules,
-    },
-  },
-  // cypress tests
-  {
-    files: ['cypress/**/*'],
-    ...pluginCypress.configs.recommended,
   },
 );
