@@ -42,13 +42,18 @@ export function RecentTransactionsCardClient({
   };
 
   const groupedTransactions = useMemo(() => {
+    const accountMap = new Map(accounts.map((account) => [account.id, account]));
+    const subaccountMap = new Map(
+      accounts.flatMap((account) =>
+        account.subaccounts.map((subaccount) => [subaccount.id, subaccount]),
+      ),
+    );
+
     const transactionsWithAccount = transactions
       .filter((transaction) => selectedAccountIds.includes(transaction.accountId))
       .map((transaction) => {
-        const account = accounts.find((account) => account.id === transaction.accountId);
-        const subaccount = account?.subaccounts.find(
-          (subaccount) => subaccount.id === transaction.subaccountId,
-        );
+        const account = accountMap.get(transaction.accountId);
+        const subaccount = subaccountMap.get(transaction.subaccountId);
 
         return { ...transaction, account, subaccount };
       })
