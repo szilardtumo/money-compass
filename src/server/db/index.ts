@@ -24,6 +24,8 @@ const drizzleClient =
   });
 if (process.env.NODE_ENV !== 'production') global.drizzleClient = drizzleClient;
 
+type DbTx = Parameters<Parameters<typeof drizzleClient.transaction>[0]>[0];
+
 /**
  * Returns the drizzle DB client.
  *
@@ -99,4 +101,4 @@ export type DbClientTx = Parameters<Parameters<typeof drizzleClient.transaction>
 const cachedGetAdminDb = cache(getAdminDb);
 const cachedGetDb = cache(getDb);
 
-export { schema, cachedGetDb as getDb, cachedGetAdminDb as getAdminDb };
+export { schema, cachedGetDb as getDb, cachedGetAdminDb as getAdminDb, type DbTx };
