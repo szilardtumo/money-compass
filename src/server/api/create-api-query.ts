@@ -41,6 +41,8 @@ const withErrorHandling = <I = void, O = void, C = undefined>(
       if (error instanceof AuthenticationError) {
         // Redirect to the login page if the user is not authenticated
         redirect('/auth/login');
+
+        // Early return to avoid processing the error further
         return undefined as O;
       }
 

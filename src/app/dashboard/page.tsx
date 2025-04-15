@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 
 import { AccountsCard } from '@/components/cards/accounts-card';
-import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card/';
+import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { QuickActionsCard } from '@/components/cards/quick-actions-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
 import { PageHeaderSlotContent } from '@/components/ui/page-header-slot';
