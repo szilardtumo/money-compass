@@ -6281,6 +6281,7 @@ __metadata:
     lucide-react: "npm:^0.468.0"
     motion: "npm:^12.0.6"
     next: "npm:15.1.1-canary.18"
+    next-safe-action: "npm:^7.10.8"
     next-themes: "npm:^0.4.4"
     nordigen-node: "patch:nordigen-node@npm%3A1.4.0#~/.yarn/patches/nordigen-node-npm-1.4.0-c527fb4a7b.patch"
     npm-run-all: "npm:^4.1.5"
@@ -6391,6 +6392,30 @@ __metadata:
   version: 0.6.3
   resolution: "negotiator@npm:0.6.3"
   checksum: 10c0/3ec9fd413e7bf071c937ae60d572bc67155262068ed522cf4b3be5edbe6ddf67d095ec03a3a14ebf8fc8e95f8e1d61be4869db0dbb0de696f6b837358bd43fc2
+  languageName: node
+  linkType: hard
+
+"next-safe-action@npm:^7.10.8":
+  version: 7.10.8
+  resolution: "next-safe-action@npm:7.10.8"
+  peerDependencies:
+    "@sinclair/typebox": ">= 0.33.3"
+    next: ">= 14.0.0"
+    react: ">= 18.2.0"
+    react-dom: ">= 18.2.0"
+    valibot: ">= 0.36.0"
+    yup: ">= 1.0.0"
+    zod: ">= 3.0.0"
+  peerDependenciesMeta:
+    "@sinclair/typebox":
+      optional: true
+    valibot:
+      optional: true
+    yup:
+      optional: true
+    zod:
+      optional: true
+  checksum: 10c0/0d3fd115203dcbfdfc8e3e96c22812ba9d1baf836a30284cddd4c0d1f220adecda4afa2b14d4b7b61fc8bb7df0dea47ab92a3d632bca8c8047840996c0a5d3b2
   languageName: node
   linkType: hard
 

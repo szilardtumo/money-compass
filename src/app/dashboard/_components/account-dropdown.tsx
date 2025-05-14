@@ -4,7 +4,7 @@ import { CaretDownIcon, ExitIcon, MoonIcon, SunIcon } from '@radix-ui/react-icon
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useCallback, useOptimistic } from 'react';
+import { useCallback } from 'react';
 
 import { useSupabaseAuth } from '@/components/providers/supabase-client-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,6 +24,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useOptimisticActionWithToast } from '@/lib/safe-action/useActionWithToast';
 import { Currency } from '@/lib/types/currencies.types';
 import { Profile } from '@/lib/types/profiles.types';
 import { apiActions } from '@/server/api/actions';
@@ -37,7 +38,16 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
   const supabaseAuth = useSupabaseAuth();
   const router = useRouter();
   const { theme, setTheme, systemTheme } = useTheme();
-  const [optimisticMainCurrency, setOptimisticMainCurrency] = useOptimistic(profile.mainCurrency);
+
+  const { execute: executeUpdateProfile, optimisticState: optimisticMainCurrency } =
+    useOptimisticActionWithToast(apiActions.profiles.updateProfile, {
+      currentState: profile.mainCurrency,
+      updateFn: (_, input) => input.mainCurrency,
+      errorToast: ({ errorMessage }) => ({
+        title: 'Failed to change main currency',
+        description: errorMessage,
+      }),
+    });
 
   const handleLogout = useCallback(async () => {
     await supabaseAuth.signOut();
@@ -47,11 +57,10 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
   const handleMainCurrencyChange = useCallback(
     async (currencyId: string) => {
       if (currencyId !== profile.mainCurrency) {
-        setOptimisticMainCurrency(currencyId);
-        await apiActions.profiles.updateProfile({ mainCurrency: currencyId });
+        executeUpdateProfile({ mainCurrency: currencyId });
       }
     },
-    [profile.mainCurrency, setOptimisticMainCurrency],
+    [profile.mainCurrency, executeUpdateProfile],
   );
 
   const displayedName = profile.name ?? profile.email ?? 'Account';

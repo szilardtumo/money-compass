@@ -24,7 +24,8 @@ type ApiQueryFunction<I = void, O = void, C = undefined> = (opts: {
  *
  * @returns The context object
  */
-const createAuthenticatedContext = cache(async (): Promise<AuthenticatedApiQueryContext> => {
+// TODO: move to separate file, create separate serializable context and full context
+export const createAuthenticatedContext = cache(async (): Promise<AuthenticatedApiQueryContext> => {
   const plainCookies = (await cookies()).getAll();
   const supabaseToken = await getSupabaseToken();
 

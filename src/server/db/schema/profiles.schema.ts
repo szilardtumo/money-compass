@@ -3,7 +3,7 @@ import { pgPolicy, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole, authUsers } from 'drizzle-orm/supabase';
 
 import { currencies } from './currencies.schema';
-import { authUid } from './utils';
+import { authUid, authUidDefault } from './utils';
 
 export const profiles = pgTable(
   'profiles',
@@ -11,6 +11,7 @@ export const profiles = pgTable(
     id: uuid()
       .notNull()
       .primaryKey()
+      .default(authUidDefault)
       .references(() => authUsers.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
     mainCurrency: text()
       .notNull()
