@@ -115,7 +115,7 @@ const getCallbacksWithToast = <
           typeof utils?.errorToast === 'function'
             ? utils.errorToast({ ...args, errorMessage })
             : utils?.errorToast;
-        const { title, ...data } =
+        const { title = errorMessage, ...data } =
           typeof config === 'object' && config !== null && 'title' in config
             ? config
             : { title: config };
