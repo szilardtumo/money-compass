@@ -3,7 +3,7 @@
 import { isToday } from 'date-fns';
 import { eq, exists, sql } from 'drizzle-orm';
 
-import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
+import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { DAILY_SYNC_COUNT_LIMIT } from '@/lib/constants/integrations';
 import { isGocardlessError, gocardlessApi } from '@/lib/gocardless';
 import { GocardlessTransaction } from '@/lib/gocardless/types';

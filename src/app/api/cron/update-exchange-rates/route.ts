@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import type { NextRequest } from 'next/server';
 
-import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
+import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { env } from '@/lib/env';
 import { apiQueries } from '@/server/api/queries';
 import { getAdminDb, schema } from '@/server/db';

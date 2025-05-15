@@ -2,7 +2,7 @@
 
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
-import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
+import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { Enums } from '@/lib/types/database.types';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { getUserId } from '@/server/api/profiles/queries';

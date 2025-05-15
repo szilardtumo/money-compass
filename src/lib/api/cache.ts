@@ -1,3 +1,5 @@
+import 'server-only';
+
 import {
   revalidateTag as nextRevalidateTag,
   unstable_cacheTag as nextCacheTag,

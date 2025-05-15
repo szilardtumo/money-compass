@@ -1,7 +1,8 @@
+import 'server-only';
+
 import { createSafeActionClient, DEFAULT_SERVER_ERROR_MESSAGE } from 'next-safe-action';
 
-import { createAuthenticatedContext } from '@/server/api/create-api-query';
-import { getDb } from '@/server/db';
+import { createFullApiContext } from './context';
 
 export const actionClient = createSafeActionClient({
   defaultValidationErrorsShape: 'flattened',
@@ -26,16 +27,11 @@ export const actionClient = createSafeActionClient({
 });
 
 export const authenticatedActionClient = actionClient.use(async ({ next }) => {
-  const queryCtx = await createAuthenticatedContext();
+  const ctx = await createFullApiContext();
 
-  if (!queryCtx.userId) {
+  if (!ctx.userId) {
     throw new Error('User not authenticated');
   }
-
-  const ctx = {
-    ...queryCtx,
-    db: await getDb(queryCtx.supabaseToken),
-  };
 
   return next({ ctx });
 });

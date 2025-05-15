@@ -4,20 +4,19 @@ import { PostgrestError } from '@supabase/supabase-js';
 import { isBefore, max } from 'date-fns';
 import { and, asc, eq, inArray, InferInsertModel, not, sql } from 'drizzle-orm';
 
-import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
+import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { ActionErrorCode, ActionResponse } from '@/lib/types/transport.types';
 import { formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
 import { getUserId } from '@/server/api/profiles/queries';
 import { apiQueries } from '@/server/api/queries';
-import { getDb } from '@/server/db';
+import { getDb, schema } from '@/server/db';
 import {
   afterTransaction,
   ascTransactions,
   beforeTransaction,
   descTransactions,
 } from '@/server/db/query-utils';
-import { transactions } from '@/server/db/schema';
 
 interface CreateTransactionParams {
   subaccountId: string;
@@ -42,7 +41,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
       });
 
       // Insert the transaction
-      await tx.insert(transactions).values({
+      await tx.insert(schema.transactions).values({
         type: params.type,
         amount: params.amount,
         balance: (latestTransaction?.balance ?? 0) + params.amount,
@@ -54,9 +53,9 @@ export async function createTransaction(params: CreateTransactionParams): Promis
 
       // Update subsequent transactions balance
       await tx
-        .update(transactions)
+        .update(schema.transactions)
         .set({
-          balance: sql`${transactions.balance} + ${params.amount}`,
+          balance: sql`${schema.transactions.balance} + ${params.amount}`,
         })
         .where(
           afterTransaction({
@@ -105,7 +104,7 @@ export async function updateBalances({
           description,
           startedDate: date ?? now,
           completedDate: date ?? now,
-        }) satisfies InferInsertModel<typeof transactions>,
+        }) satisfies InferInsertModel<typeof schema.transactions>,
     )
     // Filter out transactions for subaccounts with no changes
     .filter((transaction) => transaction.amount !== 0);
@@ -138,7 +137,7 @@ export async function updateBalances({
   }
 
   await db.rls(async (tx) => {
-    await tx.insert(transactions).values(newTransactions);
+    await tx.insert(schema.transactions).values(newTransactions);
   });
 
   revalidateTag({ tag: CACHE_TAGS.transactions, userId: await getUserId() });
@@ -164,8 +163,8 @@ export async function updateTransaction(
       // Get the transaction to update
       const [transaction] = await tx
         .select()
-        .from(transactions)
-        .where(eq(transactions.id, transactionId));
+        .from(schema.transactions)
+        .where(eq(schema.transactions.id, transactionId));
 
       if (!transaction) {
         throw new Error('Transaction not found.');
@@ -179,19 +178,19 @@ export async function updateTransaction(
       if (dateChanged) {
         // First, revert the impact of this transaction on later transactions
         await tx
-          .update(transactions)
+          .update(schema.transactions)
           .set({
-            balance: sql`${transactions.balance} - ${transaction.amount}`,
+            balance: sql`${schema.transactions.balance} - ${transaction.amount}`,
           })
           .where(afterTransaction(transaction));
 
         // Get the previous transaction at the new date to calculate the correct balance
         const [previousTransaction] = await tx
           .select()
-          .from(transactions)
+          .from(schema.transactions)
           .where(
             and(
-              not(eq(transactions.id, transaction.id)),
+              not(eq(schema.transactions.id, transaction.id)),
               beforeTransaction({ ...transaction, startedDate: params.startedDate! }),
             ),
           )
@@ -200,7 +199,7 @@ export async function updateTransaction(
 
         // Update the transaction itself with the correct balance
         await tx
-          .update(transactions)
+          .update(schema.transactions)
           .set({
             type: params.type ?? transaction.type,
             amount: params.amount ?? transaction.amount,
@@ -209,33 +208,33 @@ export async function updateTransaction(
             completedDate: params.startedDate,
             balance: (previousTransaction?.balance ?? 0) + (params.amount ?? transaction.amount),
           })
-          .where(eq(transactions.id, transactionId));
+          .where(eq(schema.transactions.id, transactionId));
 
         // Recalculate all balances after the new date
         await tx
-          .update(transactions)
+          .update(schema.transactions)
           .set({
-            balance: sql`${transactions.balance} + ${params.amount ?? transaction.amount}`,
+            balance: sql`${schema.transactions.balance} + ${params.amount ?? transaction.amount}`,
           })
           .where(afterTransaction({ ...transaction, startedDate: params.startedDate! }));
       } else {
         // Simple update without date change
         await tx
-          .update(transactions)
+          .update(schema.transactions)
           .set({
             type: params.type ?? transaction.type,
             amount: params.amount ?? transaction.amount,
             description: params.description ?? transaction.description,
             balance: transaction.balance + amountToAdd,
           })
-          .where(eq(transactions.id, transactionId));
+          .where(eq(schema.transactions.id, transactionId));
 
         // Update subsequent transactions if amount changed
         if (amountToAdd) {
           await tx
-            .update(transactions)
+            .update(schema.transactions)
             .set({
-              balance: sql`${transactions.balance} + ${amountToAdd}`,
+              balance: sql`${schema.transactions.balance} + ${amountToAdd}`,
             })
             .where(afterTransaction(transaction));
         }
@@ -263,8 +262,8 @@ export async function deleteTransactions(transactionIds: string[]): Promise<Acti
       // Get all transactions to be deleted (oldest first)
       const transactionsToDelete = await tx
         .select()
-        .from(transactions)
-        .where(inArray(transactions.id, transactionIds))
+        .from(schema.transactions)
+        .where(inArray(schema.transactions.id, transactionIds))
         .orderBy(...ascTransactions());
 
       // Group by subaccount and calculate cumulative amounts
@@ -279,9 +278,9 @@ export async function deleteTransactions(transactionIds: string[]): Promise<Acti
             .reduce((sum, t) => sum + t.amount, 0);
 
           return tx
-            .update(transactions)
+            .update(schema.transactions)
             .set({
-              balance: sql`${transactions.balance} - ${cumulativeAmount}`,
+              balance: sql`${schema.transactions.balance} - ${cumulativeAmount}`,
             })
             .where(
               and(
@@ -297,7 +296,7 @@ export async function deleteTransactions(transactionIds: string[]): Promise<Acti
       await Promise.all(updateOperations);
 
       // Delete the transactions
-      await tx.delete(transactions).where(inArray(transactions.id, transactionIds));
+      await tx.delete(schema.transactions).where(inArray(schema.transactions.id, transactionIds));
     });
 
     revalidateTag({ tag: CACHE_TAGS.transactions, userId: await getUserId() });
@@ -318,8 +317,8 @@ export async function _recalculateBalances() {
   // WARNING: This bypasses RLS
   const allTransactions = await db.admin
     .select()
-    .from(transactions)
-    .orderBy(asc(transactions.subaccountId), ...ascTransactions());
+    .from(schema.transactions)
+    .orderBy(asc(schema.transactions.subaccountId), ...ascTransactions());
 
   // Group transactions by subaccount
   const bySubaccount = groupBy(allTransactions, (t) => t.subaccountId);

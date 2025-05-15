@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
+import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { apiQueries } from '@/server/api/queries';
 
 export async function GET(request: NextRequest) {

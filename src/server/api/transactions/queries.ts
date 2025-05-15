@@ -2,21 +2,20 @@ import 'server-only';
 
 import { and, asc, eq, gte, lte, sql } from 'drizzle-orm';
 
-import { CACHE_TAGS, cacheTag } from '@/lib/cache';
-import { MissingExchangeRateError, MissingSubaccountError } from '@/lib/errors';
+import { createFullApiContext, createAuthenticatedApiQuery } from '@/lib/api';
+import { CACHE_TAGS, cacheTag } from '@/lib/api/cache';
+import { MissingExchangeRateError, MissingSubaccountError } from '@/lib/api/errors';
+import { CurrencyMapper } from '@/lib/types/currencies.types';
+import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
+import { Paginated } from '@/lib/types/transport.types';
 import { generateTimeBuckets, TimeInterval } from '@/lib/utils/time-buckets';
-import { getDb, schema } from '@/server/db';
+import { schema } from '@/server/db';
 import { descTransactions } from '@/server/db/query-utils';
-import { subaccounts, transactions } from '@/server/db/schema';
 
-import { CurrencyMapper } from '../../../lib/types/currencies.types';
-import { Transaction, TransactionHistory } from '../../../lib/types/transactions.types';
-import { Paginated } from '../../../lib/types/transport.types';
-import { createAuthenticatedApiQuery } from '../create-api-query';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
-type DbTransactionWithSubaccount = typeof transactions.$inferSelect & {
-  subaccount: typeof subaccounts.$inferSelect;
+type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
+  subaccount: typeof schema.subaccounts.$inferSelect;
 };
 
 /**
@@ -93,20 +92,20 @@ export const getTransactions = createAuthenticatedApiQuery<
     'use cache';
     cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
 
-    const db = await getDb(ctx.supabaseToken);
+    const { db } = await createFullApiContext(ctx);
 
     // Set up the database query
     const query = db.rls((tx) =>
       tx
         .select()
-        .from(transactions)
-        .innerJoin(subaccounts, eq(transactions.subaccountId, subaccounts.id))
+        .from(schema.transactions)
+        .innerJoin(schema.subaccounts, eq(schema.transactions.subaccountId, schema.subaccounts.id))
         .where(
           and(
-            accountId ? eq(subaccounts.accountId, accountId) : undefined,
-            subaccountId ? eq(transactions.subaccountId, subaccountId) : undefined,
-            fromDate ? gte(transactions.startedDate, new Date(fromDate)) : undefined,
-            toDate ? lte(transactions.startedDate, new Date(toDate)) : undefined,
+            accountId ? eq(schema.subaccounts.accountId, accountId) : undefined,
+            subaccountId ? eq(schema.transactions.subaccountId, subaccountId) : undefined,
+            fromDate ? gte(schema.transactions.startedDate, new Date(fromDate)) : undefined,
+            toDate ? lte(schema.transactions.startedDate, new Date(toDate)) : undefined,
           ),
         )
         .orderBy(...descTransactions())
@@ -152,7 +151,7 @@ export const getTransactionById = createAuthenticatedApiQuery<string, Transactio
     'use cache';
     cacheTag.id(id, CACHE_TAGS.transactions);
 
-    const db = await getDb(ctx.supabaseToken);
+    const { db } = await createFullApiContext(ctx);
 
     // Run the database query and get the main currency in parallel
     const [transaction, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
@@ -205,7 +204,7 @@ export const getTransactionHistory = createAuthenticatedApiQuery<
   cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
   cacheTag.user(ctx.userId, CACHE_TAGS.accounts);
 
-  const db = await getDb(ctx.supabaseToken);
+  const { db } = await createFullApiContext(ctx);
 
   // Run the database queries in parallel
   const [{ mainCurrency, mapper: mainCurrencyMapper }, accounts, buckets] = await Promise.all([

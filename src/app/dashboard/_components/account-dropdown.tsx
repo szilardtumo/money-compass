@@ -24,7 +24,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useOptimisticActionWithToast } from '@/lib/safe-action/useActionWithToast';
+import { useOptimisticActionWithToast } from '@/hooks/useActionWithToast';
 import { Currency } from '@/lib/types/currencies.types';
 import { Profile } from '@/lib/types/profiles.types';
 import { apiActions } from '@/server/api/actions';

@@ -1,10 +1,10 @@
 import 'server-only';
 
-import { CACHE_TAGS, cacheLife, cacheTag } from '@/lib/cache';
+import { createAuthenticatedApiQuery, createPublicApiQuery } from '@/lib/api';
+import { CACHE_TAGS, cacheLife, cacheTag } from '@/lib/api/cache';
 import { Currency, CurrencyMapper } from '@/lib/types/currencies.types';
 import { getAdminDb } from '@/server/db';
 
-import { createAuthenticatedApiQuery, createPublicApiQuery } from '../create-api-query';
 import { getProfile } from '../profiles/queries';
 
 /**

@@ -20,20 +20,19 @@ import 'server-only';
 
 import { InferSelectModel } from 'drizzle-orm';
 
-import { CACHE_TAGS, cacheLife, cacheTag } from '@/lib/cache';
+import { createFullApiContext, createAuthenticatedApiQuery, createPublicApiQuery } from '@/lib/api';
+import { CACHE_TAGS, cacheLife, cacheTag } from '@/lib/api/cache';
 import { gocardlessApi } from '@/lib/gocardless';
 import { GocardlessInstitution, Integration } from '@/lib/types/integrations.types';
-import { createAuthenticatedApiQuery, createPublicApiQuery } from '@/server/api/create-api-query';
-import { getDb } from '@/server/db';
-import { accounts, subaccounts, integrations, integrationLinks } from '@/server/db/schema';
+import { schema } from '@/server/db';
 
 import { gocardlessProvider } from './gocardless-provider';
 
 // Define a type for database integration model
-type DbIntegration = InferSelectModel<typeof integrations> & {
-  links: (InferSelectModel<typeof integrationLinks> & {
-    subaccount: InferSelectModel<typeof subaccounts> & {
-      account: InferSelectModel<typeof accounts>;
+type DbIntegration = InferSelectModel<(typeof schema)['integrations']> & {
+  links: (InferSelectModel<(typeof schema)['integrationLinks']> & {
+    subaccount: InferSelectModel<(typeof schema)['subaccounts']> & {
+      account: InferSelectModel<(typeof schema)['accounts']>;
     };
   })[];
 };
@@ -74,7 +73,7 @@ export const getIntegrations = createAuthenticatedApiQuery<void, Integration[]>(
   'use cache';
   cacheTag.user(ctx.userId, CACHE_TAGS.integrations);
 
-  const db = await getDb(ctx.supabaseToken);
+  const { db } = await createFullApiContext(ctx);
 
   // Fetch all integrations from the database
   const dbIntegrations = (await db.rls((tx) =>

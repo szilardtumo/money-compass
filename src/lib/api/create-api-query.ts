@@ -1,36 +1,15 @@
-import { RequestCookie } from 'next/dist/compiled/@edge-runtime/cookies';
-import { cookies } from 'next/headers';
+import 'server-only';
+
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
-import { AuthenticationError } from '@/lib/errors';
-import { getSupabaseToken, SupabaseToken } from '@/lib/supabase/server';
-
-interface AuthenticatedApiQueryContext {
-  plainCookies: RequestCookie[];
-  supabaseToken: SupabaseToken;
-  userId: string;
-}
+import { createSerializableApiContext, SerializableApiContext } from '@/lib/api/context';
+import { AuthenticationError } from '@/lib/api/errors';
 
 type ApiQueryFunction<I = void, O = void, C = undefined> = (opts: {
   input: I;
   ctx: C;
 }) => Promise<O>;
-
-/**
- * Creates a context object which will be accessible from all authenticated API queries.
- *
- * The context returned by this function needs to be serializable to enable caching of API queries using 'use cache'.
- *
- * @returns The context object
- */
-// TODO: move to separate file, create separate serializable context and full context
-export const createAuthenticatedContext = cache(async (): Promise<AuthenticatedApiQueryContext> => {
-  const plainCookies = (await cookies()).getAll();
-  const supabaseToken = await getSupabaseToken();
-
-  return { plainCookies, supabaseToken, userId: supabaseToken.sub ?? 'anon' };
-});
 
 const withErrorHandling = <I = void, O = void, C = undefined>(
   apiQueryFn: ApiQueryFunction<I, O, C>,
@@ -89,8 +68,8 @@ interface AuthenticatedApiQuery<I, O> {
    */
   withContext: (
     opts: I extends void
-      ? { input?: I; ctx: AuthenticatedApiQueryContext }
-      : { input: I; ctx: AuthenticatedApiQueryContext },
+      ? { input?: I; ctx: SerializableApiContext }
+      : { input: I; ctx: SerializableApiContext },
   ) => Promise<O>;
 }
 
@@ -104,11 +83,11 @@ interface AuthenticatedApiQuery<I, O> {
  * @returns A deduplicated API query function with a 'withContext' method for direct context access
  */
 const createAuthenticatedApiQuery = <I = void, O = void>(
-  apiQueryFn: ApiQueryFunction<I, O, AuthenticatedApiQueryContext>,
+  apiQueryFn: ApiQueryFunction<I, O, SerializableApiContext>,
 ) => {
   const apiQueryFnWithMiddleware = withErrorHandling(apiQueryFn);
   const fn = cache(async (input: I) => {
-    const ctx = await createAuthenticatedContext();
+    const ctx = await createSerializableApiContext();
     return apiQueryFnWithMiddleware({ input, ctx });
   }) as AuthenticatedApiQuery<I, O>;
 
@@ -117,4 +96,4 @@ const createAuthenticatedApiQuery = <I = void, O = void>(
   return fn;
 };
 
-export { createPublicApiQuery, createAuthenticatedApiQuery };
+export { createAuthenticatedApiQuery, createPublicApiQuery };

@@ -2,17 +2,16 @@ import 'server-only';
 
 import { InferSelectModel } from 'drizzle-orm';
 
-import { CACHE_TAGS, cacheTag } from '@/lib/cache';
-import { MissingExchangeRateError } from '@/lib/errors';
+import { createFullApiContext, createAuthenticatedApiQuery } from '@/lib/api';
+import { CACHE_TAGS, cacheTag } from '@/lib/api/cache';
+import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Account, Subaccount } from '@/lib/types/accounts.types';
-import { getDb, schema } from '@/server/db';
-import { accounts as accountsSchema, subaccounts as subaccountsSchema } from '@/server/db/schema';
+import { schema } from '@/server/db';
 
-import { createAuthenticatedApiQuery } from '../create-api-query';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
-type DbAccount = InferSelectModel<typeof accountsSchema> & {
-  subaccounts: InferSelectModel<typeof subaccountsSchema>[];
+type DbAccount = InferSelectModel<(typeof schema)['accounts']> & {
+  subaccounts: InferSelectModel<(typeof schema)['subaccounts']>[];
 };
 
 type SubaccountBalances = Record<
@@ -75,7 +74,7 @@ export const getSubaccountBalances = createAuthenticatedApiQuery<void, Subaccoun
     cacheTag.user(ctx.userId, CACHE_TAGS.accounts);
     cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
 
-    const db = await getDb(ctx.supabaseToken);
+    const { db } = await createFullApiContext(ctx);
 
     // Get all the balances
     const balances = await db.rls((tx) => tx.select().from(schema.balances));
@@ -105,7 +104,7 @@ export const getAccounts = createAuthenticatedApiQuery<void, Account[]>(async ({
   cacheTag.user(ctx.userId, CACHE_TAGS.accounts);
   cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
 
-  const db = await getDb(ctx.supabaseToken);
+  const { db } = await createFullApiContext(ctx);
 
   // Get all the data in parallel
   const [accounts, { mainCurrency, mapper: mainCurrencyMapper }, subaccountBalances] =
@@ -135,7 +134,7 @@ export const getAccount = createAuthenticatedApiQuery<string, Account | undefine
     cacheTag.id(accountId, CACHE_TAGS.accounts);
     cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
 
-    const db = await getDb(ctx.supabaseToken);
+    const { db } = await createFullApiContext(ctx);
 
     // Get all the data in parallel
     const [account, { mainCurrency, mapper: mainCurrencyMapper }, subaccountBalances] =

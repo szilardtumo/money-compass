@@ -3,7 +3,7 @@
 import { randomUUID } from 'crypto';
 import { eq } from 'drizzle-orm';
 
-import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
+import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { gocardlessApi, isGocardlessError } from '@/lib/gocardless';
 import { ActionResponse } from '@/lib/types/transport.types';
 import { getUserId } from '@/server/api/profiles/queries';

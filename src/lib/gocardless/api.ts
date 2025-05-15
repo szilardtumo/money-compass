@@ -1,4 +1,4 @@
-import { GocardlessError } from '@/lib/errors';
+import { GocardlessError } from '@/lib/api/errors';
 import { GocardlessInstitution } from '@/lib/types/integrations.types';
 import { uniqueBy } from '@/lib/utils/unique-by';
 

@@ -2,8 +2,8 @@
 
 import { z } from 'zod';
 
-import { CACHE_TAGS, revalidateTag } from '@/lib/cache';
-import { authenticatedActionClient } from '@/lib/safe-action/client';
+import { authenticatedActionClient } from '@/lib/api';
+import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { schema } from '@/server/db';
 
 export const updateProfile = authenticatedActionClient

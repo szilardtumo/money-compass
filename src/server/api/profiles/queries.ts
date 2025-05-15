@@ -2,13 +2,11 @@ import 'server-only';
 
 import { User } from '@supabase/supabase-js';
 
-import { CACHE_TAGS, cacheTag } from '@/lib/cache';
-import { AuthenticationError } from '@/lib/errors';
+import { createFullApiContext, createAuthenticatedApiQuery } from '@/lib/api';
+import { CACHE_TAGS, cacheTag } from '@/lib/api/cache';
+import { AuthenticationError } from '@/lib/api/errors';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Profile } from '@/lib/types/profiles.types';
-import { getDb } from '@/server/db';
-
-import { createAuthenticatedApiQuery } from '../create-api-query';
 
 /**
  * Maps the user and profile data to the Profile type.
@@ -36,7 +34,7 @@ export const getProfile = createAuthenticatedApiQuery<void, Profile>(async ({ ct
   cacheTag.user(ctx.userId, CACHE_TAGS.profiles);
 
   const supabase = await createServerSupabaseClient(ctx.plainCookies);
-  const db = await getDb(ctx.supabaseToken);
+  const { db } = await createFullApiContext(ctx);
 
   const [
     {
