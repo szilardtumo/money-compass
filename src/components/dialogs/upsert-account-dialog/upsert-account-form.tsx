@@ -1,10 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useHookFormActionErrorMapper } from '@next-safe-action/adapter-react-hook-form/hooks';
 import { Cross1Icon, PlusIcon, ResetIcon } from '@radix-ui/react-icons';
 import { useCallback, useMemo } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -29,10 +29,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Currency } from '@/lib/types/currencies.types';
 import { Enums } from '@/lib/types/database.types';
-import { ActionErrorCode } from '@/lib/types/transport.types';
-import { createToastPromise } from '@/lib/utils/toasts';
+import { createAccountSchema, updateAccountSchema } from '@/lib/validation/accounts';
 import { apiActions } from '@/server/api/actions';
 
 interface UpsertAccountFormProps {
@@ -46,36 +46,48 @@ const accountCategoryOptions = [
   { label: 'Investment', value: 'investment' },
 ] satisfies { label: string; value: Enums<'account_category'> }[];
 
-const formSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z
-    .string()
-    .min(2, { message: 'Account name must be at least 2 characters.' })
-    .max(50, { message: 'Account name must be at most 50 characters.' }),
-  category: z.enum(['checking', 'investment'], {
-    required_error: 'An account category must be selected.',
-  }),
-  subaccounts: z
-    .array(
-      z.object({
-        id: z.string().optional(),
-        name: z.string().min(1, 'Subaccount name is required'),
-        originalCurrency: z.string().min(1, 'A currency must be selected.'),
-        delete: z.literal(true).optional(),
-      }),
-    )
-    .optional(),
-});
-
-type FormFields = z.infer<typeof formSchema>;
+type FormSchema = typeof updateAccountSchema | typeof createAccountSchema;
+type FormFields = z.infer<FormSchema>;
 
 export function UpsertAccountForm({
   currencies,
   defaultValues,
   onSuccess,
 }: UpsertAccountFormProps) {
+  const isUpdate = !!defaultValues && 'id' in defaultValues;
+
+  const { execute: executeCreateAccount, result: createAccountResult } = useActionWithToast(
+    apiActions.accounts.createAccount,
+    {
+      loadingToast: 'Creating account...',
+      successToast: 'Account created!',
+      errorToast: ({ errorMessage }) => ({
+        title: 'Failed to create account',
+        description: errorMessage,
+      }),
+      onSuccess,
+    },
+  );
+
+  const { execute: executeUpdateAccount, result: updateAccountResult } = useActionWithToast(
+    apiActions.accounts.updateAccount,
+    {
+      loadingToast: 'Updating account...',
+      successToast: 'Account updated!',
+      errorToast: ({ errorMessage }) => ({
+        title: 'Failed to update account',
+        description: errorMessage,
+      }),
+      onSuccess,
+    },
+  );
+  const { hookFormValidationErrors } = useHookFormActionErrorMapper<FormSchema>(
+    isUpdate ? updateAccountResult.validationErrors : createAccountResult.validationErrors,
+  );
+
   const form = useForm<FormFields>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(isUpdate ? updateAccountSchema : createAccountSchema),
+    errors: hookFormValidationErrors,
     defaultValues: {
       name: '',
       ...defaultValues,
@@ -90,10 +102,23 @@ export function UpsertAccountForm({
     keyName: '_id', // Do not overwrite our own id
   });
 
+  const onSubmit = useCallback(
+    (fields: FormFields) => {
+      const isUpdate = 'id' in fields;
+
+      if (isUpdate) {
+        executeUpdateAccount(fields);
+      } else {
+        executeCreateAccount(fields);
+      }
+    },
+    [executeCreateAccount, executeUpdateAccount],
+  );
+
   const onRemoveSubaccount = useCallback(
     (index: number) => {
       const subaccount = getValues().subaccounts![index];
-      if (subaccount.id) {
+      if ('id' in subaccount) {
         subaccountFieldArray.update(index, { ...subaccount, delete: true });
       } else {
         subaccountFieldArray.remove(index);
@@ -112,30 +137,6 @@ export function UpsertAccountForm({
     },
     [getValues, subaccountFieldArray],
   );
-
-  async function onSubmit({ id, ...values }: FormFields) {
-    const isUpdate = !!id;
-
-    const promise = isUpdate
-      ? apiActions.accounts.updateAccount(id, values)
-      : apiActions.accounts.createAccount(values);
-
-    toast.promise(createToastPromise(promise), {
-      loading: isUpdate ? 'Updating account...' : 'Creating account...',
-      success: isUpdate ? 'Account updated!' : 'Account created!',
-      error: (error) =>
-        error?.code === ActionErrorCode.UniqueViolation
-          ? 'An account with this name already exists.'
-          : isUpdate
-            ? 'Failed to update account.'
-            : 'Failed to create account.',
-    });
-
-    const response = await promise;
-    if (response.success) {
-      onSuccess?.();
-    }
-  }
 
   const currencyOptions = useMemo(() => {
     return currencies.map((currency) => ({

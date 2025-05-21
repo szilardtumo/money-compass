@@ -1,4 +1,6 @@
-import { InferIn, Schema } from 'next-safe-action/adapters/types';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { HookProps, useHookFormAction } from '@next-safe-action/adapter-react-hook-form/hooks';
+import { Infer, InferIn, Schema } from 'next-safe-action/adapters/types';
 import {
   HookBaseUtils,
   HookCallbacks,
@@ -9,6 +11,7 @@ import {
   UseOptimisticActionHookReturn,
 } from 'next-safe-action/hooks';
 import { useId } from 'react';
+import { Resolver } from 'react-hook-form';
 import { ExternalToast, toast } from 'sonner';
 
 type ToastTitle = string | React.ReactNode;
@@ -100,14 +103,25 @@ const getCallbacksWithToast = <
           typeof config === 'object' && config !== null && 'title' in config
             ? config
             : { title: config };
-        toast.loading(title, { ...data, id });
+        toast.loading(title, { description: '', ...data, id });
       }
     },
     onError: (args) => {
       utils?.onError?.(args);
 
+      // @ts-expect-error _errors might exist in case of global validation errors
+      const { _errors: formErrors, ...fieldErrors } = args.error.validationErrors ?? {};
+
+      const validationErrorMessage = [
+        ...(formErrors ?? []),
+        ...Object.entries(fieldErrors).map(
+          ([path, error]) =>
+            `${(error as { _errors?: string[] })._errors?.join(', ') ?? ''} at ${path}`,
+        ),
+      ].join('; ');
+
       const errorMessage = String(
-        args.error.validationErrors ?? args.error.serverError ?? 'An unknown error occurred',
+        validationErrorMessage || args.error.serverError || 'An unknown error occurred',
       );
 
       if (utils?.errorToast !== false) {
@@ -157,5 +171,33 @@ export const useOptimisticActionWithToast: UseOptimisticActionWithToast = (safeA
   return useOptimisticAction(safeActionFn, {
     ...utils,
     ...getCallbacksWithToast(id, utils),
+  });
+};
+
+export const useHookFormActionWithToast = <
+  ServerError,
+  S extends Schema | undefined,
+  BAS extends readonly Schema[],
+  CVE,
+  CBAVE,
+  Data,
+  FormContext = any,
+>(
+  safeActionFn: HookSafeActionFn<ServerError, S, BAS, CVE, CBAVE, Data>,
+  hookFormResolver: Resolver<S extends Schema ? Infer<S> : any, FormContext>,
+  props?: HookProps<ServerError, S, BAS, CVE, CBAVE, Data, FormContext> & {
+    actionProps: HookBaseUtils<S> &
+      HookCallbacks<ServerError, S, BAS, CVE, CBAVE, Data> &
+      ToastUtils<ServerError, S, BAS, CVE, CBAVE, Data>;
+  },
+) => {
+  const id = useId();
+
+  return useHookFormAction(safeActionFn, hookFormResolver, {
+    ...props,
+    actionProps: {
+      ...props?.actionProps,
+      ...getCallbacksWithToast(id, props?.actionProps),
+    },
   });
 };

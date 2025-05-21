@@ -18,7 +18,7 @@ interface UpsertAccountDialogClientProps {
 
 export function UpsertAccountDialogClient({ currencies }: UpsertAccountDialogClientProps) {
   const { isOpen, internal } = useUpsertAccountDialog();
-  const isUpdate = !!internal.defaultValues?.id;
+  const isUpdate = !!internal.defaultValues && 'id' in internal.defaultValues;
 
   return (
     <Dialog open={isOpen} onOpenChange={internal.setIsOpen}>

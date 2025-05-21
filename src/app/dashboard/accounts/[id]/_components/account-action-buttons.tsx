@@ -4,7 +4,6 @@ import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import { Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MouseEvent, useState } from 'react';
-import { toast } from 'sonner';
 
 import { useUpsertAccountDialog } from '@/components/dialogs/upsert-account-dialog';
 import {
@@ -20,8 +19,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Account } from '@/lib/types/accounts.types';
-import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
 interface AccountActionButtonsProps {
@@ -33,22 +32,23 @@ export function AccountActionButtons({ account }: AccountActionButtonsProps) {
 
   const { openDialog: openEditDialog } = useUpsertAccountDialog();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { executeAsync: executeDeleteAccount, isPending } = useActionWithToast(
+    apiActions.accounts.deleteAccount,
+    {
+      loadingToast: 'Deleting account...',
+      successToast: 'Account deleted!',
+      errorToast: ({ errorMessage }) => ({
+        title: 'Failed to delete account',
+        description: errorMessage,
+      }),
+    },
+  );
 
   const handleDelete = async (e: MouseEvent) => {
     e.preventDefault();
-    setIsDeleting(true);
-    const promise = apiActions.accounts.deleteAccount(account.id);
-
-    toast.promise(createToastPromise(promise), {
-      loading: 'Deleting account...',
-      success: 'Account deleted!',
-      error: () => 'Failed to delete account. Please try again later.',
-    });
-
-    await promise;
+    await executeDeleteAccount({ accountId: account.id });
     setDeleteDialogOpen(false);
-    setIsDeleting(false);
     router.replace('/dashboard');
   };
 
@@ -77,9 +77,9 @@ export function AccountActionButtons({ account }: AccountActionButtonsProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={isDeleting} variant="destructive" onClick={handleDelete}>
-              {isDeleting && <Loader className="mr-2 size-4" />}
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={isPending} variant="destructive" onClick={handleDelete}>
+              {isPending && <Loader className="mr-2 size-4" />}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

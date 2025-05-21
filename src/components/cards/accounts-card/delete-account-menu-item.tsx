@@ -1,10 +1,9 @@
 'use client';
 
 import { TrashIcon } from '@radix-ui/react-icons';
-import { toast } from 'sonner';
 
 import { DropdownMenuItem, DropdownMenuShortcut } from '@/components/ui/dropdown-menu';
-import { createToastPromise } from '@/lib/utils/toasts';
+import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { apiActions } from '@/server/api/actions';
 
 interface DeleteAccountMenuItemProps {
@@ -12,20 +11,17 @@ interface DeleteAccountMenuItemProps {
 }
 
 export function DeleteAccountMenuItem({ accountId }: DeleteAccountMenuItemProps) {
-  const onDeleteAccount = async () => {
-    const promise = apiActions.accounts.deleteAccount(accountId);
-
-    toast.promise(createToastPromise(promise), {
-      loading: 'Deleting account...',
-      success: 'Account deleted!',
-      error: () => 'Failed to delete account.',
-    });
-
-    await promise;
-  };
+  const { execute: executeDeleteAccount } = useActionWithToast(apiActions.accounts.deleteAccount, {
+    loadingToast: 'Deleting account...',
+    successToast: 'Account deleted!',
+    errorToast: ({ errorMessage }) => ({
+      title: 'Failed to delete account',
+      description: errorMessage,
+    }),
+  });
 
   return (
-    <DropdownMenuItem onSelect={onDeleteAccount}>
+    <DropdownMenuItem onSelect={() => executeDeleteAccount({ accountId })}>
       Delete
       <DropdownMenuShortcut>
         <TrashIcon />
