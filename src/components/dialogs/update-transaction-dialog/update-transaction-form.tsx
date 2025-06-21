@@ -2,8 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isFuture } from 'date-fns';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -20,8 +18,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
-import { createToastPromise } from '@/lib/utils/toasts';
+import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
+import { updateTransactionSchema } from '@/lib/validation/transactions';
 import { apiActions } from '@/server/api/actions';
+
+type FormFields = z.infer<typeof updateTransactionSchema>;
 
 interface UpdateTransactionFormProps {
   currency: string;
@@ -38,51 +39,33 @@ const transactionTypeOptions = [
   { label: 'Top-up', value: 'topup' },
 ] satisfies { label: string; value: string }[];
 
-const formSchema = z.object({
-  id: z.string().uuid(),
-  type: z.string({ required_error: 'A transaction type must be selected.' }),
-  amount: z.number(),
-  description: z.string().min(1, 'Description is required.'),
-  startedDate: z.date().refine((date) => date <= new Date(), {
-    message: 'Date cannot be in the future',
-  }),
-});
-
-type FormFields = z.infer<typeof formSchema>;
-
 export function UpdateTransactionForm({
   currency,
   defaultValues,
   onSuccess,
 }: UpdateTransactionFormProps) {
-  const form = useForm<FormFields>({
-    resolver: zodResolver(formSchema),
-    defaultValues,
-  });
-
-  async function onSubmit(values: FormFields) {
-    const promise = apiActions.transactions.updateTransaction(values.id, {
-      type: values.type,
-      amount: values.amount,
-      description: values.description,
-      startedDate: values.startedDate,
-    });
-
-    toast.promise(createToastPromise(promise), {
-      loading: 'Updating transaction...',
-      success: 'Transaction updated!',
-      error: () => 'Failed to update transaction.',
-    });
-
-    const response = await promise;
-    if (response.success) {
-      onSuccess?.();
-    }
-  }
+  const { form, handleSubmitWithAction } = useHookFormActionWithToast(
+    apiActions.transactions.updateTransaction,
+    zodResolver(updateTransactionSchema),
+    {
+      actionProps: {
+        loadingToast: 'Updating transaction...',
+        successToast: 'Transaction updated!',
+        errorToast: ({ errorMessage }) => ({
+          title: 'Failed to update transaction',
+          description: errorMessage,
+        }),
+        onSuccess,
+      },
+      formProps: {
+        defaultValues,
+      },
+    },
+  );
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-8">
+      <form onSubmit={handleSubmitWithAction} className="flex flex-col space-y-8">
         <FormField
           control={form.control}
           name="type"
@@ -129,7 +112,7 @@ export function UpdateTransactionForm({
 
         <FormField
           control={form.control}
-          name="startedDate"
+          name="date"
           render={({ field: { onChange, ...field } }) => (
             <FormItem>
               <FormLabel>Date</FormLabel>

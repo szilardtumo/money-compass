@@ -11,8 +11,6 @@ export function AddTransactionMenuItem({ accountId }: AddTransactionMenuItemProp
   const { openDialog } = useCreateTransactionDialog();
 
   return (
-    <DropdownMenuItem onSelect={() => openDialog({ account: accountId })}>
-      Add Transaction
-    </DropdownMenuItem>
+    <DropdownMenuItem onSelect={() => openDialog({ accountId })}>Add Transaction</DropdownMenuItem>
   );
 }

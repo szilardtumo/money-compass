@@ -81,7 +81,7 @@ export function RecentTransactionsCardClient({
         {accounts.length === 1 && (
           <Button
             size="sm"
-            onClick={() => openCreateTransactionDialog({ account: accounts[0].id })}
+            onClick={() => openCreateTransactionDialog({ accountId: accounts[0].id })}
           >
             <PlusIcon className=" mr-1" />
             Add <span className="sr-only sm:not-sr-only">&nbsp;transaction</span>

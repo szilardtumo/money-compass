@@ -1,8 +1,6 @@
 import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu';
 import { DotsHorizontalIcon, TrashIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
-import { useCallback } from 'react';
-import { toast } from 'sonner';
 
 import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
 import { Avatar } from '@/components/ui/avatar';
@@ -15,9 +13,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NavLink } from '@/components/ui/nav-link';
+import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { TransactionWithAccount } from '@/lib/types/transactions.types';
 import { formatCurrency, formatTime } from '@/lib/utils/formatters';
-import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
 interface TransactionItemProps {
@@ -26,17 +24,17 @@ interface TransactionItemProps {
 
 export function TransactionItem({ transaction }: TransactionItemProps) {
   const { openDialog: openUpdateTransactionDialog } = useUpdateTransactionDialog();
-  const deleteTransaction = useCallback(async (transactionId: string) => {
-    const promise = apiActions.transactions.deleteTransactions([transactionId]);
-
-    toast.promise(createToastPromise(promise), {
-      loading: 'Deleting transaction...',
-      success: 'Transaction deleted!',
-      error: 'Failed to delete transaction. Please try again later.',
-    });
-
-    await promise;
-  }, []);
+  const { execute: deleteTransaction } = useActionWithToast(
+    apiActions.transactions.deleteTransaction,
+    {
+      loadingToast: 'Deleting transaction...',
+      successToast: 'Transaction deleted!',
+      errorToast: ({ errorMessage }) => ({
+        title: 'Failed to delete transaction',
+        description: errorMessage,
+      }),
+    },
+  );
 
   return (
     <div className="flex items-start gap-4">
@@ -71,6 +69,7 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
                 ...transaction,
                 amount: transaction.amount.originalValue,
                 currency: transaction.originalCurrency,
+                date: transaction.startedDate,
               })
             }
           >

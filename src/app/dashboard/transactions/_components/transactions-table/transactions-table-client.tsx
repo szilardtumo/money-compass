@@ -3,8 +3,7 @@
 
 import { DotsHorizontalIcon, TrashIcon } from '@radix-ui/react-icons';
 import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
-import { useCallback, useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import { useCallback, useMemo } from 'react';
 
 import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
 import { AccountIcon } from '@/components/ui/account-avatar';
@@ -27,11 +26,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { NavLink } from '@/components/ui/nav-link';
+import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Account } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
-import { createToastPromise } from '@/lib/utils/toasts';
 import { apiActions } from '@/server/api/actions';
 
 const columnHelper = createColumnHelper<TransactionWithAccount>();
@@ -129,21 +128,24 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
   );
 
   const { openDialog: openUpdateTransactionDialog } = useUpdateTransactionDialog();
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const deleteTransaction = useCallback(async (transactionId: string) => {
-    setIsDeleting(true);
-    const promise = apiActions.transactions.deleteTransactions([transactionId]);
+  const { execute: deleteTransaction, isExecuting: isDeleting } = useActionWithToast(
+    apiActions.transactions.deleteTransaction,
+    {
+      loadingToast: 'Deleting transaction...',
+      successToast: 'Transaction deleted!',
+      errorToast: 'Failed to delete transaction. Please try again later.',
+    },
+  );
 
-    toast.promise(createToastPromise(promise), {
-      loading: 'Deleting transaction...',
-      success: 'Transaction deleted!',
-      error: 'Failed to delete transaction. Please try again later.',
-    });
-
-    await promise;
-    setIsDeleting(false);
-  }, []);
+  const { executeAsync: deleteTransactions, isExecuting: isDeletingSelected } = useActionWithToast(
+    apiActions.transactions.deleteTransactions,
+    {
+      loadingToast: 'Deleting selected transactions...',
+      successToast: 'Transactions deleted!',
+      errorToast: 'Failed to delete transaction. Please try again later.',
+    },
+  );
 
   const columns = useMemo(() => {
     const actionsCell: ColumnDefTemplate<CellContext<TransactionWithAccount, unknown>> = ({
@@ -164,6 +166,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
                   ...row.original,
                   amount: row.original.amount.originalValue,
                   currency: row.original.originalCurrency,
+                  date: row.original.startedDate,
                 })
               }
             >
@@ -200,20 +203,10 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
   const selectedRowCount = table.getSelectedRowModel().rows.length;
 
   const deleteSelected = useCallback(async () => {
-    setIsDeleting(true);
     const transactionIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
-    const promise = apiActions.transactions.deleteTransactions(transactionIds);
-
-    toast.promise(createToastPromise(promise), {
-      loading: 'Deleting selected transactions...',
-      success: 'Transactions deleted!',
-      error: 'Failed to delete transaction. Please try again later.',
-    });
-
-    await promise;
+    await deleteTransactions({ transactionIds });
     table.resetRowSelection();
-    setIsDeleting(false);
-  }, [table]);
+  }, [deleteTransactions, table]);
 
   return (
     <div className="space-y-2">
@@ -230,8 +223,8 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
           icon={TrashIcon}
           className="h-8 px-2.5 sm:ml-auto"
           onClick={deleteSelected}
-          disabled={selectedRowCount === 0 || isDeleting}
-          isLoading={isDeleting}
+          disabled={selectedRowCount === 0 || isDeleting || isDeletingSelected}
+          isLoading={isDeleting || isDeletingSelected}
         >
           Delete ({selectedRowCount})
         </Button>
