@@ -69,7 +69,7 @@ const iconVariants = cva('shrink-0', {
 });
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends React.ComponentProps<'button'>,
     VariantProps<typeof buttonVariants>,
     VariantProps<typeof iconVariants> {
   asChild?: boolean;
@@ -77,59 +77,52 @@ export interface ButtonProps
   isLoading?: boolean;
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      className,
-      variant,
-      size,
-      asChild = false,
-      icon,
-      iconPlacement = 'left',
-      iconAnimation,
-      isLoading = false,
-      ...props
-    },
-    ref,
-  ) => {
-    const Comp = asChild ? SlotPrimitive.Slot : 'button';
-    const Icon = isLoading ? Loader2 : icon;
+function Button({
+  className,
+  variant,
+  size,
+  asChild = false,
+  icon,
+  iconPlacement = 'left',
+  iconAnimation,
+  isLoading = false,
+  ...props
+}: ButtonProps) {
+  const Comp = asChild ? SlotPrimitive.Slot : 'button';
+  const Icon = isLoading ? Loader2 : icon;
 
-    return (
-      <Comp
-        className={cn(
-          variant === 'unstyled' ? className : buttonVariants({ variant, size, className }),
-        )}
-        ref={ref}
-        {...props}
-      >
-        {Icon && iconPlacement === 'left' && (
-          <Icon
-            className={cn(
-              iconVariants({
-                size,
-                iconPlacement,
-                iconAnimation: isLoading ? 'spin' : iconAnimation,
-              }),
-            )}
-          />
-        )}
-        <SlotPrimitive.Slottable>{props.children}</SlotPrimitive.Slottable>
-        {Icon && iconPlacement === 'right' && (
-          <Icon
-            className={cn(
-              iconVariants({
-                size,
-                iconPlacement,
-                iconAnimation: isLoading ? 'spin' : iconAnimation,
-              }),
-            )}
-          />
-        )}
-      </Comp>
-    );
-  },
-);
-Button.displayName = 'Button';
+  return (
+    <Comp
+      className={cn(
+        variant === 'unstyled' ? className : buttonVariants({ variant, size, className }),
+      )}
+      {...props}
+    >
+      {Icon && iconPlacement === 'left' && (
+        <Icon
+          className={cn(
+            iconVariants({
+              size,
+              iconPlacement,
+              iconAnimation: isLoading ? 'spin' : iconAnimation,
+            }),
+          )}
+        />
+      )}
+      <SlotPrimitive.Slottable>{props.children}</SlotPrimitive.Slottable>
+      {Icon && iconPlacement === 'right' && (
+        <Icon
+          className={cn(
+            iconVariants({
+              size,
+              iconPlacement,
+              iconAnimation: isLoading ? 'spin' : iconAnimation,
+            }),
+          )}
+        />
+      )}
+    </Comp>
+  );
+}
 
 export { Button, buttonVariants };
