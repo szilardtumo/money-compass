@@ -28,9 +28,7 @@ const PaginationItem = React.forwardRef<HTMLLIElement, React.ComponentProps<'li'
 );
 PaginationItem.displayName = 'PaginationItem';
 
-type PaginationButtonProps = {
-  isActive?: boolean;
-} & React.ComponentProps<typeof Button>;
+type PaginationButtonProps = { isActive?: boolean } & React.ComponentProps<typeof Button>;
 
 function PaginationButton({ isActive, ...props }: PaginationButtonProps) {
   return (

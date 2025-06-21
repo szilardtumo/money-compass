@@ -47,7 +47,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
             aria-expanded={open}
             disabled={disabled}
             className={cn(
-              'flex w-full justify-between focus:outline-none focus:ring-1 focus:ring-ring',
+              'flex w-full justify-between focus:outline-hidden focus:ring-1 focus:ring-ring',
               className,
             )}
             ref={ref}
@@ -57,7 +57,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
             <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+        <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
           <Command>
             <CommandInput placeholder={placeholder} className="h-9" />
             <CommandList>

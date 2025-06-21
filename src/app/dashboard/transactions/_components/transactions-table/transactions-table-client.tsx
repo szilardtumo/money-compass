@@ -46,7 +46,7 @@ const staticColumns = [
     cell: ({ getValue }) => (
       <HoverCard>
         <HoverCardTrigger asChild>
-          <span className="min-w-[150px] overflow-ellipsis line-clamp-3">{getValue()}</span>
+          <span className="min-w-[150px] text-ellipsis line-clamp-3">{getValue()}</span>
         </HoverCardTrigger>
         <HoverCardContent className="w-80">{getValue()}</HoverCardContent>
       </HoverCard>

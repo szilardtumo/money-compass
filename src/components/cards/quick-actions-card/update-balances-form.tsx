@@ -113,7 +113,7 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
                           />
                         </FormControl>
 
-                        <FormDescription className="col-start-2 !mt-1">
+                        <FormDescription className="col-start-2 mt-1!">
                           Previous balance:{' '}
                           {formatCurrency(
                             subaccount.balance.originalValue,

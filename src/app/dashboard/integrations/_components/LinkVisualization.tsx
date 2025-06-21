@@ -21,7 +21,7 @@ function LinkPart({ ref, info }: { info?: LinkPart; ref: React.RefObject<HTMLDiv
     <div
       ref={ref}
       className={cn(
-        'size-36 flex flex-col justify-center items-center rounded-lg border-2 p-4 text-center shadow-sm bg-card text-sm',
+        'size-36 flex flex-col justify-center items-center rounded-lg border-2 p-4 text-center shadow-xs bg-card text-sm',
         !info && 'border-dashed',
       )}
     >
