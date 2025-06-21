@@ -1,8 +1,8 @@
 'use client';
 
-import * as SheetPrimitive from '@radix-ui/react-dialog';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { Dialog as SheetPrimitive } from 'radix-ui';
 import * as React from 'react';
 
 import { cn } from '@/lib/cn';
@@ -43,9 +43,7 @@ const sheetVariants = cva(
           'inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
       },
     },
-    defaultVariants: {
-      side: 'right',
-    },
+    defaultVariants: { side: 'right' },
   },
 );
 

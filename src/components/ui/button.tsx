@@ -1,6 +1,6 @@
-import { Slot, Slottable } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Loader2 } from 'lucide-react';
+import { Slot as SlotPrimitive } from 'radix-ui';
 import * as React from 'react';
 
 import { cn } from '@/lib/cn';
@@ -29,19 +29,13 @@ const buttonVariants = cva(
         card: 'w-32 p-4 flex-col justify-center gap-3 whitespace-normal text-balance rounded-md',
       },
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
+    defaultVariants: { variant: 'default', size: 'default' },
   },
 );
 
 const iconVariants = cva('shrink-0', {
   variants: {
-    iconPlacement: {
-      left: 'mr-2',
-      right: 'ml-2',
-    },
+    iconPlacement: { left: 'mr-2', right: 'ml-2' },
     size: {
       default: 'size-4',
       sm: 'size-3.5',
@@ -67,26 +61,11 @@ const iconVariants = cva('shrink-0', {
       iconAnimation: 'expand',
       className: 'translate-x-100 group-hover:translate-x-0 group-hover:ml-2',
     },
-    {
-      iconAnimation: 'expand',
-      size: 'sm',
-      className: 'group-hover:w-3',
-    },
-    {
-      iconPlacement: 'left',
-      iconAnimation: 'bounce',
-      className: 'group-hover:-translate-x-0.5',
-    },
-    {
-      iconPlacement: 'right',
-      iconAnimation: 'bounce',
-      className: 'group-hover:translate-x-0.5',
-    },
+    { iconAnimation: 'expand', size: 'sm', className: 'group-hover:w-3' },
+    { iconPlacement: 'left', iconAnimation: 'bounce', className: 'group-hover:-translate-x-0.5' },
+    { iconPlacement: 'right', iconAnimation: 'bounce', className: 'group-hover:translate-x-0.5' },
   ],
-  defaultVariants: {
-    iconPlacement: 'left',
-    size: 'default',
-  },
+  defaultVariants: { iconPlacement: 'left', size: 'default' },
 });
 
 export interface ButtonProps
@@ -113,7 +92,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) => {
-    const Comp = asChild ? Slot : 'button';
+    const Comp = asChild ? SlotPrimitive.Slot : 'button';
     const Icon = isLoading ? Loader2 : icon;
 
     return (
@@ -135,7 +114,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             )}
           />
         )}
-        <Slottable>{props.children}</Slottable>
+        <SlotPrimitive.Slottable>{props.children}</SlotPrimitive.Slottable>
         {Icon && iconPlacement === 'right' && (
           <Icon
             className={cn(
