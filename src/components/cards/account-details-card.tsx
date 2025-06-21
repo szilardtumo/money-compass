@@ -1,12 +1,16 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Currency } from '@/components/ui/currency';
-import { Account } from '@/lib/types/accounts.types';
+import { apiQueries } from '@/server/api/queries';
 
 interface AccountDetailsCardProps {
-  account: Account;
+  accountId: string;
 }
 
-export function AccountDetailsCard({ account }: AccountDetailsCardProps) {
+export async function AccountDetailsCard({ accountId }: AccountDetailsCardProps) {
+  const account = await apiQueries.accounts.getAccount(accountId);
+
+  if (!account) return null;
+
   return (
     <Card>
       <CardContent className="p-6 w-fit mx-auto flex flex-col sm:flex-row sm:w-full gap-8 justify-around">

@@ -1,10 +1,13 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { AccountDetailsCard } from '@/components/cards/account-details-card';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
 import { SubaccountsCard } from '@/components/cards/subaccounts-card';
-import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
+import { PageHeaderSlotContent } from '@/components/ui/page-header-slot';
+import { PageHeaderTitle } from '@/components/ui/page-layout';
+import { Skeleton } from '@/components/ui/skeleton';
 import { apiQueries } from '@/server/api/queries';
 
 import { AccountActionButtons } from './_components/account-action-buttons';
@@ -15,38 +18,36 @@ interface AccountDetailsPageProps {
 
 export default async function AccountDetailsPage({ params }: AccountDetailsPageProps) {
   const { id } = await params;
+
+  // Only fetch the minimal account data needed for the page header and to verify existence
   const account = await apiQueries.accounts.getAccount(id);
 
   if (!account) {
     notFound();
   }
 
-  const [transactions, transactionHistory] = await Promise.all([
-    apiQueries.transactions.getTransactions({ accountId: account.id, pageSize: 5 }),
-    apiQueries.transactions.getTransactionHistory({ dateRange: '12 month', interval: '1 month' }),
-  ]);
-
   return (
-    <PageLayout>
-      <PageHeader>
+    <>
+      <PageHeaderSlotContent>
         <PageHeaderTitle>{account.name}</PageHeaderTitle>
         <AccountActionButtons account={account} />
-      </PageHeader>
+      </PageHeaderSlotContent>
 
-      <PageContent>
-        <AccountDetailsCard account={account} />
-        <AccountHistoryCard
-          data={transactionHistory}
-          account={account}
-          title="Transaction history (past 12 months)"
-        />
-        <SubaccountsCard subaccounts={account.subaccounts} accountBalance={account.totalBalance} />
-        <RecentTransactionsCard
-          accounts={[account]}
-          transactions={transactions.data}
-          mainCurrency={account.mainCurrency}
-        />
-      </PageContent>
-    </PageLayout>
+      <Suspense fallback={<Skeleton className="h-[100px]" />}>
+        <AccountDetailsCard accountId={id} />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton className="h-[360px]" />}>
+        <AccountHistoryCard accountId={id} />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton className="h-[500px]" />}>
+        <SubaccountsCard accountId={id} />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton className="h-[500px]" />}>
+        <RecentTransactionsCard accountId={id} />
+      </Suspense>
+    </>
   );
 }

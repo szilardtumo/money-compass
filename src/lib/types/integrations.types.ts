@@ -1,4 +1,4 @@
-import { Subaccount } from '@/lib/types/accounts.types';
+import { Subaccount } from './accounts.types';
 
 type IntegrationStatus = 'unconfirmed' | 'active' | 'expired' | 'unknown';
 

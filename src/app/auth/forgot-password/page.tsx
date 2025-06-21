@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
+import { useSupabaseAuth } from '@/components/providers/supabase-client-provider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -28,7 +28,7 @@ const formSchema = z.object({
 type FormFields = z.infer<typeof formSchema>;
 
 export default function ForgotPasswordPage() {
-  const supabase = useBrowserSupabaseClient();
+  const supabaseAuth = useSupabaseAuth();
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),
@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = useCallback(
     async (formFields: FormFields) => {
-      const { error } = await supabase.auth.resetPasswordForEmail(formFields.email, {
+      const { error } = await supabaseAuth.resetPasswordForEmail(formFields.email, {
         redirectTo: redirectUrl,
       });
 
@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
         return;
       }
     },
-    [redirectUrl, setError, supabase.auth],
+    [redirectUrl, setError, supabaseAuth],
   );
 
   return (

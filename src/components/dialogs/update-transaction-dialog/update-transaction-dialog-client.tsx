@@ -1,8 +1,9 @@
 'use client';
 
-import { UpdateTransactionForm } from '@/components/dialogs/update-transaction-dialog/update-transaction-form';
-import { useUpdateTransactionDialog } from '@/components/providers/update-transaction-dialog-provider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+import { useUpdateTransactionDialog } from './update-transaction-dialog-context';
+import { UpdateTransactionForm } from './update-transaction-form';
 
 export function UpdateTransactionDialogClient() {
   const { isOpen, internal } = useUpdateTransactionDialog();

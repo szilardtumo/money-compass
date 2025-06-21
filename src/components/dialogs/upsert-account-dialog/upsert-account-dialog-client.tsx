@@ -1,6 +1,5 @@
 'use client';
 
-import { useUpsertAccountDialog } from '@/components/providers/upsert-account-dialog-provider';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Currency } from '@/lib/types/currencies.types';
 
+import { useUpsertAccountDialog } from './upsert-account-dialog-context';
 import { UpsertAccountForm } from './upsert-account-form';
 
 interface UpsertAccountDialogClientProps {
@@ -18,7 +18,7 @@ interface UpsertAccountDialogClientProps {
 
 export function UpsertAccountDialogClient({ currencies }: UpsertAccountDialogClientProps) {
   const { isOpen, internal } = useUpsertAccountDialog();
-  const isUpdate = !!internal.defaultValues?.id;
+  const isUpdate = !!internal.defaultValues && 'id' in internal.defaultValues;
 
   return (
     <Dialog open={isOpen} onOpenChange={internal.setIsOpen}>

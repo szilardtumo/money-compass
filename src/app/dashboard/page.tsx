@@ -1,37 +1,35 @@
+import { Suspense } from 'react';
+
 import { AccountsCard } from '@/components/cards/accounts-card';
 import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { QuickActionsCard } from '@/components/cards/quick-actions-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
-import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
-import { apiQueries } from '@/server/api/queries';
+import { PageHeaderSlotContent } from '@/components/ui/page-header-slot';
+import { PageHeaderTitle } from '@/components/ui/page-layout';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default async function DashboardPage() {
-  const [accounts, transactionHistory, transactions, { mainCurrency }] = await Promise.all([
-    apiQueries.accounts.getAccounts(),
-    apiQueries.transactions.getTransactionHistory({ dateRange: '12 month', interval: '1 month' }),
-    apiQueries.transactions.getTransactions({ pageSize: 5 }),
-    apiQueries.currencies.getMainCurrencyWithMapper(),
-  ]);
-
   return (
-    <PageLayout>
-      <PageHeader>
+    <>
+      <PageHeaderSlotContent>
         <PageHeaderTitle>Dashboard</PageHeaderTitle>
-      </PageHeader>
+      </PageHeaderSlotContent>
 
-      <PageContent>
-        <NetWorthHistoryCard accounts={accounts} data={transactionHistory} />
+      <Suspense fallback={<Skeleton className="h-[360px]" />}>
+        <NetWorthHistoryCard />
+      </Suspense>
 
+      <Suspense fallback={<Skeleton className="h-[220px]" />}>
         <QuickActionsCard />
+      </Suspense>
 
+      <Suspense fallback={<Skeleton className="h-[400px]" />}>
         <AccountsCard />
+      </Suspense>
 
-        <RecentTransactionsCard
-          accounts={accounts}
-          transactions={transactions.data}
-          mainCurrency={mainCurrency}
-        />
-      </PageContent>
-    </PageLayout>
+      <Suspense fallback={<Skeleton className="h-[400px]" />}>
+        <RecentTransactionsCard />
+      </Suspense>
+    </>
   );
 }

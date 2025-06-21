@@ -2,9 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isFuture, startOfDay } from 'date-fns';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
@@ -19,10 +16,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
 import { Account } from '@/lib/types/accounts.types';
-import { ActionErrorCode, ActionResponseError } from '@/lib/types/transport.types';
 import { formatCurrency } from '@/lib/utils/formatters';
-import { createToastPromise } from '@/lib/utils/toasts';
+import { updateBalancesSchema } from '@/lib/validation/transactions';
 import { apiActions } from '@/server/api/actions';
 
 interface UpdateBalancesFormProps {
@@ -31,51 +28,39 @@ interface UpdateBalancesFormProps {
 }
 
 export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormProps) {
-  const formSchema = z.object({
-    description: z.string().min(1, 'Description is required.'),
-    date: z.date().max(new Date(), 'Date cannot be in the future.'),
-    balances: z.record(z.number()),
-  });
-
-  type FormFields = z.infer<typeof formSchema>;
-
-  const form = useForm<FormFields>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      description: 'Manual balance correction',
-      date: startOfDay(new Date()),
-      balances: Object.fromEntries(
-        accounts.flatMap((account) =>
-          account.subaccounts.map((subaccount) => [
-            subaccount.id,
-            subaccount.balance.originalValue,
-          ]),
-        ),
-      ),
+  const { form, handleSubmitWithAction } = useHookFormActionWithToast(
+    apiActions.transactions.updateBalances,
+    zodResolver(updateBalancesSchema),
+    {
+      actionProps: {
+        loadingToast: 'Updating account balances...',
+        successToast: 'Account balances updated!',
+        errorToast: ({ errorMessage }) => ({
+          title: 'Failed to update account balances',
+          description: errorMessage,
+        }),
+        onSuccess,
+      },
+      formProps: {
+        defaultValues: {
+          description: 'Manual balance correction',
+          date: startOfDay(new Date()),
+          balances: Object.fromEntries(
+            accounts.flatMap((account) =>
+              account.subaccounts.map((subaccount) => [
+                subaccount.id,
+                subaccount.balance.originalValue,
+              ]),
+            ),
+          ),
+        },
+      },
     },
-  });
-
-  async function onSubmit(values: FormFields) {
-    const promise = apiActions.accounts.updateAccountBalances(values);
-
-    toast.promise(createToastPromise(promise), {
-      loading: 'Updating account balances...',
-      success: 'Account balances updated!',
-      error: (error: ActionResponseError['error']) =>
-        error.code === ActionErrorCode.ValidationError
-          ? error.message
-          : 'Failed to update account balances.',
-    });
-
-    const response = await promise;
-    if (response.success) {
-      onSuccess?.();
-    }
-  }
+  );
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-8">
+      <form onSubmit={handleSubmitWithAction} className="flex flex-col space-y-8">
         <FormField
           control={form.control}
           name="description"

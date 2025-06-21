@@ -3,8 +3,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isFuture, startOfDay } from 'date-fns';
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -22,8 +20,9 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
+import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
 import { Account } from '@/lib/types/accounts.types';
-import { createToastPromise } from '@/lib/utils/toasts';
+import { createTransactionSchema } from '@/lib/validation/transactions';
 import { apiActions } from '@/server/api/actions';
 
 interface CreateTransactionFormProps {
@@ -41,29 +40,39 @@ const transactionTypeOptions = [
   { label: 'Top-up', value: 'topup' },
 ] satisfies { label: string; value: string }[];
 
-const formSchema = z.object({
-  account: z.string({ required_error: 'An account must be selected.' }),
-  subaccount: z.string({ required_error: 'A subaccount must be selected.' }),
-  type: z.string({ required_error: 'A transaction type must be selected.' }),
-  amount: z.number(),
-  description: z.string().min(1, 'Description is required.'),
-  date: z.date().max(new Date(), 'Date cannot be in the future.'),
-});
-
-type FormFields = z.infer<typeof formSchema>;
+type FormFields = z.infer<typeof createTransactionSchema>;
 
 export function CreateTransactionForm({
   accounts,
   defaultValues,
   onSuccess,
 }: CreateTransactionFormProps) {
-  const form = useForm<FormFields>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { amount: 0, description: '', date: startOfDay(new Date()), ...defaultValues },
-  });
+  const { form, handleSubmitWithAction } = useHookFormActionWithToast(
+    apiActions.transactions.createTransaction,
+    zodResolver(createTransactionSchema),
+    {
+      actionProps: {
+        loadingToast: 'Adding transaction...',
+        successToast: 'Transaction added!',
+        errorToast: ({ errorMessage }) => ({
+          title: 'Failed to add transaction',
+          description: errorMessage,
+        }),
+        onSuccess,
+      },
+      formProps: {
+        defaultValues: {
+          amount: 0,
+          description: '',
+          date: startOfDay(new Date()),
+          ...defaultValues,
+        },
+      },
+    },
+  );
 
-  const selectedAccountId = form.watch('account');
-  const selectedSubaccountId = form.watch('subaccount');
+  const selectedAccountId = form.watch('accountId');
+  const selectedSubaccountId = form.watch('subaccountId');
   const selectedSubaccountCurrency = useMemo(
     () =>
       accounts
@@ -72,27 +81,6 @@ export function CreateTransactionForm({
         ?.originalCurrency,
     [accounts, selectedAccountId, selectedSubaccountId],
   );
-
-  async function onSubmit(values: FormFields) {
-    const promise = apiActions.transactions.createTransaction({
-      amount: values.amount,
-      type: values.type,
-      subaccountId: selectedSubaccountId,
-      description: values.description,
-      date: values.date,
-    });
-
-    toast.promise(createToastPromise(promise), {
-      loading: 'Adding transaction...',
-      success: 'Transaction added!',
-      error: () => 'Failed to add transaction.',
-    });
-
-    const response = await promise;
-    if (response.success) {
-      onSuccess?.();
-    }
-  }
 
   const accountOptions = useMemo(() => {
     return accounts.map((account) => ({
@@ -114,15 +102,22 @@ export function CreateTransactionForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-8">
+      <form onSubmit={handleSubmitWithAction} className="flex flex-col space-y-8">
         <FormField
           control={form.control}
-          name="account"
+          name="accountId"
           render={({ field: { onChange, ...field } }) => (
             <FormItem>
               <FormLabel>Account</FormLabel>
               <FormControl>
-                <Combobox options={accountOptions} onValueChange={onChange} {...field} />
+                <Combobox
+                  options={accountOptions}
+                  onValueChange={(value) => {
+                    onChange(value);
+                    form.resetField('subaccountId');
+                  }}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -130,7 +125,7 @@ export function CreateTransactionForm({
         />
         <FormField
           control={form.control}
-          name="subaccount"
+          name="subaccountId"
           disabled={!selectedAccountId}
           render={({ field: { onChange, ...field } }) => (
             <FormItem>

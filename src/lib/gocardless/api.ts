@@ -1,3 +1,4 @@
+import { GocardlessError } from '@/lib/api/errors';
 import { GocardlessInstitution } from '@/lib/types/integrations.types';
 import { uniqueBy } from '@/lib/utils/unique-by';
 
@@ -17,31 +18,43 @@ interface GetRequisitionsResponse {
 }
 
 async function getInstitutions(): Promise<GocardlessInstitution[]> {
-  const gocardless = await getGocardlessClient();
-  const responses = await Promise.all(
-    gocardlessCountries.map(
-      (country) =>
-        gocardless.institution.getInstitutions({ country }) as Promise<GocardlessInstitution[]>,
-    ),
-  );
+  try {
+    const gocardless = await getGocardlessClient();
+    const responses = await Promise.all(
+      gocardlessCountries.map(
+        (country) =>
+          gocardless.institution.getInstitutions({ country }) as Promise<GocardlessInstitution[]>,
+      ),
+    );
 
-  return uniqueBy(responses.flat(), (institution) => institution.id);
+    return uniqueBy(responses.flat(), (institution) => institution.id);
+  } catch (error) {
+    throw new GocardlessError(error);
+  }
 }
 
 async function getRequisitions(): Promise<GocardlessRequisition[]> {
-  const gocardless = await getGocardlessClient();
-  const response = (await gocardless.requisition.getRequisitions()) as GetRequisitionsResponse;
+  try {
+    const gocardless = await getGocardlessClient();
+    const response = (await gocardless.requisition.getRequisitions()) as GetRequisitionsResponse;
 
-  return response.results;
+    return response.results;
+  } catch (error) {
+    throw new GocardlessError(error);
+  }
 }
 
 async function getRequisition(id: string): Promise<GocardlessRequisition | undefined> {
-  const gocardless = await getGocardlessClient();
-  const response = (await gocardless.requisition.getRequisitionById(id)) as
-    | GocardlessRequisition
-    | undefined;
+  try {
+    const gocardless = await getGocardlessClient();
+    const response = (await gocardless.requisition.getRequisitionById(id)) as
+      | GocardlessRequisition
+      | undefined;
 
-  return response;
+    return response;
+  } catch (error) {
+    throw new GocardlessError(error);
+  }
 }
 
 async function createRequisition(params: {
@@ -49,21 +62,29 @@ async function createRequisition(params: {
   redirectUrl: string;
   integrationId: string;
 }): Promise<GocardlessRequisition> {
-  const gocardlessClient = await getGocardlessClient();
+  try {
+    const gocardlessClient = await getGocardlessClient();
 
-  return (await gocardlessClient.requisition.createRequisition({
-    institutionId: params.institutionId,
-    redirectUrl: params.redirectUrl,
-    accountSelection: false,
-    redirectImmediate: false,
-    reference: params.integrationId,
-    ssn: '',
-  })) as GocardlessRequisition;
+    return (await gocardlessClient.requisition.createRequisition({
+      institutionId: params.institutionId,
+      redirectUrl: params.redirectUrl,
+      accountSelection: false,
+      redirectImmediate: false,
+      reference: params.integrationId,
+      ssn: '',
+    })) as GocardlessRequisition;
+  } catch (error) {
+    throw new GocardlessError(error);
+  }
 }
 
 async function deleteRequisition(id: string): Promise<void> {
-  const gocardlessClient = await getGocardlessClient();
-  await gocardlessClient.requisition.deleteRequisition(id);
+  try {
+    const gocardlessClient = await getGocardlessClient();
+    await gocardlessClient.requisition.deleteRequisition(id);
+  } catch (error) {
+    throw new GocardlessError(error);
+  }
 }
 
 interface GetAccountDetailsResponse {
@@ -71,12 +92,16 @@ interface GetAccountDetailsResponse {
 }
 
 async function getAccountDetails(id: string): Promise<GocardlessAccountDetails | undefined> {
-  const gocardlessClient = await getGocardlessClient();
-  const response = (await gocardlessClient.account(id).getDetails()) as
-    | GetAccountDetailsResponse
-    | undefined;
+  try {
+    const gocardlessClient = await getGocardlessClient();
+    const response = (await gocardlessClient.account(id).getDetails()) as
+      | GetAccountDetailsResponse
+      | undefined;
 
-  return response?.account;
+    return response?.account;
+  } catch (error) {
+    throw new GocardlessError(error);
+  }
 }
 
 interface GetAccountBalanceResponse {
@@ -88,12 +113,16 @@ interface GetAccountBalanceResponse {
 }
 
 async function getAccountBalance(id: string): Promise<GocardlessAmount | undefined> {
-  const gocardlessClient = await getGocardlessClient();
-  const response = (await gocardlessClient.account(id).getBalances()) as
-    | GetAccountBalanceResponse
-    | undefined;
+  try {
+    const gocardlessClient = await getGocardlessClient();
+    const response = (await gocardlessClient.account(id).getBalances()) as
+      | GetAccountBalanceResponse
+      | undefined;
 
-  return response?.balances?.[0].balanceAmount;
+    return response?.balances?.[0].balanceAmount;
+  } catch (error) {
+    throw new GocardlessError(error);
+  }
 }
 
 interface GetTransactionsResponse {
@@ -104,12 +133,16 @@ interface GetTransactionsResponse {
 }
 
 async function getTransactions(accountId: string): Promise<GocardlessTransaction[]> {
-  const gocardlessClient = await getGocardlessClient();
-  const response = (await gocardlessClient
-    .account(accountId)
-    .getTransactions()) as GetTransactionsResponse;
+  try {
+    const gocardlessClient = await getGocardlessClient();
+    const response = (await gocardlessClient
+      .account(accountId)
+      .getTransactions()) as GetTransactionsResponse;
 
-  return [...response.transactions.booked, ...(response.transactions.pending ?? [])];
+    return [...response.transactions.booked, ...(response.transactions.pending ?? [])];
+  } catch (error) {
+    throw new GocardlessError(error);
+  }
 }
 
 export const gocardlessApi = {

@@ -13,11 +13,7 @@ PageLayout.displayName = 'PageLayout';
 const PageHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <>
-      <div
-        ref={ref}
-        className={cn('flex items-center justify-between px-4 h-14 ml-12 sm:ml-0', className)}
-        {...props}
-      />
+      <div ref={ref} className={cn('px-4 h-14 ml-12 sm:ml-0', className)} {...props} />
       <Separator />
     </>
   ),

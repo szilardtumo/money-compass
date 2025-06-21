@@ -30,7 +30,7 @@ export function formatPercent(value: number, options: Intl.NumberFormatOptions =
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     ...options,
-  }).format(value);
+  }).format(Number.isNaN(value) ? 0 : value);
 }
 
 export function formatDate(date: string | Date, pattern = 'dd-MM-yyyy') {

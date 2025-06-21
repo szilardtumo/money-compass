@@ -1,4 +1,7 @@
-import { NextConfig } from 'next';
+import type { NextConfig } from 'next';
+
+// Validate environment variables on build
+import './src/lib/env';
 
 const nextConfig: NextConfig = {
   eslint: {
@@ -18,4 +21,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

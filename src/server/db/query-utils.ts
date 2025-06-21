@@ -21,13 +21,15 @@ export function descTransactions() {
   return [desc(transactions.startedDate), desc(transactions.sequence)];
 }
 
+const MAX_INTEGER = 2_147_483_647;
+
 /**
  * Drizzle query helper for filtering transactions after a transaction
  */
 export function afterTransaction(transaction: TransactionForQueryHelper) {
   return and(
     eq(transactions.subaccountId, transaction.subaccountId),
-    sql`(${transactions.startedDate}, ${transactions.sequence}) > (${transaction.startedDate.toISOString()}, ${transaction.sequence})`,
+    sql`(${transactions.startedDate}, ${transactions.sequence}) > (${transaction.startedDate.toISOString()}, ${Math.min(transaction.sequence, MAX_INTEGER)})`,
   );
 }
 
@@ -37,6 +39,6 @@ export function afterTransaction(transaction: TransactionForQueryHelper) {
 export function beforeTransaction(transaction: TransactionForQueryHelper) {
   return and(
     eq(transactions.subaccountId, transaction.subaccountId),
-    sql`(${transactions.startedDate}, ${transactions.sequence}) < (${transaction.startedDate.toISOString()}, ${transaction.sequence})`,
+    sql`(${transactions.startedDate}, ${transactions.sequence}) < (${transaction.startedDate.toISOString()}, ${Math.min(transaction.sequence, MAX_INTEGER)})`,
   );
 }

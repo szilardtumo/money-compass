@@ -1,5 +1,5 @@
-import { Account, Subaccount } from '@/lib/types/accounts.types';
-import { CurrencyValue } from '@/lib/types/currencies.types';
+import { Account, Subaccount } from './accounts.types';
+import { CurrencyValue } from './currencies.types';
 
 export interface Transaction {
   id: string;

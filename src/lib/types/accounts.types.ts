@@ -1,4 +1,4 @@
-import { CurrencyValue } from '@/lib/types/currencies.types';
+import { CurrencyValue } from './currencies.types';
 
 type AccountCategory = 'checking' | 'investment';
 

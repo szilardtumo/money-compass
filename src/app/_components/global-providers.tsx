@@ -1,10 +1,8 @@
 import { ThemeProvider } from 'next-themes';
 
-import { CreateTransactionDialogProvider } from '@/components/providers/create-transaction-dialog-provider';
+import { DialogsProvider } from '@/components/dialogs/dialogs-provider';
 import { LoadingProvider } from '@/components/providers/loading-provider';
 import { BrowserSupabaseClientProvider } from '@/components/providers/supabase-client-provider';
-import { UpdateTransactionDialogProvider } from '@/components/providers/update-transaction-dialog-provider';
-import { UpsertAccountDialogProvider } from '@/components/providers/upsert-account-dialog-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 export function GlobalProviders({ children }: { children: React.ReactNode }) {
@@ -13,11 +11,7 @@ export function GlobalProviders({ children }: { children: React.ReactNode }) {
       <BrowserSupabaseClientProvider>
         <LoadingProvider>
           <TooltipProvider>
-            <CreateTransactionDialogProvider>
-              <UpdateTransactionDialogProvider>
-                <UpsertAccountDialogProvider>{children}</UpsertAccountDialogProvider>
-              </UpdateTransactionDialogProvider>
-            </CreateTransactionDialogProvider>
+            <DialogsProvider>{children}</DialogsProvider>
           </TooltipProvider>
         </LoadingProvider>
       </BrowserSupabaseClientProvider>

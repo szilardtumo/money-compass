@@ -5,6 +5,7 @@ import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { cache } from 'react';
 
+import { env } from '@/lib/env';
 import { getSupabaseToken, SupabaseToken } from '@/lib/supabase/server';
 
 import * as schema from './schema';
@@ -17,11 +18,13 @@ declare global {
 const drizzleClient =
   global.drizzleClient ||
   drizzle({
-    client: postgres(process.env.DATABASE_URL!, { prepare: false }),
+    client: postgres(env.DATABASE_URL, { prepare: false }),
     schema,
     casing: 'snake_case',
   });
 if (process.env.NODE_ENV !== 'production') global.drizzleClient = drizzleClient;
+
+type DbTx = Parameters<Parameters<typeof drizzleClient.transaction>[0]>[0];
 
 /**
  * Returns the drizzle DB client.
@@ -92,10 +95,10 @@ async function getAdminDb() {
   };
 }
 
-export type DbClient = ReturnType<typeof getDb>;
+export type DbClient = Awaited<ReturnType<typeof getDb>>;
 export type DbClientTx = Parameters<Parameters<typeof drizzleClient.transaction>[0]>[0];
 
 const cachedGetAdminDb = cache(getAdminDb);
 const cachedGetDb = cache(getDb);
 
-export { schema, cachedGetDb as getDb, cachedGetAdminDb as getAdminDb };
+export { schema, cachedGetDb as getDb, cachedGetAdminDb as getAdminDb, type DbTx };

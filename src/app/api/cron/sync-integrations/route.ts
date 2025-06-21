@@ -1,10 +1,11 @@
 import type { NextRequest } from 'next/server';
 
+import { env } from '@/lib/env';
 import { apiActions } from '@/server/api/actions';
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET!}`) {
+  if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
     return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 

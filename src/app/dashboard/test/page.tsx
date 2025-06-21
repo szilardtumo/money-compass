@@ -7,7 +7,8 @@ import { NetWorthDifferenceCard } from '@/components/cards/net-worth-difference-
 import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { QuickActionsCard } from '@/components/cards/quick-actions-card/quick-actions-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
-import { PageContent, PageHeader, PageHeaderTitle, PageLayout } from '@/components/ui/page-layout';
+import { PageHeaderSlotContent } from '@/components/ui/page-header-slot';
+import { PageHeaderTitle } from '@/components/ui/page-layout';
 import { apiQueries } from '@/server/api/queries';
 
 import { DataTableTest } from './_components/data-table-test';
@@ -18,42 +19,34 @@ export default async function TestPage() {
     redirect('/dashboard');
   }
 
-  const [accounts, transactionHistory, transactions, { mainCurrency }] = await Promise.all([
+  const [accounts, transactions] = await Promise.all([
     apiQueries.accounts.getAccounts(),
-    apiQueries.transactions.getTransactionHistory({ dateRange: '12 month', interval: '1 month' }),
     apiQueries.transactions.getTransactions(),
-    apiQueries.currencies.getMainCurrencyWithMapper(),
   ]);
 
   return (
-    <PageLayout>
-      <PageHeader>
+    <>
+      <PageHeaderSlotContent>
         <PageHeaderTitle>Test page</PageHeaderTitle>
-      </PageHeader>
+      </PageHeaderSlotContent>
 
-      <PageContent>
-        <RecalculateBalances />
+      <RecalculateBalances />
 
-        <NetWorthHistoryCard data={transactionHistory} accounts={accounts} />
+      <NetWorthHistoryCard />
 
-        {!!accounts[0] && <AccountHistoryCard data={transactionHistory} account={accounts[0]} />}
+      {!!accounts[0] && <AccountHistoryCard accountId={accounts[0].id} />}
 
-        <AssetDistributionCard accounts={accounts} mainCurrency={mainCurrency} />
+      <AssetDistributionCard />
 
-        <NetWorthDifferenceCard data={transactionHistory} />
+      <NetWorthDifferenceCard />
 
-        <QuickActionsCard />
+      <QuickActionsCard />
 
-        <AccountsCard />
+      <AccountsCard />
 
-        <RecentTransactionsCard
-          accounts={accounts}
-          transactions={transactions.data}
-          mainCurrency={mainCurrency}
-        />
+      <RecentTransactionsCard />
 
-        <DataTableTest accounts={accounts} transactions={transactions} />
-      </PageContent>
-    </PageLayout>
+      <DataTableTest accounts={accounts} transactions={transactions} />
+    </>
   );
 }

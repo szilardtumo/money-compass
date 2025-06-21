@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { OAuthButtons } from '@/app/auth/_components/oauth-buttons';
-import { useBrowserSupabaseClient } from '@/components/providers/supabase-client-provider';
+import { useSupabaseAuth } from '@/components/providers/supabase-client-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -44,7 +44,7 @@ type FormFields = z.infer<typeof formSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = useBrowserSupabaseClient();
+  const supabaseAuth = useSupabaseAuth();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormFields>({
@@ -65,7 +65,7 @@ export default function RegisterPage() {
 
   const onSubmit = useCallback(
     async (formFields: FormFields) => {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabaseAuth.signUp({
         email: formFields.email,
         password: formFields.password,
       });
@@ -79,7 +79,7 @@ export default function RegisterPage() {
         router.replace(searchParams.get('next') ?? '/dashboard');
       });
     },
-    [router, searchParams, setError, supabase.auth],
+    [router, searchParams, setError, supabaseAuth],
   );
 
   return (

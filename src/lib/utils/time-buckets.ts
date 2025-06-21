@@ -1,4 +1,10 @@
-import { TimeInterval } from '@/lib/types/time.types';
+export type TimeInterval =
+  | `${number} min`
+  | `${number} hour`
+  | `${number} day`
+  | `${number} week`
+  | `${number} month`
+  | `${number} year`;
 
 /**
  * Returns a date in the past based on the given range.

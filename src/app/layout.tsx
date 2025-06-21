@@ -6,6 +6,7 @@ import './globals.css';
 
 import { GlobalProgress } from '@/app/_components/global-progress';
 import { GlobalProviders } from '@/app/_components/global-providers';
+import { ErrorBoundary, PageErrorFallback } from '@/components/ui/error-boundary';
 import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/cn';
 
@@ -23,13 +24,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
-        <GlobalProviders>
-          <Analytics />
-          <SpeedInsights />
-          <GlobalProgress />
-          <Toaster />
-          {children}
-        </GlobalProviders>
+        <ErrorBoundary FallbackComponent={PageErrorFallback}>
+          <GlobalProviders>
+            <Analytics />
+            <SpeedInsights />
+            <GlobalProgress />
+            <Toaster />
+            {children}
+          </GlobalProviders>
+        </ErrorBoundary>
       </body>
     </html>
   );

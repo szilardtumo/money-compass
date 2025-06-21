@@ -1,6 +1,6 @@
 'use client';
 
-import { useCreateTransactionDialog } from '@/components/providers/create-transaction-dialog-provider';
+import { useCreateTransactionDialog } from '@/components/dialogs/create-transaction-dialog';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 interface AddTransactionMenuItemProps {
@@ -11,8 +11,6 @@ export function AddTransactionMenuItem({ accountId }: AddTransactionMenuItemProp
   const { openDialog } = useCreateTransactionDialog();
 
   return (
-    <DropdownMenuItem onSelect={() => openDialog({ account: accountId })}>
-      Add Transaction
-    </DropdownMenuItem>
+    <DropdownMenuItem onSelect={() => openDialog({ accountId })}>Add Transaction</DropdownMenuItem>
   );
 }
