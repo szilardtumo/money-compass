@@ -1,3 +1,5 @@
+'use server';
+
 import { asc } from 'drizzle-orm';
 
 import { revalidateTag, CACHE_TAGS } from '@/lib/api/cache';
