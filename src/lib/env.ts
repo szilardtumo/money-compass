@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Schema for client-side environment variables (NEXT_PUBLIC_*)
 const clientEnvSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+  NEXT_PUBLIC_SUPABASE_URL: z.url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 });
 
@@ -30,7 +30,7 @@ const serverEnvSchema = z.object({
 });
 
 // Combined schema
-const allEnvSchema = serverEnvSchema.merge(clientEnvSchema);
+const allEnvSchema = serverEnvSchema.extend(clientEnvSchema.shape);
 
 // Client side env variables need to be destructured in Next.js
 const runtimeClientEnv: Record<keyof z.infer<typeof clientEnvSchema>, string | undefined> = {
@@ -50,7 +50,7 @@ function validateEnv(): z.infer<typeof allEnvSchema> {
     : clientEnvSchema.safeParse(runtimeClientEnv);
 
   if (!parsed.success) {
-    console.error('❌ Invalid environment variables:', parsed.error.flatten().fieldErrors);
+    console.error('❌ Invalid environment variables:', z.treeifyError(parsed.error));
     throw new Error('Invalid environment variables');
   }
 

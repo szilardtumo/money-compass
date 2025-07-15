@@ -22,7 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 
 const formSchema = z.object({
-  email: z.string().email('Invalid email'),
+  email: z.email('Invalid email'),
 });
 
 type FormFields = z.infer<typeof formSchema>;

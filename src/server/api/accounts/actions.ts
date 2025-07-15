@@ -211,11 +211,7 @@ export const updateAccount = authenticatedActionClient
   });
 
 export const deleteAccount = authenticatedActionClient
-  .inputSchema(
-    z.object({
-      accountId: z.string().uuid(),
-    }),
-  )
+  .inputSchema(z.object({ accountId: z.uuid() }))
   .action(async ({ parsedInput, ctx }) => {
     await ctx.db.rls((tx) =>
       tx.delete(schema.accounts).where(eq(schema.accounts.id, parsedInput.accountId)),

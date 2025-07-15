@@ -262,7 +262,7 @@ export const deleteTransactions = authenticatedActionClient
   });
 
 export const deleteTransaction = authenticatedActionClient
-  .inputSchema(z.string().uuid())
+  .inputSchema(z.uuid())
   .action(async ({ parsedInput: transactionId }) => {
     await deleteTransactions({ transactionIds: [transactionId] });
   });
