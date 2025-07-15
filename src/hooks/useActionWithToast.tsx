@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HookProps, useHookFormAction } from '@next-safe-action/adapter-react-hook-form/hooks';
-import { Infer, InferIn, Schema } from 'next-safe-action/adapters/types';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import {
-  HookBaseUtils,
   HookCallbacks,
   HookSafeActionFn,
   useAction,
@@ -14,85 +13,63 @@ import { useId } from 'react';
 import { Resolver } from 'react-hook-form';
 import { ExternalToast, toast } from 'sonner';
 
+/** Infer the input type of a Standard Schema, or a default type if the schema is undefined. */
+type InferInputOrDefault<MaybeSchema, Default> = MaybeSchema extends StandardSchemaV1
+  ? StandardSchemaV1.InferInput<MaybeSchema>
+  : Default;
+/** Infer the output type of a Standard Schema, or a default type if the schema is undefined. */
+type InferOutputOrDefault<MaybeSchema, Default> = MaybeSchema extends StandardSchemaV1
+  ? StandardSchemaV1.InferOutput<MaybeSchema>
+  : Default;
+
 type ToastTitle = string | React.ReactNode;
 type ToastConfig = ToastTitle | (ExternalToast & { title: ToastTitle });
 
-type ToastUtils<
-  ServerError,
-  S extends Schema | undefined,
-  BAS extends readonly Schema[],
-  CVE,
-  CBAVE,
-  Data,
-> = {
+type ToastUtils<ServerError, S extends StandardSchemaV1 | undefined, CVE, Data> = {
   loadingToast?:
     | ToastConfig
     | ((
-        ...args: Parameters<
-          NonNullable<HookCallbacks<ServerError, S, BAS, CVE, CBAVE, Data>['onExecute']>
-        >
+        ...args: Parameters<NonNullable<HookCallbacks<ServerError, S, CVE, Data>['onExecute']>>
       ) => ToastConfig);
   errorToast?:
     | ToastConfig
     | ((
-        params: Parameters<
-          NonNullable<HookCallbacks<ServerError, S, BAS, CVE, CBAVE, Data>['onError']>
-        >[0] & { errorMessage: string },
+        params: Parameters<NonNullable<HookCallbacks<ServerError, S, CVE, Data>['onError']>>[0] & {
+          errorMessage: string;
+        },
       ) => ToastConfig)
     | false;
   successToast?:
     | ToastConfig
     | ((
-        ...args: Parameters<
-          NonNullable<HookCallbacks<ServerError, S, BAS, CVE, CBAVE, Data>['onSuccess']>
-        >
+        ...args: Parameters<NonNullable<HookCallbacks<ServerError, S, CVE, Data>['onSuccess']>>
       ) => ToastConfig);
 };
 
-type UseActionWithToast = <
-  ServerError,
-  S extends Schema | undefined,
-  const BAS extends readonly Schema[],
-  CVE,
-  CBAVE,
-  Data,
->(
-  safeActionFn: HookSafeActionFn<ServerError, S, BAS, CVE, CBAVE, Data>,
-  utils?: HookBaseUtils<S> &
-    HookCallbacks<ServerError, S, BAS, CVE, CBAVE, Data> &
-    ToastUtils<ServerError, S, BAS, CVE, CBAVE, Data>,
-) => UseActionHookReturn<ServerError, S, BAS, CVE, CBAVE, Data>;
+type UseActionWithToast = <ServerError, S extends StandardSchemaV1 | undefined, CVE, Data>(
+  safeActionFn: HookSafeActionFn<ServerError, S, CVE, Data>,
+  cb?: HookCallbacks<ServerError, S, CVE, Data> & ToastUtils<ServerError, S, CVE, Data>,
+) => UseActionHookReturn<ServerError, S, CVE, Data>;
 
 type UseOptimisticActionWithToast = <
   ServerError,
-  S extends Schema | undefined,
-  const BAS extends readonly Schema[],
+  S extends StandardSchemaV1 | undefined,
   CVE,
-  CBAVE,
   Data,
   State,
 >(
-  safeActionFn: HookSafeActionFn<ServerError, S, BAS, CVE, CBAVE, Data>,
+  safeActionFn: HookSafeActionFn<ServerError, S, CVE, Data>,
   utils: {
     currentState: State;
-    updateFn: (state: State, input: S extends Schema ? InferIn<S> : undefined) => State;
-  } & HookBaseUtils<S> &
-    HookCallbacks<ServerError, S, BAS, CVE, CBAVE, Data> &
-    ToastUtils<ServerError, S, BAS, CVE, CBAVE, Data>,
-) => UseOptimisticActionHookReturn<ServerError, S, BAS, CVE, CBAVE, Data, State>;
+    updateFn: (state: State, input: InferInputOrDefault<S, void>) => State;
+  } & HookCallbacks<ServerError, S, CVE, Data> &
+    ToastUtils<ServerError, S, CVE, Data>,
+) => UseOptimisticActionHookReturn<ServerError, S, CVE, Data, State>;
 
-const getCallbacksWithToast = <
-  ServerError,
-  S extends Schema | undefined,
-  const BAS extends readonly Schema[],
-  CVE,
-  CBAVE,
-  Data,
->(
+const getCallbacksWithToast = <ServerError, S extends StandardSchemaV1 | undefined, CVE, Data>(
   id: number | string,
-  utils?: HookCallbacks<ServerError, S, BAS, CVE, CBAVE, Data> &
-    ToastUtils<ServerError, S, BAS, CVE, CBAVE, Data>,
-): HookCallbacks<ServerError, S, BAS, CVE, CBAVE, Data> => {
+  utils?: HookCallbacks<ServerError, S, CVE, Data> & ToastUtils<ServerError, S, CVE, Data>,
+): HookCallbacks<ServerError, S, CVE, Data> => {
   return {
     onExecute: (args) => {
       utils?.onExecute?.(args);
@@ -176,19 +153,19 @@ export const useOptimisticActionWithToast: UseOptimisticActionWithToast = (safeA
 
 export const useHookFormActionWithToast = <
   ServerError,
-  S extends Schema | undefined,
-  BAS extends readonly Schema[],
+  S extends StandardSchemaV1 | undefined,
   CVE,
-  CBAVE,
   Data,
   FormContext = any,
 >(
-  safeActionFn: HookSafeActionFn<ServerError, S, BAS, CVE, CBAVE, Data>,
-  hookFormResolver: Resolver<S extends Schema ? Infer<S> : any, FormContext>,
-  props?: HookProps<ServerError, S, BAS, CVE, CBAVE, Data, FormContext> & {
-    actionProps: HookBaseUtils<S> &
-      HookCallbacks<ServerError, S, BAS, CVE, CBAVE, Data> &
-      ToastUtils<ServerError, S, BAS, CVE, CBAVE, Data>;
+  safeActionFn: HookSafeActionFn<ServerError, S, CVE, Data>,
+  hookFormResolver: Resolver<
+    InferInputOrDefault<S, any>,
+    FormContext,
+    InferOutputOrDefault<S, any>
+  >,
+  props?: HookProps<ServerError, S, CVE, Data, FormContext> & {
+    actionProps: HookCallbacks<ServerError, S, CVE, Data> & ToastUtils<ServerError, S, CVE, Data>;
   },
 ) => {
   const id = useId();

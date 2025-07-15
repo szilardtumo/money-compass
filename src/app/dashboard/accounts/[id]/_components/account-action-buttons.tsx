@@ -5,7 +5,7 @@ import { Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MouseEvent, useState } from 'react';
 
-import { useUpsertAccountDialog } from '@/components/dialogs/upsert-account-dialog';
+import { useUpdateAccountDialog } from '@/components/dialogs/update-account-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +30,7 @@ interface AccountActionButtonsProps {
 export function AccountActionButtons({ account }: AccountActionButtonsProps) {
   const router = useRouter();
 
-  const { openDialog: openEditDialog } = useUpsertAccountDialog();
+  const { openDialog: openEditDialog } = useUpdateAccountDialog();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { executeAsync: executeDeleteAccount, isPending } = useActionWithToast(

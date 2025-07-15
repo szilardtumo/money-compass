@@ -1,10 +1,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useHookFormActionErrorMapper } from '@next-safe-action/adapter-react-hook-form/hooks';
-import { Cross1Icon, PlusIcon, ResetIcon } from '@radix-ui/react-icons';
+import { Cross1Icon, PlusIcon } from '@radix-ui/react-icons';
 import { useCallback, useMemo } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -29,13 +28,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useActionWithToast } from '@/hooks/useActionWithToast';
+import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
 import { Currency } from '@/lib/types/currencies.types';
 import { Enums } from '@/lib/types/database.types';
-import { createAccountSchema, updateAccountSchema } from '@/lib/validation/accounts';
+import { createAccountSchema } from '@/lib/validation/accounts';
 import { apiActions } from '@/server/api/actions';
 
-interface UpsertAccountFormProps {
+interface CreateAccountFormProps {
   currencies: Currency[];
   defaultValues?: Partial<FormFields>;
   onSuccess?: () => void;
@@ -46,55 +45,34 @@ const accountCategoryOptions = [
   { label: 'Investment', value: 'investment' },
 ] satisfies { label: string; value: Enums<'account_category'> }[];
 
-type FormSchema = typeof updateAccountSchema | typeof createAccountSchema;
-type FormFields = z.infer<FormSchema>;
+type FormFields = z.infer<typeof createAccountSchema>;
 
-export function UpsertAccountForm({
+export function CreateAccountForm({
   currencies,
   defaultValues,
   onSuccess,
-}: UpsertAccountFormProps) {
-  const isUpdate = !!defaultValues && 'id' in defaultValues;
-
-  const { execute: executeCreateAccount, result: createAccountResult } = useActionWithToast(
+}: CreateAccountFormProps) {
+  const { form, handleSubmitWithAction } = useHookFormActionWithToast(
     apiActions.accounts.createAccount,
+    zodResolver(createAccountSchema),
     {
-      loadingToast: 'Creating account...',
-      successToast: 'Account created!',
-      errorToast: ({ errorMessage }) => ({
-        title: 'Failed to create account',
-        description: errorMessage,
-      }),
-      onSuccess,
+      actionProps: {
+        loadingToast: 'Creating account...',
+        successToast: 'Account created!',
+        errorToast: ({ errorMessage }) => ({
+          title: 'Failed to create account',
+          description: errorMessage,
+        }),
+        onSuccess,
+      },
+      formProps: {
+        defaultValues: {
+          name: '',
+          ...defaultValues,
+        },
+      },
     },
   );
-
-  const { execute: executeUpdateAccount, result: updateAccountResult } = useActionWithToast(
-    apiActions.accounts.updateAccount,
-    {
-      loadingToast: 'Updating account...',
-      successToast: 'Account updated!',
-      errorToast: ({ errorMessage }) => ({
-        title: 'Failed to update account',
-        description: errorMessage,
-      }),
-      onSuccess,
-    },
-  );
-  const { hookFormValidationErrors } = useHookFormActionErrorMapper<FormSchema>(
-    isUpdate ? updateAccountResult.validationErrors : createAccountResult.validationErrors,
-  );
-
-  const form = useForm<FormFields>({
-    resolver: zodResolver(isUpdate ? updateAccountSchema : createAccountSchema),
-    errors: hookFormValidationErrors,
-    defaultValues: {
-      name: '',
-      ...defaultValues,
-    },
-  });
-
-  const { getValues } = form;
 
   const subaccountFieldArray = useFieldArray({
     control: form.control,
@@ -102,40 +80,11 @@ export function UpsertAccountForm({
     keyName: '_id', // Do not overwrite our own id
   });
 
-  const onSubmit = useCallback(
-    (fields: FormFields) => {
-      const isUpdate = 'id' in fields;
-
-      if (isUpdate) {
-        executeUpdateAccount(fields);
-      } else {
-        executeCreateAccount(fields);
-      }
-    },
-    [executeCreateAccount, executeUpdateAccount],
-  );
-
   const onRemoveSubaccount = useCallback(
     (index: number) => {
-      const subaccount = getValues().subaccounts![index];
-      if ('id' in subaccount) {
-        subaccountFieldArray.update(index, { ...subaccount, delete: true });
-      } else {
-        subaccountFieldArray.remove(index);
-      }
+      subaccountFieldArray.remove(index);
     },
-    [getValues, subaccountFieldArray],
-  );
-
-  const onReinstateSubaccount = useCallback(
-    (index: number) => {
-      const subaccount = getValues().subaccounts![index];
-      subaccountFieldArray.update(index, {
-        ...subaccount,
-        delete: undefined,
-      });
-    },
-    [getValues, subaccountFieldArray],
+    [subaccountFieldArray],
   );
 
   const currencyOptions = useMemo(() => {
@@ -147,7 +96,7 @@ export function UpsertAccountForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-8">
+      <form onSubmit={handleSubmitWithAction} className="flex flex-col space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -237,29 +186,16 @@ export function UpsertAccountForm({
                     />
                   </TableCell>
                   <TableCell className="align-top">
-                    {subaccount.delete ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onReinstateSubaccount(index)}
-                        disabled={form.formState.isSubmitting}
-                        aria-label="Reinstate subaccount"
-                      >
-                        <ResetIcon />
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onRemoveSubaccount(index)}
-                        disabled={form.formState.isSubmitting}
-                        aria-label="Remove subaccount"
-                      >
-                        <Cross1Icon />
-                      </Button>
-                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => onRemoveSubaccount(index)}
+                      disabled={form.formState.isSubmitting}
+                      aria-label="Remove subaccount"
+                    >
+                      <Cross1Icon />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

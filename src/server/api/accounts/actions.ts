@@ -117,7 +117,7 @@ async function _updateSubaccounts(params: UpdateSubaccountParams[], tx: DbTx): P
  * Creates a new account with subaccounts.
  */
 export const createAccount = authenticatedActionClient
-  .schema(createAccountSchema)
+  .inputSchema(createAccountSchema)
   .action(async ({ parsedInput, ctx }) => {
     await ctx.db.rls(async (tx) => {
       const [{ id }] = await tx
@@ -141,7 +141,7 @@ export const createAccount = authenticatedActionClient
   });
 
 export const updateAccount = authenticatedActionClient
-  .schema(updateAccountSchema)
+  .inputSchema(updateAccountSchema)
   .action(async ({ parsedInput, ctx }) => {
     const account = await apiQueries.accounts.getAccount(parsedInput.id);
 
@@ -211,7 +211,7 @@ export const updateAccount = authenticatedActionClient
   });
 
 export const deleteAccount = authenticatedActionClient
-  .schema(
+  .inputSchema(
     z.object({
       accountId: z.string().uuid(),
     }),

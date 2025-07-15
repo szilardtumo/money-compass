@@ -25,7 +25,7 @@ import {
 } from '@/server/db/query-utils';
 
 export const createTransaction = authenticatedActionClient
-  .schema(createTransactionSchema)
+  .inputSchema(createTransactionSchema)
   .action(async ({ parsedInput: params, ctx }) => {
     await ctx.db.rls(async (tx) => {
       const latestTransaction = await tx.query.transactions.findFirst({
@@ -67,7 +67,7 @@ export const createTransaction = authenticatedActionClient
   });
 
 export const updateBalances = authenticatedActionClient
-  .schema(updateBalancesSchema)
+  .inputSchema(updateBalancesSchema)
   .action(async ({ parsedInput: { balances, description, date }, ctx }) => {
     const subaccountBalances = await apiQueries.accounts.getSubaccountBalances();
     const now = new Date();
@@ -104,7 +104,6 @@ export const updateBalances = authenticatedActionClient
       );
 
       returnValidationErrors(updateBalancesSchema, {
-        // @ts-expect-error - this is a bug in the library, it should be fixed
         date: {
           _errors: [
             `The transaction date can't be before the latest already existing ` +
@@ -126,7 +125,7 @@ export const updateBalances = authenticatedActionClient
   });
 
 export const updateTransaction = authenticatedActionClient
-  .schema(updateTransactionSchema)
+  .inputSchema(updateTransactionSchema)
   .action(async ({ parsedInput: params, ctx }) => {
     await ctx.db.rls(async (tx) => {
       // Get the transaction to update
@@ -216,7 +215,7 @@ export const updateTransaction = authenticatedActionClient
   });
 
 export const deleteTransactions = authenticatedActionClient
-  .schema(deleteTransactionsSchema)
+  .inputSchema(deleteTransactionsSchema)
   .action(async ({ parsedInput: { transactionIds }, ctx }) => {
     await ctx.db.rls(async (tx) => {
       // Get all transactions to be deleted (oldest first)
@@ -263,7 +262,7 @@ export const deleteTransactions = authenticatedActionClient
   });
 
 export const deleteTransaction = authenticatedActionClient
-  .schema(z.string().uuid())
+  .inputSchema(z.string().uuid())
   .action(async ({ parsedInput: transactionId }) => {
     await deleteTransactions({ transactionIds: [transactionId] });
   });

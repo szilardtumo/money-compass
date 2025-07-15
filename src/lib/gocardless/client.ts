@@ -6,7 +6,6 @@ import { env } from '@/lib/env';
 import type { GocardlessError } from './types';
 
 declare global {
-  // eslint-disable-next-line no-var
   var gocardlessClient: NordigenClient | undefined;
 }
 
