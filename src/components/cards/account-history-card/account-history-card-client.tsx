@@ -1,10 +1,10 @@
 'use client';
 
-import { Label } from '@radix-ui/react-label';
 import { useState } from 'react';
 
 import { TransactionHistoryChart } from '@/components/charts/transaction-history-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Account } from '@/lib/types/accounts.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';

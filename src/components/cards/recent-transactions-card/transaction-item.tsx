@@ -1,4 +1,3 @@
-import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu';
 import { DotsHorizontalIcon, TrashIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
 
@@ -8,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
