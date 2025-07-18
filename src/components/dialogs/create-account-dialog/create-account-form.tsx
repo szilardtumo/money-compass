@@ -156,11 +156,8 @@ export function CreateAccountForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input {...field} disabled={subaccount.delete} />
+                            <Input {...field} />
                           </FormControl>
-                          {subaccount.delete && (
-                            <FormDescription>This subaccount will be deleted.</FormDescription>
-                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -177,7 +174,6 @@ export function CreateAccountForm({
                               options={currencyOptions}
                               value={field.value}
                               onValueChange={field.onChange}
-                              disabled={subaccount.delete}
                             />
                           </FormControl>
                           <FormMessage />
