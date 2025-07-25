@@ -30,7 +30,7 @@ export function NetWorthDifferenceChart({ data }: NetWorthDifferenceChartProps) 
         Loss: i === 0 ? 0 : Math.min(item.Total - array[i - 1].Total, 0),
         Difference: i === 0 ? 0 : item.Total - array[i - 1].Total,
         Delta: i === 0 ? 0 : (item.Total - array[i - 1].Total) / array[i - 1].Total,
-        fill: item.Total >= array[i - 1]?.Total ? 'hsl(var(--success))' : 'hsl(var(--destructive))',
+        fill: item.Total >= array[i - 1]?.Total ? 'var(--success)' : 'var(--destructive)',
       }))
       .slice(1);
 

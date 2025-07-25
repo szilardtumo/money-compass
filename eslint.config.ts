@@ -1,18 +1,15 @@
-/* eslint-disable import/no-named-as-default-member */
-import { fixupPluginRules } from '@eslint/compat';
 import pluginJs from '@eslint/js';
 import pluginNext from '@next/eslint-plugin-next';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import pluginImport from 'eslint-plugin-import';
-import importRecommented from 'eslint-plugin-import/config/recommended.js';
-import importTypescript from 'eslint-plugin-import/config/typescript.js';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginReact from 'eslint-plugin-react';
-import pluginReactCompiler from 'eslint-plugin-react-compiler';
+import * as pluginReactCompiler from 'eslint-plugin-react-compiler';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
+export default defineConfig(
   // global
   {
     languageOptions: {
@@ -21,13 +18,16 @@ export default tseslint.config(
         ...globals.node,
       },
     },
+    settings: {
+      react: { version: 'detect' },
+    },
   },
-  {
-    ignores: ['node_modules/*', '.next/*', 'src/lib/types/database.types.ts'],
-  },
+  globalIgnores(['node_modules/*', '.next/*', '.yarn/*', 'src/lib/types/database.types.ts']),
   // js, ts
   pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
+  // @ts-expect-error - https://github.com/typescript-eslint/typescript-eslint/issues/10899
+  // eslint-disable-next-line import/no-named-as-default-member
+  tseslint.configs.recommended,
   {
     rules: {
       '@typescript-eslint/no-empty-object-type': 'off',
@@ -50,28 +50,14 @@ export default tseslint.config(
   pluginJsxA11y.flatConfigs.recommended,
   pluginReact.configs.flat.recommended,
   pluginReact.configs.flat['jsx-runtime'],
+  // TODO: v6: pluginReactHooks.configs.recommended,
+  pluginReactHooks.configs['recommended-latest'],
+  pluginReactCompiler.configs.recommended,
   {
     plugins: {
-      'react-hooks': pluginReactHooks,
+      '@next/next': pluginNext,
     },
-    rules: pluginReactHooks.configs.recommended.rules,
-  },
-  {
-    files: ['**/*.{j,t}sx'],
-    plugins: {
-      'react-compiler': pluginReactCompiler,
-    },
-    rules: {
-      'react-compiler/react-compiler': 'error',
-    },
-  },
-  {
-    plugins: {
-      '@next/next': fixupPluginRules(pluginNext),
-    },
-    settings: {
-      react: { version: 'detect' },
-    },
+    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
     rules: {
       ...pluginNext.configs.recommended.rules,
       ...pluginNext.configs['core-web-vitals'].rules,
@@ -84,15 +70,8 @@ export default tseslint.config(
   },
   // import
   {
-    languageOptions: {
-      // import plugin does not use ecmaVersion and sourceType from languageOptions object
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-      },
-    },
     plugins: {
-      import: fixupPluginRules(pluginImport),
+      import: pluginImport,
     },
     settings: {
       'import/parsers': {
@@ -105,8 +84,8 @@ export default tseslint.config(
       },
     },
     rules: {
-      ...importRecommented.rules,
-      ...importTypescript.rules,
+      ...pluginImport.flatConfigs.recommended.rules,
+      ...pluginImport.flatConfigs.typescript.rules,
       'import/no-duplicates': 'error',
       'import/prefer-default-export': 'off',
       'import/order': [

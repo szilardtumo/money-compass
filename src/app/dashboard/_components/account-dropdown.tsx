@@ -89,7 +89,7 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
           <span className="truncate">{displayedName}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[var(--radix-popper-anchor-width)] min-w-56">
+      <DropdownMenuContent className="w-(--radix-popper-anchor-width) min-w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>

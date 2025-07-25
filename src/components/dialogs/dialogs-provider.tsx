@@ -1,24 +1,29 @@
 import { Suspense } from 'react';
 
+import { CreateAccountDialogProvider } from '@/components/dialogs/create-account-dialog';
+import { CreateAccountDialog } from '@/components/dialogs/create-account-dialog/create-account-dialog';
 import { CreateTransactionDialogProvider } from '@/components/dialogs/create-transaction-dialog';
 import { CreateTransactionDialog } from '@/components/dialogs/create-transaction-dialog/create-transaction-dialog';
+import { UpdateAccountDialogProvider } from '@/components/dialogs/update-account-dialog';
+import { UpdateAccountDialog } from '@/components/dialogs/update-account-dialog/update-account-dialog';
 import { UpdateTransactionDialogProvider } from '@/components/dialogs/update-transaction-dialog';
 import { UpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog/update-transaction-dialog';
-import { UpsertAccountDialogProvider } from '@/components/dialogs/upsert-account-dialog';
-import { UpsertAccountDialog } from '@/components/dialogs/upsert-account-dialog/upsert-account-dialog';
 
 export function DialogsProvider({ children }: { children: React.ReactNode }) {
   return (
     <CreateTransactionDialogProvider>
       <UpdateTransactionDialogProvider>
-        <UpsertAccountDialogProvider>
-          {children}
-          <Suspense fallback={null}>
-            <UpsertAccountDialog />
-            <CreateTransactionDialog />
-            <UpdateTransactionDialog />
-          </Suspense>
-        </UpsertAccountDialogProvider>
+        <CreateAccountDialogProvider>
+          <UpdateAccountDialogProvider>
+            {children}
+            <Suspense fallback={null}>
+              <CreateAccountDialog />
+              <UpdateAccountDialog />
+              <CreateTransactionDialog />
+              <UpdateTransactionDialog />
+            </Suspense>
+          </UpdateAccountDialogProvider>
+        </CreateAccountDialogProvider>
       </UpdateTransactionDialogProvider>
     </CreateTransactionDialogProvider>
   );

@@ -51,9 +51,8 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     className={cn(
-                      header.column.columnDef.meta?.align === 'right' && 'text-right [&>*]:ml-auto',
-                      header.column.columnDef.meta?.align === 'center' &&
-                        'text-center [&>*]:mx-auto',
+                      header.column.columnDef.meta?.align === 'right' && 'text-right *:ml-auto',
+                      header.column.columnDef.meta?.align === 'center' && 'text-center *:mx-auto',
                     )}
                   >
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
@@ -100,8 +99,8 @@ export function DataTable<TData>({
                   <TableCell
                     key={cell.id}
                     className={cn(
-                      cell.column.columnDef.meta?.align === 'right' && 'text-right [&>*]:ml-auto',
-                      cell.column.columnDef.meta?.align === 'center' && 'text-center [&>*]:mx-auto',
+                      cell.column.columnDef.meta?.align === 'right' && 'text-right *:ml-auto',
+                      cell.column.columnDef.meta?.align === 'center' && 'text-center *:mx-auto',
                     )}
                   >
                     {cell.getIsGrouped() ? (

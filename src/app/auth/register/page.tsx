@@ -26,16 +26,17 @@ import { SeparatorWithText } from '@/components/ui/separator-with-text';
 
 const formSchema = z
   .object({
-    email: z.string().email('Invalid email'),
+    email: z.email('Invalid email'),
     password: z
       .string()
-      .refine((data) => strengthRequirements.every((req) => req.regex.test(data)), {
-        message: 'Password must meet all strength requirements',
-      }),
+      .refine(
+        (data) => strengthRequirements.every((req) => req.regex.test(data)),
+        'Password must meet all strength requirements',
+      ),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
+    error: 'Passwords do not match',
     path: ['confirmPassword'],
   });
 

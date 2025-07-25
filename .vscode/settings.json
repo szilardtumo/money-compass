@@ -6,5 +6,10 @@
   },
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "eslint.useFlatConfig": true,
-  "cSpell.words": ["subaccount", "subaccounts", "supabase"]
+  "cSpell.words": ["subaccount", "subaccounts", "supabase"],
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.yarn": true
+  }
 }

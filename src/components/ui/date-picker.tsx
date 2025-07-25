@@ -44,7 +44,6 @@ const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
             selected={value}
             onSelect={onValueChange}
             disabled={(date) => disabledFn(date) || date < new Date('1900-01-01')}
-            initialFocus
           />
         </PopoverContent>
       </Popover>

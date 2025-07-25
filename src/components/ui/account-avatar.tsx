@@ -1,10 +1,10 @@
-import { RiBankLine, RiLineChartLine } from '@remixicon/react';
+import { ChartSplineIcon, LandmarkIcon } from 'lucide-react';
 import React from 'react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/cn';
 
-interface AccountAvatarProps extends React.ComponentPropsWithoutRef<typeof Avatar> {
+interface AccountAvatarProps extends React.ComponentProps<typeof Avatar> {
   category: string;
 }
 
@@ -14,8 +14,8 @@ interface AccountIconProps {
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  checking: RiBankLine,
-  investment: RiLineChartLine,
+  checking: LandmarkIcon,
+  investment: ChartSplineIcon,
 };
 
 function AccountIcon({ category, className }: AccountIconProps) {
@@ -28,17 +28,14 @@ function AccountIcon({ category, className }: AccountIconProps) {
   );
 }
 
-const AccountAvatar = React.forwardRef<React.ElementRef<typeof Avatar>, AccountAvatarProps>(
-  ({ category, ...props }, ref) => {
-    return (
-      <Avatar ref={ref} {...props}>
-        <AvatarFallback>
-          <AccountIcon category={category} />
-        </AvatarFallback>
-      </Avatar>
-    );
-  },
-);
-AccountAvatar.displayName = 'AccountAvatar';
+function AccountAvatar({ category, ...props }: AccountAvatarProps) {
+  return (
+    <Avatar {...props}>
+      <AvatarFallback>
+        <AccountIcon category={category} />
+      </AvatarFallback>
+    </Avatar>
+  );
+}
 
 export { AccountIcon, AccountAvatar };

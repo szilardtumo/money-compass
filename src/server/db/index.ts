@@ -11,7 +11,6 @@ import { getSupabaseToken, SupabaseToken } from '@/lib/supabase/server';
 import * as schema from './schema';
 
 declare global {
-  // eslint-disable-next-line no-var
   var drizzleClient: PostgresJsDatabase<typeof schema> | undefined;
 }
 

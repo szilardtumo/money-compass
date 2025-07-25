@@ -7,7 +7,7 @@ import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { schema } from '@/server/db';
 
 export const updateProfile = authenticatedActionClient
-  .schema(
+  .inputSchema(
     z.object({
       mainCurrency: z.string().length(3).toLowerCase(),
     }),
