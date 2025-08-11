@@ -258,35 +258,74 @@ const AreaChart = <TPayload extends Record<string, unknown>>(props: AreaChartPro
             }
           />
         )}
+
+        {/* Defs for the area chart gradient/fill */}
         {categories.map((category, i) => {
           const categoryId = `${areaId}-${category.replace(/[^a-zA-Z0-9]/g, '')}`;
           const color = colors[i % colors.length];
           return (
-            <React.Fragment key={category}>
-              <defs>
-                <linearGradient color={color} id={categoryId} x1="0" y1="0" x2="0" y2="1">
-                  {getFillContent({
-                    fillType: fill,
-                    activeDot: activeDot,
-                    activeLegend: activeLegend,
-                    category: category,
-                  })}
-                </linearGradient>
-              </defs>
-              <Area
-                strokeOpacity={activeDot || (activeLegend && activeLegend !== category) ? 0.3 : 1}
-                activeDot={(props: any) => {
-                  const {
-                    cx: cxCoord,
-                    cy: cyCoord,
-                    stroke,
-                    strokeLinecap,
-                    strokeLinejoin,
-                    strokeWidth,
-                  } = props;
+            <defs key={categoryId}>
+              <linearGradient color={color} id={categoryId} x1="0" y1="0" x2="0" y2="1">
+                {getFillContent({
+                  fillType: fill,
+                  activeDot: activeDot,
+                  activeLegend: activeLegend,
+                  category: category,
+                })}
+              </linearGradient>
+            </defs>
+          );
+        })}
+        {categories.map((category, i) => {
+          const categoryId = `${areaId}-${category.replace(/[^a-zA-Z0-9]/g, '')}`;
+          const color = colors[i % colors.length];
+          return (
+            <Area
+              key={categoryId}
+              strokeOpacity={activeDot || (activeLegend && activeLegend !== category) ? 0.3 : 1}
+              activeDot={(props: any) => {
+                const {
+                  cx: cxCoord,
+                  cy: cyCoord,
+                  stroke,
+                  strokeLinecap,
+                  strokeLinejoin,
+                  strokeWidth,
+                } = props;
+                return (
+                  <Dot
+                    className={cn(onValueChange ? 'cursor-pointer' : '')}
+                    cx={cxCoord}
+                    cy={cyCoord}
+                    r={5}
+                    fill={color}
+                    stroke={stroke}
+                    strokeLinecap={strokeLinecap}
+                    strokeLinejoin={strokeLinejoin}
+                    strokeWidth={strokeWidth}
+                    onClick={(_, event) => onDotClick(props, event)}
+                  />
+                );
+              }}
+              dot={(props: any) => {
+                const {
+                  stroke,
+                  strokeLinecap,
+                  strokeLinejoin,
+                  strokeWidth,
+                  cx: cxCoord,
+                  cy: cyCoord,
+                  index,
+                } = props;
+
+                if (
+                  (hasOnlyOneValueForKey(data, category) &&
+                    !(activeDot || (activeLegend && activeLegend !== category))) ||
+                  (activeDot?.index === index && activeDot?.dataKey === category)
+                ) {
                   return (
                     <Dot
-                      className={cn(onValueChange ? 'cursor-pointer' : '')}
+                      key={index}
                       cx={cxCoord}
                       cy={cyCoord}
                       r={5}
@@ -295,55 +334,23 @@ const AreaChart = <TPayload extends Record<string, unknown>>(props: AreaChartPro
                       strokeLinecap={strokeLinecap}
                       strokeLinejoin={strokeLinejoin}
                       strokeWidth={strokeWidth}
-                      onClick={(_, event) => onDotClick(props, event)}
+                      className={cn(onValueChange ? 'cursor-pointer' : '')}
                     />
                   );
-                }}
-                dot={(props: any) => {
-                  const {
-                    stroke,
-                    strokeLinecap,
-                    strokeLinejoin,
-                    strokeWidth,
-                    cx: cxCoord,
-                    cy: cyCoord,
-                    index,
-                  } = props;
-
-                  if (
-                    (hasOnlyOneValueForKey(data, category) &&
-                      !(activeDot || (activeLegend && activeLegend !== category))) ||
-                    (activeDot?.index === index && activeDot?.dataKey === category)
-                  ) {
-                    return (
-                      <Dot
-                        key={index}
-                        cx={cxCoord}
-                        cy={cyCoord}
-                        r={5}
-                        fill={color}
-                        stroke={stroke}
-                        strokeLinecap={strokeLinecap}
-                        strokeLinejoin={strokeLinejoin}
-                        strokeWidth={strokeWidth}
-                        className={cn(onValueChange ? 'cursor-pointer' : '')}
-                      />
-                    );
-                  }
-                  return <React.Fragment key={index}></React.Fragment>;
-                }}
-                name={category}
-                type={curveType}
-                dataKey={category}
-                stroke={color}
-                strokeWidth={2}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                connectNulls={connectNulls}
-                stackId={stacked ? 'stack' : undefined}
-                fill={`url(#${categoryId})`}
-              />
-            </React.Fragment>
+                }
+                return <React.Fragment key={index}></React.Fragment>;
+              }}
+              name={category}
+              type={curveType}
+              dataKey={category}
+              stroke={color}
+              strokeWidth={2}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              connectNulls={connectNulls}
+              stackId={stacked ? 'stack' : undefined}
+              fill={`url(#${categoryId})`}
+            />
           );
         })}
         {/* hidden lines to increase clickable target area */}
