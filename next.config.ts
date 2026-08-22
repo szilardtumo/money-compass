@@ -4,9 +4,6 @@ import type { NextConfig } from 'next';
 import './src/lib/env';
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -15,10 +12,8 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
-  experimental: {
-    reactCompiler: true,
-    dynamicIO: true,
-  },
+  reactCompiler: true,
+  cacheComponents: true,
 };
 
 export default nextConfig;

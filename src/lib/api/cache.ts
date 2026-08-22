@@ -1,9 +1,9 @@
 import 'server-only';
 
 import {
+  cacheLife,
+  cacheTag as nextCacheTag,
   revalidateTag as nextRevalidateTag,
-  unstable_cacheTag as nextCacheTag,
-  unstable_cacheLife as cacheLife,
 } from 'next/cache';
 
 export type ValidTags =
@@ -30,7 +30,7 @@ cacheTag.global = (...args: Parameters<typeof getGlobalTag>) => cacheTag(getGlob
 cacheTag.user = (...args: Parameters<typeof getUserTag>) => cacheTag(getUserTag(...args));
 cacheTag.id = (...args: Parameters<typeof getIdTag>) => cacheTag(getIdTag(...args));
 
-export const revalidateAllTags = () => nextRevalidateTag('*');
+export const revalidateAllTags = () => nextRevalidateTag('*', 'max');
 export const revalidateTag = ({
   tag,
   userId,
@@ -40,12 +40,12 @@ export const revalidateTag = ({
   userId?: string;
   id?: string;
 }) => {
-  nextRevalidateTag(getGlobalTag(tag));
+  nextRevalidateTag(getGlobalTag(tag), 'max');
   if (userId != null) {
-    nextRevalidateTag(getUserTag(userId, tag));
+    nextRevalidateTag(getUserTag(userId, tag), 'max');
   }
   if (id != null) {
-    nextRevalidateTag(getIdTag(id, tag));
+    nextRevalidateTag(getIdTag(id, tag), 'max');
   }
 };
 
