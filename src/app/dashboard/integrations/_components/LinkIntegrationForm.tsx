@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -86,10 +86,9 @@ export function LinkIntegrationForm({
         label: subaccount.name,
         value: subaccount.id,
       }));
-  }, [integrationAccount?.currency, accounts]);
+  }, [integrationAccount.currency, accounts]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const selectedSubaccountId = form.watch('subaccountId');
+  const selectedSubaccountId = useWatch({ control: form.control, name: 'subaccountId' });
 
   const visualizationProps = useMemo(() => {
     const selectedAccount = accounts.find((account) =>

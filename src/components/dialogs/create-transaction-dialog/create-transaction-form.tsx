@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isFuture, startOfDay } from 'date-fns';
 import { useMemo } from 'react';
+import { useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -71,8 +72,8 @@ export function CreateTransactionForm({
     },
   );
 
-  const selectedAccountId = form.watch('accountId');
-  const selectedSubaccountId = form.watch('subaccountId');
+  const selectedAccountId = useWatch({ control: form.control, name: 'accountId' });
+  const selectedSubaccountId = useWatch({ control: form.control, name: 'subaccountId' });
   const selectedSubaccountCurrency = useMemo(
     () =>
       accounts

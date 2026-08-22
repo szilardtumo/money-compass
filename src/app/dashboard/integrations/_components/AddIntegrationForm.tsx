@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -71,8 +71,7 @@ export function AddIntegrationForm({ gocardlessInstitutions, onSuccess }: AddInt
     }
   }
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const selectedCountry = form.watch('country');
+  const selectedCountry = useWatch({ control: form.control, name: 'country' });
 
   const institutionOptions = useMemo(() => {
     const options = gocardlessInstitutions
