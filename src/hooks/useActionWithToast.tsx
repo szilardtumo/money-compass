@@ -3,24 +3,34 @@ import { HookProps, useHookFormAction } from '@next-safe-action/adapter-react-ho
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import {
   HookCallbacks,
-  HookSafeActionFn,
+  SingleInputActionFn,
   useAction,
   UseActionHookReturn,
   useOptimisticAction,
   UseOptimisticActionHookReturn,
 } from 'next-safe-action/hooks';
 import { useId } from 'react';
-import { Resolver } from 'react-hook-form';
 import { ExternalToast, toast } from 'sonner';
 
-/** Infer the input type of a Standard Schema, or a default type if the schema is undefined. */
-type InferInputOrDefault<MaybeSchema, Default> = MaybeSchema extends StandardSchemaV1
-  ? StandardSchemaV1.InferInput<MaybeSchema>
-  : Default;
-/** Infer the output type of a Standard Schema, or a default type if the schema is undefined. */
-type InferOutputOrDefault<MaybeSchema, Default> = MaybeSchema extends StandardSchemaV1
-  ? StandardSchemaV1.InferOutput<MaybeSchema>
-  : Default;
+/**
+ * Input type of the action, taken from the hook's own `execute` signature so it stays identical to
+ * the library's internal `InferInputOrDefault` (which uses a bundled copy of `StandardSchemaV1`).
+ */
+type InferExecuteInput<
+  ServerError,
+  Schema extends StandardSchemaV1 | undefined,
+  CVE,
+  Data,
+> = Parameters<UseActionHookReturn<ServerError, Schema, CVE, Data>['execute']>[0];
+
+/** Resolver expected by `useHookFormAction`, taken from its own signature for the same reason. */
+type HookFormResolver<
+  ServerError,
+  Schema extends StandardSchemaV1 | undefined,
+  CVE,
+  Data,
+  FormContext = any,
+> = Parameters<typeof useHookFormAction<ServerError, Schema, CVE, Data, FormContext>>[1];
 
 type ToastTitle = string | React.ReactNode;
 type ToastConfig = ToastTitle | (ExternalToast & { title: ToastTitle });
@@ -47,7 +57,7 @@ type ToastUtils<ServerError, S extends StandardSchemaV1 | undefined, CVE, Data> 
 };
 
 type UseActionWithToast = <ServerError, S extends StandardSchemaV1 | undefined, CVE, Data>(
-  safeActionFn: HookSafeActionFn<ServerError, S, CVE, Data>,
+  safeActionFn: SingleInputActionFn<ServerError, S, CVE, Data>,
   cb?: HookCallbacks<ServerError, S, CVE, Data> & ToastUtils<ServerError, S, CVE, Data>,
 ) => UseActionHookReturn<ServerError, S, CVE, Data>;
 
@@ -58,10 +68,10 @@ type UseOptimisticActionWithToast = <
   Data,
   State,
 >(
-  safeActionFn: HookSafeActionFn<ServerError, S, CVE, Data>,
+  safeActionFn: SingleInputActionFn<ServerError, S, CVE, Data>,
   utils: {
     currentState: State;
-    updateFn: (state: State, input: InferInputOrDefault<S, void>) => State;
+    updateFn: (state: State, input: InferExecuteInput<ServerError, S, CVE, Data>) => State;
   } & HookCallbacks<ServerError, S, CVE, Data> &
     ToastUtils<ServerError, S, CVE, Data>,
 ) => UseOptimisticActionHookReturn<ServerError, S, CVE, Data, State>;
@@ -158,12 +168,8 @@ export const useHookFormActionWithToast = <
   Data,
   FormContext = any,
 >(
-  safeActionFn: HookSafeActionFn<ServerError, S, CVE, Data>,
-  hookFormResolver: Resolver<
-    InferInputOrDefault<S, any>,
-    FormContext,
-    InferOutputOrDefault<S, any>
-  >,
+  safeActionFn: SingleInputActionFn<ServerError, S, CVE, Data>,
+  hookFormResolver: HookFormResolver<ServerError, S, CVE, Data, FormContext>,
   props?: HookProps<ServerError, S, CVE, Data, FormContext> & {
     actionProps: HookCallbacks<ServerError, S, CVE, Data> & ToastUtils<ServerError, S, CVE, Data>;
   },

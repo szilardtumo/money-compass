@@ -88,6 +88,7 @@ export function LinkIntegrationForm({
       }));
   }, [integrationAccount?.currency, accounts]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedSubaccountId = form.watch('subaccountId');
 
   const visualizationProps = useMemo(() => {

@@ -237,6 +237,7 @@ async function _syncIntegrationLink(
 
     throw new Error(
       `Failed to sync transactions for integration account ${link.integrationAccountId}`,
+      { cause: err },
     );
   } finally {
     // Finally, update sync count and last synced at

@@ -7,6 +7,7 @@ import pluginReact from 'eslint-plugin-react';
 import * as pluginReactCompiler from 'eslint-plugin-react-compiler';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
+import { version as reactVersion } from 'react';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
@@ -19,13 +20,13 @@ export default defineConfig(
       },
     },
     settings: {
-      react: { version: 'detect' },
+      // 'detect' calls the removed context.getFilename() API in eslint-plugin-react, which breaks on ESLint 10
+      react: { version: reactVersion },
     },
   },
   globalIgnores(['node_modules/*', '.next/*', '.yarn/*', 'src/lib/types/database.types.ts']),
   // js, ts
   pluginJs.configs.recommended,
-  // @ts-expect-error - https://github.com/typescript-eslint/typescript-eslint/issues/10899
   // eslint-disable-next-line import/no-named-as-default-member
   tseslint.configs.recommended,
   {
@@ -50,19 +51,10 @@ export default defineConfig(
   pluginJsxA11y.flatConfigs.recommended,
   pluginReact.configs.flat.recommended,
   pluginReact.configs.flat['jsx-runtime'],
-  // TODO: v6: pluginReactHooks.configs.recommended,
-  pluginReactHooks.configs['recommended-latest'],
+  pluginReactHooks.configs.flat['recommended-latest'],
   pluginReactCompiler.configs.recommended,
-  {
-    plugins: {
-      '@next/next': pluginNext,
-    },
-    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
-    rules: {
-      ...pluginNext.configs.recommended.rules,
-      ...pluginNext.configs['core-web-vitals'].rules,
-    },
-  },
+  pluginNext.configs.recommended,
+  pluginNext.configs['core-web-vitals'],
   {
     rules: {
       'react/prop-types': 'off',

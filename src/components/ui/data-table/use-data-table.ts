@@ -27,6 +27,7 @@ export function useDataTable<TData>(options: UseDataTableOptions<TData>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<TData>({
     data: options.data,
     columns: options.columns,

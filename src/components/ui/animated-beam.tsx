@@ -32,6 +32,7 @@ export const AnimatedBeam: React.FC<AnimatedBeamProps> = ({
   toRef,
   curvature = 0,
   reverse = false, // Include the reverse prop
+  // eslint-disable-next-line react-hooks/purity
   duration = Math.random() * 3 + 4,
   delay = 0,
   pathColor = 'gray',

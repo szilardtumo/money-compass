@@ -4,37 +4,33 @@ import { AlertCircle, RefreshCw } from 'lucide-react';
 import {
   ErrorBoundary as ReactErrorBoundary,
   ErrorBoundaryProps as ReactErrorBoundaryProps,
+  FallbackProps,
+  getErrorMessage,
 } from 'react-error-boundary';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-const DevErrorStack = ({ error }: { error: Error }) => {
+const DevErrorStack = ({ error }: { error: unknown }) => {
   if (process.env.NODE_ENV !== 'development') return null;
 
   return (
     <details className="text-left w-full max-w-md my-4">
       <summary className="text-xs cursor-pointer">Error details</summary>
       <pre className="text-xs mt-1 p-2 bg-destructive/5 rounded overflow-x-scroll">
-        {error.stack}
+        {error instanceof Error ? error.stack : String(error)}
       </pre>
     </details>
   );
 };
 
-export const ComponentErrorFallback = ({
-  error,
-  resetErrorBoundary,
-}: {
-  error: Error;
-  resetErrorBoundary: () => void;
-}) => (
+export const ComponentErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => (
   <Card className="overflow-hidden">
     <CardContent className="p-4 flex flex-col items-center text-center">
       <AlertCircle className="size-5 text-destructive my-2" />
       <h3 className="text-sm font-medium mb-1">Something went wrong!</h3>
       <p className="text-xs text-muted-foreground line-clamp-2">
-        {error?.message || 'An unexpected error occurred'}
+        {getErrorMessage(error) || 'An unexpected error occurred'}
       </p>
       <DevErrorStack error={error} />
       <Button
@@ -50,13 +46,7 @@ export const ComponentErrorFallback = ({
   </Card>
 );
 
-export const PageErrorFallback = ({
-  error,
-  resetErrorBoundary,
-}: {
-  error: Error;
-  resetErrorBoundary: () => void;
-}) => (
+export const PageErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => (
   <div className="flex flex-col h-screen items-center justify-center p-6 text-center bg-background">
     <div className="rounded-full bg-destructive/15 p-4 mb-4">
       <AlertCircle className="h-8 w-8 text-destructive" />

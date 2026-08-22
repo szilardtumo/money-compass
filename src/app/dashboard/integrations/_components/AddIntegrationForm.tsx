@@ -71,6 +71,7 @@ export function AddIntegrationForm({ gocardlessInstitutions, onSuccess }: AddInt
     }
   }
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedCountry = form.watch('country');
 
   const institutionOptions = useMemo(() => {
