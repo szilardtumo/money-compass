@@ -83,7 +83,8 @@ function AlertDialogDescription({
 }
 
 interface AlertDialogActionProps
-  extends React.ComponentProps<typeof AlertDialogPrimitive.Action>,
+  extends
+    React.ComponentProps<typeof AlertDialogPrimitive.Action>,
     VariantProps<typeof buttonVariants> {}
 
 function AlertDialogAction({ className, variant, ...props }: AlertDialogActionProps) {

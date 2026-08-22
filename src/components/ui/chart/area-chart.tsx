@@ -38,7 +38,8 @@ interface ActiveDot {
 }
 
 export interface AreaChartProps<TPayload>
-  extends BaseChartProps<TPayload>,
+  extends
+    BaseChartProps<TPayload>,
     AxisProps,
     GridProps,
     LegendProps,

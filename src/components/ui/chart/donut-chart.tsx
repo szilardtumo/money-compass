@@ -33,9 +33,7 @@ const renderInactiveShape = (props: any) => {
 };
 
 interface DonutChartProps<TPayload>
-  extends BaseChartProps<TPayload>,
-    TooltipProps,
-    ValueChangeProps<TPayload, 'sector'> {
+  extends BaseChartProps<TPayload>, TooltipProps, ValueChangeProps<TPayload, 'sector'> {
   categories: [BaseChartProps<TPayload>['categories'][number]]; // one-element array
   variant?: 'donut' | 'pie';
   label?: string;

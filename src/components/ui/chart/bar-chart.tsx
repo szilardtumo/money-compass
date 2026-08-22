@@ -83,7 +83,8 @@ const renderShape = (
 //#region BarChart
 
 interface BarChartProps<TPayload>
-  extends BaseChartProps<TPayload>,
+  extends
+    BaseChartProps<TPayload>,
     AxisProps,
     GridProps,
     LegendProps,

@@ -7,9 +7,7 @@ import {
 } from 'next/cache';
 
 export type ValidTags =
-  | ReturnType<typeof getGlobalTag>
-  | ReturnType<typeof getUserTag>
-  | ReturnType<typeof getIdTag>;
+  ReturnType<typeof getGlobalTag> | ReturnType<typeof getUserTag> | ReturnType<typeof getIdTag>;
 
 export const CACHE_TAGS = {
   profiles: 'profiles',

@@ -34,8 +34,7 @@ const priceChangeBadgeVariants = cva(
 );
 
 export interface PriceChangeBadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof priceChangeBadgeVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof priceChangeBadgeVariants> {
   percent: number;
 }
 

@@ -69,7 +69,8 @@ const iconVariants = cva('shrink-0', {
 });
 
 export interface ButtonProps
-  extends React.ComponentProps<'button'>,
+  extends
+    React.ComponentProps<'button'>,
     VariantProps<typeof buttonVariants>,
     VariantProps<typeof iconVariants> {
   asChild?: boolean;

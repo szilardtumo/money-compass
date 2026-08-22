@@ -48,8 +48,7 @@ async function getRequisition(id: string): Promise<GocardlessRequisition | undef
   try {
     const gocardless = await getGocardlessClient();
     const response = (await gocardless.requisition.getRequisitionById(id)) as
-      | GocardlessRequisition
-      | undefined;
+      GocardlessRequisition | undefined;
 
     return response;
   } catch (error) {
@@ -95,8 +94,7 @@ async function getAccountDetails(id: string): Promise<GocardlessAccountDetails |
   try {
     const gocardlessClient = await getGocardlessClient();
     const response = (await gocardlessClient.account(id).getDetails()) as
-      | GetAccountDetailsResponse
-      | undefined;
+      GetAccountDetailsResponse | undefined;
 
     return response?.account;
   } catch (error) {
@@ -116,8 +114,7 @@ async function getAccountBalance(id: string): Promise<GocardlessAmount | undefin
   try {
     const gocardlessClient = await getGocardlessClient();
     const response = (await gocardlessClient.account(id).getBalances()) as
-      | GetAccountBalanceResponse
-      | undefined;
+      GetAccountBalanceResponse | undefined;
 
     return response?.balances?.[0].balanceAmount;
   } catch (error) {
