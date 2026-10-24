@@ -3,6 +3,7 @@
 
 'use client';
 
+import { cn } from 'cn';
 import React from 'react';
 import {
   Area,
@@ -16,8 +17,6 @@ import {
 } from 'recharts';
 import { CurveType } from 'recharts/types/shape/Curve';
 import { AxisDomain } from 'recharts/types/util/types';
-
-import { cn } from '@/lib/cn';
 
 import { ChartContainer } from './chart-container';
 import { ChartLegend, ChartLegendContent } from './chart-legend';

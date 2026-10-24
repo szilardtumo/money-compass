@@ -1,8 +1,8 @@
+import { cn } from 'cn';
 import { useRef } from 'react';
 
 import { AnimatedBeam } from '@/components/ui/animated-beam';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/cn';
 
 interface LinkPart {
   accountName: string;

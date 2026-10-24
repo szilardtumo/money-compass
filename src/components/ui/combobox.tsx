@@ -1,4 +1,5 @@
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
+import { cn } from 'cn';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,6 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/cn';
 
 export interface ComboboxProps extends React.HTMLAttributes<HTMLButtonElement> {
   options: readonly { label: string; value: string }[];

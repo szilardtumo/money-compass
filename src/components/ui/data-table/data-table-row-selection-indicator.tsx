@@ -1,6 +1,5 @@
 import { ReactTable, RowData } from '@tanstack/react-table';
-
-import { cn } from '@/lib/cn';
+import { cn } from 'cn';
 
 import { DataTableFeatures } from './use-data-table';
 

@@ -1,8 +1,8 @@
+import { cn } from 'cn';
 import { ChartSplineIcon, LandmarkIcon } from 'lucide-react';
 import React from 'react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { cn } from '@/lib/cn';
 
 interface AccountAvatarProps extends React.ComponentProps<typeof Avatar> {
   category: string;

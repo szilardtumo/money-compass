@@ -1,10 +1,10 @@
 import { CalendarIcon } from '@radix-ui/react-icons';
+import { cn } from 'cn';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/utils/formatters';
 
 export interface DatePickerProps extends React.HTMLAttributes<HTMLButtonElement> {

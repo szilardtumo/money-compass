@@ -1,3 +1,4 @@
+import { cn } from 'cn';
 import { formatDistanceToNow, isToday } from 'date-fns';
 import { Loader } from 'lucide-react';
 import Link from 'next/link';
@@ -22,7 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { cn } from '@/lib/cn';
 import { DAILY_SYNC_COUNT_LIMIT } from '@/lib/constants/integrations';
 import { Integration } from '@/lib/types/integrations.types';
 

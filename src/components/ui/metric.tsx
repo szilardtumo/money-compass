@@ -1,6 +1,5 @@
+import { cn } from 'cn';
 import React from 'react';
-
-import { cn } from '@/lib/cn';
 
 const Metric = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (

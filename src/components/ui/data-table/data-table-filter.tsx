@@ -2,6 +2,7 @@
 
 import { CheckIcon, PlusCircledIcon } from '@radix-ui/react-icons';
 import { ReactTable, RowData } from '@tanstack/react-table';
+import { cn } from 'cn';
 import * as React from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +19,6 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/cn';
 
 import { DataTableFeatures } from './use-data-table';
 

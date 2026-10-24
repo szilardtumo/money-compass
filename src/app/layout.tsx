@@ -1,5 +1,6 @@
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { cn } from 'cn';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -8,7 +9,6 @@ import { GlobalProgress } from '@/app/_components/global-progress';
 import { GlobalProviders } from '@/app/_components/global-providers';
 import { ErrorBoundary, PageErrorFallback } from '@/components/ui/error-boundary';
 import { Toaster } from '@/components/ui/sonner';
-import { cn } from '@/lib/cn';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 

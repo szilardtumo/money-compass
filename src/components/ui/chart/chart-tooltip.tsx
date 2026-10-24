@@ -1,8 +1,7 @@
+import { cn } from 'cn';
 import React from 'react';
 import * as RechartsPrimitive from 'recharts';
 import type { TooltipValueType } from 'recharts';
-
-import { cn } from '@/lib/cn';
 
 import { ChartCategoryIndicator } from './chart-category-indicator';
 

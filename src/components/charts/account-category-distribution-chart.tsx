@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from 'cn';
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { cn } from '@/lib/cn';
 import { Account } from '@/lib/types/accounts.types';
 import { capitalize, formatCurrency, formatPercent } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';

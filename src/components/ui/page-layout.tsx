@@ -1,7 +1,7 @@
+import { cn } from 'cn';
 import React from 'react';
 
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/cn';
 
 const PageLayout = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (

@@ -1,7 +1,8 @@
 import pluginJs from '@eslint/js';
 import pluginNext from '@next/eslint-plugin-next';
 import { defineConfig, globalIgnores } from 'eslint/config';
-import pluginImport from 'eslint-plugin-import';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+import { createNodeResolver, importX } from 'eslint-plugin-import-x';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
@@ -26,7 +27,6 @@ export default defineConfig(
   globalIgnores(['node_modules/*', '.next/*', '.yarn/*', 'src/lib/types/database.types.ts']),
   // js, ts
   pluginJs.configs.recommended,
-  // eslint-disable-next-line import/no-named-as-default-member
   tseslint.configs.recommended,
   {
     rules: {
@@ -59,26 +59,17 @@ export default defineConfig(
     },
   },
   // import
+  importX.flatConfigs.recommended,
+  importX.flatConfigs.typescript,
   {
-    plugins: {
-      import: pluginImport,
-    },
     settings: {
-      'import/parsers': {
-        espree: ['.js', '.jsx', '.cjs', '.mjs'],
-        '@typescript-eslint/parser': ['.ts', '.tsx'],
-      },
-      'import/resolver': {
-        node: true,
-        typescript: true,
-      },
+      'import-x/resolver-next': [createTypeScriptImportResolver(), createNodeResolver()],
     },
     rules: {
-      ...pluginImport.flatConfigs.recommended.rules,
-      ...pluginImport.flatConfigs.typescript.rules,
-      'import/no-duplicates': 'error',
-      'import/prefer-default-export': 'off',
-      'import/order': [
+      'import-x/no-duplicates': 'error',
+      // Flags every `React.useState`-style call on the default React import
+      'import-x/no-named-as-default-member': 'off',
+      'import-x/order': [
         'error',
         {
           pathGroups: [

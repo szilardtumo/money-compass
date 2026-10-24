@@ -1,6 +1,7 @@
+import { cn } from 'cn';
+
 import { buttonVariants } from '@/components/ui/button';
 import { NavLink } from '@/components/ui/nav-link';
-import { cn } from '@/lib/cn';
 
 interface NavItemProps {
   href: string;

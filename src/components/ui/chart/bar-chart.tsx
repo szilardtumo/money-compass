@@ -3,11 +3,10 @@
 
 'use client';
 
+import { cn } from 'cn';
 import React from 'react';
 import { Bar, CartesianGrid, Label, BarChart as RechartsBarChart, XAxis, YAxis } from 'recharts';
 import { AxisDomain } from 'recharts/types/util/types';
-
-import { cn } from '@/lib/cn';
 
 import { ChartContainer } from './chart-container';
 import { ChartLegend, ChartLegendContent } from './chart-legend';

@@ -3,10 +3,9 @@
 
 'use client';
 
+import { cn } from 'cn';
 import React, { useMemo } from 'react';
 import { Pie, PieChart as ReChartsDonutChart, PieSectorShapeProps, Sector } from 'recharts';
-
-import { cn } from '@/lib/cn';
 
 import { ChartContainer } from './chart-container';
 import { ChartTooltip, ChartTooltipContent } from './chart-tooltip';

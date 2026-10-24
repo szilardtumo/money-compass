@@ -1,9 +1,8 @@
 'use client';
 
+import { cn } from 'cn';
 import { motion } from 'motion/react';
 import { RefObject, useEffect, useId, useState } from 'react';
-
-import { cn } from '@/lib/cn';
 
 export interface AnimatedBeamProps {
   className?: string;

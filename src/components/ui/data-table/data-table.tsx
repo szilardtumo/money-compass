@@ -2,6 +2,7 @@
 
 import { CaretSortIcon, CaretUpIcon } from '@radix-ui/react-icons';
 import { ReactTable, RowData, flexRender } from '@tanstack/react-table';
+import { cn } from 'cn';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -13,7 +14,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Toggle } from '@/components/ui/toggle';
-import { cn } from '@/lib/cn';
 
 import { DataTableFeatures } from './use-data-table';
 

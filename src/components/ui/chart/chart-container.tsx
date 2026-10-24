@@ -1,7 +1,6 @@
+import { cn } from 'cn';
 import React from 'react';
 import * as RechartsPrimitive from 'recharts';
-
-import { cn } from '@/lib/cn';
 
 const ChartContainer = React.forwardRef<
   HTMLDivElement,

@@ -2,6 +2,7 @@
 
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import { ReactTable, RowData } from '@tanstack/react-table';
+import { cn } from 'cn';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/cn';
 
 import { DataTableFeatures } from './use-data-table';
 

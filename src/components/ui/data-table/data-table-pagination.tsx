@@ -1,4 +1,5 @@
 import { ReactTable, RowData } from '@tanstack/react-table';
+import { cn } from 'cn';
 
 import {
   Pagination,
@@ -14,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/cn';
 
 import { DataTableFeatures } from './use-data-table';
 

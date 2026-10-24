@@ -1,9 +1,8 @@
 import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from 'cn';
 import { Loader2 } from 'lucide-react';
 import { Slot as SlotPrimitive } from 'radix-ui';
 import * as React from 'react';
-
-import { cn } from '@/lib/cn';
 
 const buttonVariants = cva(
   'group relative inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
