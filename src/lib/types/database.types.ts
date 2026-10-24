@@ -11,6 +11,7 @@ export type Database = {
           name: string;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           category: Database['public']['Enums']['account_category'];
           created_at?: string;
@@ -33,6 +34,7 @@ export type Database = {
           id: string;
           name: string;
         };
+        ComputedFields: never;
         Insert: {
           country: string;
           id: string;
@@ -51,6 +53,7 @@ export type Database = {
           rate: number;
           to: string;
         };
+        ComputedFields: never;
         Insert: {
           from: string;
           rate: number;
@@ -88,6 +91,7 @@ export type Database = {
           subaccount_id: string;
           sync_count: number;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           id?: string;
@@ -131,6 +135,7 @@ export type Database = {
           name: string;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           external_id: string;
@@ -152,6 +157,7 @@ export type Database = {
           id: string;
           main_currency: string;
         };
+        ComputedFields: never;
         Insert: {
           id: string;
           main_currency?: string;
@@ -178,6 +184,7 @@ export type Database = {
           id: string;
           name: string;
         };
+        ComputedFields: never;
         Insert: {
           account_id: string;
           created_at?: string;
@@ -226,6 +233,7 @@ export type Database = {
           type: string;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           amount: number;
           balance: number;
@@ -276,6 +284,7 @@ export type Database = {
           started_date: string | null;
           subaccount_id: string | null;
         };
+        ComputedFields: never;
         Relationships: [
           {
             foreignKeyName: 'transactions_subaccount_id_subaccounts_id_fk';
@@ -290,11 +299,11 @@ export type Database = {
     Functions: {
       add_compression_policy: {
         Args: {
-          hypertable: unknown;
           compress_after: unknown;
+          hypertable: unknown;
           if_not_exists?: boolean;
-          schedule_interval?: unknown;
           initial_start?: string;
+          schedule_interval?: string;
           timezone?: string;
         };
         Returns: number;
@@ -302,61 +311,61 @@ export type Database = {
       add_continuous_aggregate_policy: {
         Args: {
           continuous_aggregate: unknown;
-          start_offset: unknown;
           end_offset: unknown;
-          schedule_interval: unknown;
           if_not_exists?: boolean;
           initial_start?: string;
+          schedule_interval: string;
+          start_offset: unknown;
           timezone?: string;
         };
         Returns: number;
       };
       add_data_node: {
         Args: {
-          node_name: unknown;
-          host: string;
-          database?: unknown;
-          port?: number;
-          if_not_exists?: boolean;
           bootstrap?: boolean;
+          database?: unknown;
+          host: string;
+          if_not_exists?: boolean;
+          node_name: unknown;
           password?: string;
+          port?: number;
         };
         Returns: {
-          node_name: unknown;
-          host: string;
-          port: number;
           database: unknown;
-          node_created: boolean;
           database_created: boolean;
           extension_created: boolean;
+          host: string;
+          node_created: boolean;
+          node_name: unknown;
+          port: number;
         }[];
       };
       add_dimension: {
         Args: {
-          hypertable: unknown;
-          column_name: unknown;
-          number_partitions?: number;
           chunk_time_interval?: unknown;
-          partitioning_func?: unknown;
+          column_name: unknown;
+          hypertable: unknown;
           if_not_exists?: boolean;
+          number_partitions?: number;
+          partitioning_func?: unknown;
         };
         Returns: {
+          column_name: unknown;
+          created: boolean;
           dimension_id: number;
           schema_name: unknown;
           table_name: unknown;
-          column_name: unknown;
-          created: boolean;
         }[];
       };
       add_job: {
         Args: {
-          proc: unknown;
-          schedule_interval: unknown;
-          config?: Json;
-          initial_start?: string;
-          scheduled?: boolean;
           check_config?: unknown;
+          config?: Json;
           fixed_schedule?: boolean;
+          initial_start?: string;
+          proc: unknown;
+          schedule_interval: string;
+          scheduled?: boolean;
           timezone?: string;
         };
         Returns: number;
@@ -364,8 +373,8 @@ export type Database = {
       add_reorder_policy: {
         Args: {
           hypertable: unknown;
-          index_name: unknown;
           if_not_exists?: boolean;
+          index_name: unknown;
           initial_start?: string;
           timezone?: string;
         };
@@ -373,67 +382,62 @@ export type Database = {
       };
       add_retention_policy: {
         Args: {
-          relation: unknown;
           drop_after: unknown;
           if_not_exists?: boolean;
-          schedule_interval?: unknown;
           initial_start?: string;
+          relation: unknown;
+          schedule_interval?: string;
           timezone?: string;
         };
         Returns: number;
       };
       alter_data_node: {
         Args: {
-          node_name: unknown;
-          host?: string;
-          database?: unknown;
-          port?: number;
           available?: boolean;
+          database?: unknown;
+          host?: string;
+          node_name: unknown;
+          port?: number;
         };
         Returns: {
-          node_name: unknown;
-          host: string;
-          port: number;
-          database: unknown;
           available: boolean;
+          database: unknown;
+          host: string;
+          node_name: unknown;
+          port: number;
         }[];
       };
       alter_job: {
         Args: {
-          job_id: number;
-          schedule_interval?: unknown;
-          max_runtime?: unknown;
-          max_retries?: number;
-          retry_period?: unknown;
-          scheduled?: boolean;
-          config?: Json;
-          next_start?: string;
-          if_exists?: boolean;
           check_config?: unknown;
+          config?: Json;
+          if_exists?: boolean;
+          job_id: number;
+          max_retries?: number;
+          max_runtime?: string;
+          next_start?: string;
+          retry_period?: string;
+          schedule_interval?: string;
+          scheduled?: boolean;
         };
         Returns: {
-          job_id: number;
-          schedule_interval: unknown;
-          max_runtime: unknown;
-          max_retries: number;
-          retry_period: unknown;
-          scheduled: boolean;
-          config: Json;
-          next_start: string;
           check_config: string;
+          config: Json;
+          job_id: number;
+          max_retries: number;
+          max_runtime: string;
+          next_start: string;
+          retry_period: string;
+          schedule_interval: string;
+          scheduled: boolean;
         }[];
       };
-      approximate_row_count: {
-        Args: {
-          relation: unknown;
-        };
-        Returns: number;
-      };
+      approximate_row_count: { Args: { relation: unknown }; Returns: number };
       attach_data_node: {
         Args: {
-          node_name: unknown;
           hypertable: unknown;
           if_not_attached?: boolean;
+          node_name: unknown;
           repartition?: boolean;
         };
         Returns: {
@@ -443,83 +447,70 @@ export type Database = {
         }[];
       };
       attach_tablespace: {
-        Args: {
-          tablespace: unknown;
-          hypertable: unknown;
-          if_not_attached?: boolean;
-        };
+        Args: { hypertable: unknown; if_not_attached?: boolean; tablespace: unknown };
         Returns: undefined;
       };
       chunk_compression_stats: {
-        Args: {
-          hypertable: unknown;
-        };
+        Args: { hypertable: unknown };
         Returns: {
-          chunk_schema: unknown;
-          chunk_name: unknown;
-          compression_status: string;
-          before_compression_table_bytes: number;
-          before_compression_index_bytes: number;
-          before_compression_toast_bytes: number;
-          before_compression_total_bytes: number;
-          after_compression_table_bytes: number;
           after_compression_index_bytes: number;
+          after_compression_table_bytes: number;
           after_compression_toast_bytes: number;
           after_compression_total_bytes: number;
+          before_compression_index_bytes: number;
+          before_compression_table_bytes: number;
+          before_compression_toast_bytes: number;
+          before_compression_total_bytes: number;
+          chunk_name: unknown;
+          chunk_schema: unknown;
+          compression_status: string;
           node_name: unknown;
         }[];
       };
       chunks_detailed_size: {
-        Args: {
-          hypertable: unknown;
-        };
+        Args: { hypertable: unknown };
         Returns: {
-          chunk_schema: unknown;
           chunk_name: unknown;
-          table_bytes: number;
+          chunk_schema: unknown;
           index_bytes: number;
+          node_name: unknown;
+          table_bytes: number;
           toast_bytes: number;
           total_bytes: number;
-          node_name: unknown;
         }[];
       };
       compress_chunk: {
-        Args: {
-          uncompressed_chunk: unknown;
-          if_not_compressed?: boolean;
-        };
+        Args: { if_not_compressed?: boolean; uncompressed_chunk: unknown };
         Returns: unknown;
       };
       create_distributed_hypertable: {
         Args: {
-          relation: unknown;
-          time_column_name: unknown;
-          partitioning_column?: unknown;
-          number_partitions?: number;
           associated_schema_name?: unknown;
           associated_table_prefix?: unknown;
+          chunk_sizing_func?: unknown;
+          chunk_target_size?: string;
           chunk_time_interval?: unknown;
           create_default_indexes?: boolean;
-          if_not_exists?: boolean;
-          partitioning_func?: unknown;
-          migrate_data?: boolean;
-          chunk_target_size?: string;
-          chunk_sizing_func?: unknown;
-          time_partitioning_func?: unknown;
-          replication_factor?: number;
           data_nodes?: unknown[];
+          if_not_exists?: boolean;
+          migrate_data?: boolean;
+          number_partitions?: number;
+          partitioning_column?: unknown;
+          partitioning_func?: unknown;
+          relation: unknown;
+          replication_factor?: number;
+          time_column_name: unknown;
+          time_partitioning_func?: unknown;
         };
         Returns: {
+          created: boolean;
           hypertable_id: number;
           schema_name: unknown;
           table_name: unknown;
-          created: boolean;
         }[];
       };
       create_distributed_restore_point: {
-        Args: {
-          name: string;
-        };
+        Args: { name: string };
         Returns: {
           node_name: unknown;
           node_type: string;
@@ -528,181 +519,118 @@ export type Database = {
       };
       create_hypertable: {
         Args: {
-          relation: unknown;
-          time_column_name: unknown;
-          partitioning_column?: unknown;
-          number_partitions?: number;
           associated_schema_name?: unknown;
           associated_table_prefix?: unknown;
+          chunk_sizing_func?: unknown;
+          chunk_target_size?: string;
           chunk_time_interval?: unknown;
           create_default_indexes?: boolean;
-          if_not_exists?: boolean;
-          partitioning_func?: unknown;
-          migrate_data?: boolean;
-          chunk_target_size?: string;
-          chunk_sizing_func?: unknown;
-          time_partitioning_func?: unknown;
-          replication_factor?: number;
           data_nodes?: unknown[];
           distributed?: boolean;
+          if_not_exists?: boolean;
+          migrate_data?: boolean;
+          number_partitions?: number;
+          partitioning_column?: unknown;
+          partitioning_func?: unknown;
+          relation: unknown;
+          replication_factor?: number;
+          time_column_name: unknown;
+          time_partitioning_func?: unknown;
         };
         Returns: {
+          created: boolean;
           hypertable_id: number;
           schema_name: unknown;
           table_name: unknown;
-          created: boolean;
         }[];
       };
       decompress_chunk: {
-        Args: {
-          uncompressed_chunk: unknown;
-          if_compressed?: boolean;
-        };
+        Args: { if_compressed?: boolean; uncompressed_chunk: unknown };
         Returns: unknown;
       };
       delete_data_node: {
         Args: {
-          node_name: unknown;
-          if_exists?: boolean;
-          force?: boolean;
-          repartition?: boolean;
           drop_database?: boolean;
+          force?: boolean;
+          if_exists?: boolean;
+          node_name: unknown;
+          repartition?: boolean;
         };
         Returns: boolean;
       };
-      delete_job: {
-        Args: {
-          job_id: number;
-        };
-        Returns: undefined;
-      };
+      delete_job: { Args: { job_id: number }; Returns: undefined };
       detach_data_node: {
         Args: {
-          node_name: unknown;
+          drop_remote_data?: boolean;
+          force?: boolean;
           hypertable?: unknown;
           if_attached?: boolean;
-          force?: boolean;
+          node_name: unknown;
           repartition?: boolean;
-          drop_remote_data?: boolean;
         };
         Returns: number;
       };
       detach_tablespace: {
-        Args: {
-          tablespace: unknown;
-          hypertable?: unknown;
-          if_attached?: boolean;
-        };
+        Args: { hypertable?: unknown; if_attached?: boolean; tablespace: unknown };
         Returns: number;
       };
-      detach_tablespaces: {
-        Args: {
-          hypertable: unknown;
-        };
-        Returns: number;
-      };
+      detach_tablespaces: { Args: { hypertable: unknown }; Returns: number };
       drop_chunks: {
-        Args: {
-          relation: unknown;
-          older_than?: unknown;
-          newer_than?: unknown;
-          verbose?: boolean;
-        };
+        Args: { newer_than?: unknown; older_than?: unknown; relation: unknown; verbose?: boolean };
         Returns: string[];
       };
-      get_telemetry_report: {
-        Args: Record<PropertyKey, never>;
-        Returns: Json;
-      };
+      get_telemetry_report: { Args: Record<PropertyKey, never>; Returns: Json };
       hypertable_compression_stats: {
-        Args: {
-          hypertable: unknown;
-        };
+        Args: { hypertable: unknown };
         Returns: {
-          total_chunks: number;
-          number_compressed_chunks: number;
-          before_compression_table_bytes: number;
-          before_compression_index_bytes: number;
-          before_compression_toast_bytes: number;
-          before_compression_total_bytes: number;
-          after_compression_table_bytes: number;
           after_compression_index_bytes: number;
+          after_compression_table_bytes: number;
           after_compression_toast_bytes: number;
           after_compression_total_bytes: number;
+          before_compression_index_bytes: number;
+          before_compression_table_bytes: number;
+          before_compression_toast_bytes: number;
+          before_compression_total_bytes: number;
           node_name: unknown;
+          number_compressed_chunks: number;
+          total_chunks: number;
         }[];
       };
       hypertable_detailed_size: {
-        Args: {
-          hypertable: unknown;
-        };
+        Args: { hypertable: unknown };
         Returns: {
-          table_bytes: number;
           index_bytes: number;
+          node_name: unknown;
+          table_bytes: number;
           toast_bytes: number;
           total_bytes: number;
-          node_name: unknown;
         }[];
       };
-      hypertable_index_size: {
-        Args: {
-          index_name: unknown;
-        };
-        Returns: number;
-      };
-      hypertable_size: {
-        Args: {
-          hypertable: unknown;
-        };
-        Returns: number;
-      };
+      hypertable_index_size: { Args: { index_name: unknown }; Returns: number };
+      hypertable_size: { Args: { hypertable: unknown }; Returns: number };
       interpolate:
         | {
-            Args: {
-              value: number;
-              prev?: Record<string, unknown>;
-              next?: Record<string, unknown>;
-            };
+            Args: { next?: Record<string, unknown>; prev?: Record<string, unknown>; value: number };
             Returns: number;
           }
         | {
-            Args: {
-              value: number;
-              prev?: Record<string, unknown>;
-              next?: Record<string, unknown>;
-            };
+            Args: { next?: Record<string, unknown>; prev?: Record<string, unknown>; value: number };
             Returns: number;
           }
         | {
-            Args: {
-              value: number;
-              prev?: Record<string, unknown>;
-              next?: Record<string, unknown>;
-            };
+            Args: { next?: Record<string, unknown>; prev?: Record<string, unknown>; value: number };
             Returns: number;
           }
         | {
-            Args: {
-              value: number;
-              prev?: Record<string, unknown>;
-              next?: Record<string, unknown>;
-            };
+            Args: { next?: Record<string, unknown>; prev?: Record<string, unknown>; value: number };
             Returns: number;
           }
         | {
-            Args: {
-              value: number;
-              prev?: Record<string, unknown>;
-              next?: Record<string, unknown>;
-            };
+            Args: { next?: Record<string, unknown>; prev?: Record<string, unknown>; value: number };
             Returns: number;
           };
       locf: {
-        Args: {
-          value: unknown;
-          prev?: unknown;
-          treat_null_as_missing?: boolean;
-        };
+        Args: { prev?: unknown; treat_null_as_missing?: boolean; value: unknown };
         Returns: unknown;
       };
       move_chunk: {
@@ -716,320 +644,125 @@ export type Database = {
         Returns: undefined;
       };
       query_transaction_history: {
-        Args: {
-          date_range: string;
-          bucket_interval: string;
-        };
+        Args: { bucket_interval: string; date_range: string };
         Returns: {
-          subaccount_id: string;
           interval_start: string;
           last_balance: number;
+          subaccount_id: string;
         }[];
       };
       remove_compression_policy: {
-        Args: {
-          hypertable: unknown;
-          if_exists?: boolean;
-        };
+        Args: { hypertable: unknown; if_exists?: boolean };
         Returns: boolean;
       };
       remove_continuous_aggregate_policy: {
-        Args: {
-          continuous_aggregate: unknown;
-          if_not_exists?: boolean;
-          if_exists?: boolean;
-        };
+        Args: { continuous_aggregate: unknown; if_exists?: boolean; if_not_exists?: boolean };
         Returns: undefined;
       };
       remove_reorder_policy: {
-        Args: {
-          hypertable: unknown;
-          if_exists?: boolean;
-        };
+        Args: { hypertable: unknown; if_exists?: boolean };
         Returns: undefined;
       };
       remove_retention_policy: {
-        Args: {
-          relation: unknown;
-          if_exists?: boolean;
-        };
+        Args: { if_exists?: boolean; relation: unknown };
         Returns: undefined;
       };
       reorder_chunk: {
-        Args: {
-          chunk: unknown;
-          index?: unknown;
-          verbose?: boolean;
-        };
+        Args: { chunk: unknown; index?: unknown; verbose?: boolean };
         Returns: undefined;
       };
       set_adaptive_chunking: {
-        Args: {
-          hypertable: unknown;
-          chunk_target_size: string;
-        };
+        Args: { chunk_sizing_func?: unknown; chunk_target_size: string; hypertable: unknown };
         Returns: Record<string, unknown>;
       };
       set_chunk_time_interval: {
-        Args: {
-          hypertable: unknown;
-          chunk_time_interval: unknown;
-          dimension_name?: unknown;
-        };
+        Args: { chunk_time_interval: unknown; dimension_name?: unknown; hypertable: unknown };
         Returns: undefined;
       };
       set_integer_now_func: {
-        Args: {
-          hypertable: unknown;
-          integer_now_func: unknown;
-          replace_if_exists?: boolean;
-        };
+        Args: { hypertable: unknown; integer_now_func: unknown; replace_if_exists?: boolean };
         Returns: undefined;
       };
       set_number_partitions: {
-        Args: {
-          hypertable: unknown;
-          number_partitions: number;
-          dimension_name?: unknown;
-        };
+        Args: { dimension_name?: unknown; hypertable: unknown; number_partitions: number };
         Returns: undefined;
       };
       set_replication_factor: {
-        Args: {
-          hypertable: unknown;
-          replication_factor: number;
-        };
+        Args: { hypertable: unknown; replication_factor: number };
         Returns: undefined;
       };
       show_chunks: {
-        Args: {
-          relation: unknown;
-          older_than?: unknown;
-          newer_than?: unknown;
-        };
+        Args: { newer_than?: unknown; older_than?: unknown; relation: unknown };
         Returns: unknown[];
       };
-      show_tablespaces: {
-        Args: {
-          hypertable: unknown;
-        };
-        Returns: unknown[];
-      };
+      show_tablespaces: { Args: { hypertable: unknown }; Returns: unknown[] };
       time_bucket:
+        | { Args: { bucket_width: number; ts: number }; Returns: number }
+        | { Args: { bucket_width: number; offset: number; ts: number }; Returns: number }
+        | { Args: { bucket_width: number; ts: number }; Returns: number }
+        | { Args: { bucket_width: number; offset: number; ts: number }; Returns: number }
+        | { Args: { bucket_width: string; ts: string }; Returns: string }
+        | { Args: { bucket_width: string; offset: string; ts: string }; Returns: string }
+        | { Args: { bucket_width: string; origin: string; ts: string }; Returns: string }
+        | { Args: { bucket_width: string; ts: string }; Returns: string }
+        | { Args: { bucket_width: string; offset: string; ts: string }; Returns: string }
+        | { Args: { bucket_width: string; origin: string; ts: string }; Returns: string }
         | {
             Args: {
-              bucket_width: number;
-              ts: number;
-            };
-            Returns: number;
-          }
-        | {
-            Args: {
-              bucket_width: number;
-              ts: number;
-            };
-            Returns: number;
-          }
-        | {
-            Args: {
-              bucket_width: number;
-              ts: number;
-            };
-            Returns: number;
-          }
-        | {
-            Args: {
-              bucket_width: number;
-              ts: number;
-              offset: number;
-            };
-            Returns: number;
-          }
-        | {
-            Args: {
-              bucket_width: number;
-              ts: number;
-              offset: number;
-            };
-            Returns: number;
-          }
-        | {
-            Args: {
-              bucket_width: number;
-              ts: number;
-              offset: number;
-            };
-            Returns: number;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-              offset: unknown;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-              offset: unknown;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-              offset: unknown;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-              origin: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-              origin: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-              origin: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-              timezone: string;
+              bucket_width: string;
+              offset?: string;
               origin?: string;
-              offset?: unknown;
+              timezone: string;
+              ts: string;
             };
             Returns: string;
-          };
+          }
+        | { Args: { bucket_width: string; ts: string }; Returns: string }
+        | { Args: { bucket_width: string; offset: string; ts: string }; Returns: string }
+        | { Args: { bucket_width: string; origin: string; ts: string }; Returns: string }
+        | { Args: { bucket_width: number; ts: number }; Returns: number }
+        | { Args: { bucket_width: number; offset: number; ts: number }; Returns: number };
       time_bucket_gapfill:
         | {
-            Args: {
-              bucket_width: number;
-              ts: number;
-              start?: number;
-              finish?: number;
-            };
+            Args: { bucket_width: number; finish?: number; start?: number; ts: number };
             Returns: number;
           }
         | {
-            Args: {
-              bucket_width: number;
-              ts: number;
-              start?: number;
-              finish?: number;
-            };
+            Args: { bucket_width: number; finish?: number; start?: number; ts: number };
             Returns: number;
           }
         | {
-            Args: {
-              bucket_width: number;
-              ts: number;
-              start?: number;
-              finish?: number;
-            };
-            Returns: number;
+            Args: { bucket_width: string; finish?: string; start?: string; ts: string };
+            Returns: string;
           }
         | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
-              start?: string;
-              finish?: string;
-            };
+            Args: { bucket_width: string; finish?: string; start?: string; ts: string };
             Returns: string;
           }
         | {
             Args: {
-              bucket_width: unknown;
-              ts: string;
-              start?: string;
+              bucket_width: string;
               finish?: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
               start?: string;
-              finish?: string;
-            };
-            Returns: string;
-          }
-        | {
-            Args: {
-              bucket_width: unknown;
-              ts: string;
               timezone: string;
-              start?: string;
-              finish?: string;
+              ts: string;
             };
             Returns: string;
+          }
+        | {
+            Args: { bucket_width: string; finish?: string; start?: string; ts: string };
+            Returns: string;
+          }
+        | {
+            Args: { bucket_width: number; finish?: number; start?: number; ts: number };
+            Returns: number;
           };
-      timescaledb_fdw_handler: {
-        Args: Record<PropertyKey, never>;
-        Returns: unknown;
-      };
-      timescaledb_post_restore: {
-        Args: Record<PropertyKey, never>;
-        Returns: boolean;
-      };
-      timescaledb_pre_restore: {
-        Args: Record<PropertyKey, never>;
-        Returns: boolean;
-      };
-      update_subaccount: {
-        Args: {
-          _id: string;
-          _currency: string;
-        };
-        Returns: undefined;
-      };
+      timescaledb_fdw_handler: { Args: Record<PropertyKey, never>; Returns: unknown };
+      timescaledb_post_restore: { Args: Record<PropertyKey, never>; Returns: boolean };
+      timescaledb_pre_restore: { Args: Record<PropertyKey, never>; Returns: boolean };
+      update_subaccount: { Args: { _currency: string; _id: string }; Returns: undefined };
       update_transaction_balances: {
-        Args: {
-          _subaccount_id: string;
-          fromdate: string;
-          amounttoadd: number;
-        };
+        Args: { _subaccount_id: string; amounttoadd: number; fromdate: string };
         Returns: undefined;
       };
     };
@@ -1042,24 +775,29 @@ export type Database = {
   };
 };
 
-type PublicSchema = Database[Extract<keyof Database, 'public'>];
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>];
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    keyof (PublicSchema['Tables'] & PublicSchema['Views']) | { schema: keyof Database },
-  TableName extends (PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-        Database[PublicTableNameOrOptions['schema']]['Views'])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never) = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-      Database[PublicTableNameOrOptions['schema']]['Views'])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R;
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema['Tables'] & PublicSchema['Views'])
-    ? (PublicSchema['Tables'] & PublicSchema['Views'])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R;
       }
       ? R
@@ -1067,18 +805,21 @@ export type Tables<
     : never;
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends keyof PublicSchema['Tables'] | { schema: keyof Database },
-  TableName extends (PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+  DefaultSchemaTableNameOrOptions extends
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never) = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I;
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-    ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I;
       }
       ? I
@@ -1086,18 +827,21 @@ export type TablesInsert<
     : never;
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends keyof PublicSchema['Tables'] | { schema: keyof Database },
-  TableName extends (PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
+  DefaultSchemaTableNameOrOptions extends
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never) = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U;
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
-    ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U;
       }
       ? U
@@ -1105,26 +849,37 @@ export type TablesUpdate<
     : never;
 
 export type Enums<
-  PublicEnumNameOrOptions extends keyof PublicSchema['Enums'] | { schema: keyof Database },
-  EnumName extends (PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions['schema']]['Enums']
+  DefaultSchemaEnumNameOrOptions extends
+    keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never) = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema['Enums']
-    ? PublicSchema['Enums'][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    keyof PublicSchema['CompositeTypes'] | { schema: keyof Database },
+    keyof DefaultSchema['CompositeTypes'] | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never) = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema['CompositeTypes']
-    ? PublicSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never;
+
+export const Constants = {
+  public: {
+    Enums: {
+      account_category: ['checking', 'investment'],
+    },
+  },
+} as const;
