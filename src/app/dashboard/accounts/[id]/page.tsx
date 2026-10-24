@@ -12,11 +12,9 @@ import { apiQueries } from '@/server/api/queries';
 
 import { AccountActionButtons } from './_components/account-action-buttons';
 
-interface AccountDetailsPageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default async function AccountDetailsPage({ params }: AccountDetailsPageProps) {
+export default async function AccountDetailsPage({
+  params,
+}: PageProps<'/dashboard/accounts/[id]'>) {
   const { id } = await params;
 
   // Only fetch the minimal account data needed for the page header and to verify existence

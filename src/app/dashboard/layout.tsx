@@ -5,7 +5,7 @@ import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 import { Navbar } from './_components/navbar';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: LayoutProps<'/dashboard'>) {
   return (
     <DialogsProvider>
       <ResizablePanelGroup

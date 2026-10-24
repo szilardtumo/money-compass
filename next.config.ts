@@ -4,9 +4,6 @@ import type { NextConfig } from 'next';
 import './src/lib/env';
 
 const nextConfig: NextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   logging: {
     fetches: {
       fullUrl: true,
@@ -15,6 +12,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   cacheComponents: true,
   partialPrefetching: true,
+  redirects: async () => [{ source: '/', destination: '/dashboard', permanent: false }],
 };
 
 export default nextConfig;

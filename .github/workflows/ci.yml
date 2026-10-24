@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Preview
+    env:
+      # next typegen loads next.config.ts, which validates env vars this job doesn't need
+      SKIP_ENV_VALIDATION: 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

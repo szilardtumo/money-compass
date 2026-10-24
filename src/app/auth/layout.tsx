@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default function AuthLayout({ children }: LayoutProps<'/auth'>) {
   return (
     <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
       <div className="hidden bg-muted lg:block">
