@@ -1,15 +1,15 @@
-'use no memo';
-
-import { Table } from '@tanstack/react-table';
+import { ReactTable, RowData } from '@tanstack/react-table';
 
 import { cn } from '@/lib/cn';
 
-interface DataTableRowSelectionIndicatorProps<TData> {
-  table: Table<TData>;
+import { DataTableFeatures } from './use-data-table';
+
+interface DataTableRowSelectionIndicatorProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
   className?: string;
 }
 
-export function DataTableRowSelectionIndicator<TData>({
+export function DataTableRowSelectionIndicator<TData extends RowData>({
   table,
   className,
 }: DataTableRowSelectionIndicatorProps<TData>) {

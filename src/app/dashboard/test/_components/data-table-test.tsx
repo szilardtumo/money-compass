@@ -13,6 +13,7 @@ import {
   DataTableRowSelectionIndicator,
   DataTableViewOptions,
   useDataTable,
+  type DataTableFeatures,
 } from '@/components/ui/data-table';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -21,9 +22,9 @@ import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.ty
 import { Paginated } from '@/lib/types/transport.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 
-const columnHelper = createColumnHelper<TransactionWithAccount>();
+const columnHelper = createColumnHelper<DataTableFeatures, TransactionWithAccount>();
 
-const columns = [
+const columns = columnHelper.columns([
   columnHelper.accessor((row) => row.startedDate, {
     id: 'date',
     header: 'Date',
@@ -34,14 +35,14 @@ const columns = [
     id: 'account',
     header: 'Account',
     cell: ({ getValue }) => getValue(),
-    filterFn: 'arrIncludesSome',
+    filterFn: 'arrHas',
   }),
   columnHelper.accessor('amount.originalValue', {
     meta: { align: 'right' },
     header: 'Amount',
     cell: ({ row, getValue }) => formatCurrency(getValue(), row.original.originalCurrency),
   }),
-];
+]);
 
 interface DataTableTestProps {
   accounts: Account[];
@@ -126,7 +127,8 @@ export function DataTableTest({ accounts, transactions }: DataTableTestProps) {
           {enableColumnFilters && (
             <>
               <DataTableFilter
-                column={table.getColumn('account')!}
+                table={table}
+                columnId="account"
                 title="Account"
                 options={accountOptions}
               />

@@ -1,10 +1,8 @@
 'use client';
-'use no memo';
 
-import { CaretSortIcon, CaretUpIcon, ChevronRightIcon } from '@radix-ui/react-icons';
-import { Table as TableType, flexRender } from '@tanstack/react-table';
+import { CaretSortIcon, CaretUpIcon } from '@radix-ui/react-icons';
+import { ReactTable, RowData, flexRender } from '@tanstack/react-table';
 
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
@@ -17,13 +15,15 @@ import {
 import { Toggle } from '@/components/ui/toggle';
 import { cn } from '@/lib/cn';
 
-interface DataTableProps<TData> {
-  table: TableType<TData>;
+import { DataTableFeatures } from './use-data-table';
+
+interface DataTableProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
   emptyMessage?: string;
   enableRowSelection?: boolean;
 }
 
-export function DataTable<TData>({
+export function DataTable<TData extends RowData>({
   table,
   emptyMessage = 'No results.',
   enableRowSelection = false,
@@ -103,26 +103,7 @@ export function DataTable<TData>({
                       cell.column.columnDef.meta?.align === 'center' && 'text-center *:mx-auto',
                     )}
                   >
-                    {cell.getIsGrouped() ? (
-                      <div className="flex items-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={cell.row.getToggleExpandedHandler()}
-                          className="mr-2"
-                        >
-                          <ChevronRightIcon
-                            className={cn(
-                              'h-4 w-4 transition-transform',
-                              cell.row.getIsExpanded() && 'rotate-90',
-                            )}
-                          />
-                        </Button>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </div>
-                    ) : cell.getIsPlaceholder() ? null : (
-                      flexRender(cell.column.columnDef.cell, cell.getContext())
-                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>

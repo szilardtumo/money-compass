@@ -1,8 +1,7 @@
 'use client';
-'use no memo';
 
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
-import { Table } from '@tanstack/react-table';
+import { ReactTable, RowData } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -15,12 +14,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/cn';
 
-interface DataTableViewOptionsProps<TData> {
-  table: Table<TData>;
+import { DataTableFeatures } from './use-data-table';
+
+interface DataTableViewOptionsProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
   className?: string;
 }
 
-export function DataTableViewOptions<TData>({
+export function DataTableViewOptions<TData extends RowData>({
   table,
   className,
 }: DataTableViewOptionsProps<TData>) {

@@ -5,4 +5,4 @@ export { DataTableRowSelectionIndicator } from './data-table-row-selection-indic
 export { DataTablePagination } from './data-table-pagination';
 export { DataTableViewOptions } from './data-table-view-options';
 export { DataTable } from './data-table';
-export { useDataTable } from './use-data-table';
+export { useDataTable, type DataTableFeatures } from './use-data-table';

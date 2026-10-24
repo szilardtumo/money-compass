@@ -1,7 +1,7 @@
 'use no memo';
 
 import { CheckIcon, PlusCircledIcon } from '@radix-ui/react-icons';
-import { Column } from '@tanstack/react-table';
+import { ReactTable, RowData } from '@tanstack/react-table';
 import * as React from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -20,8 +20,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/cn';
 
-interface DataTableFilterProps<TData, TValue> {
-  column: Column<TData, TValue>;
+import { DataTableFeatures } from './use-data-table';
+
+interface DataTableFilterProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
+  columnId: string;
   title: string;
   options: {
     label: string;
@@ -31,12 +34,16 @@ interface DataTableFilterProps<TData, TValue> {
   className?: string;
 }
 
-export function DataTableFilter<TData, TValue>({
-  column,
+export function DataTableFilter<TData extends RowData>({
+  table,
+  columnId,
   title,
   options,
   className,
-}: DataTableFilterProps<TData, TValue>) {
+}: DataTableFilterProps<TData>) {
+  // The column object is stable across state changes, so the compiler would cache its reads.
+  // Taking `table` (new on every change) re-renders this component, and 'use no memo' re-reads them.
+  const column = table.getColumn(columnId)!;
   const facets = column?.getFacetedUniqueValues();
   const selectedValues = new Set(column?.getFilterValue() as string[]);
 

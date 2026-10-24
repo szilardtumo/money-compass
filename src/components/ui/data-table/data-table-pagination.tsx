@@ -1,6 +1,4 @@
-'use no memo';
-
-import { Table } from '@tanstack/react-table';
+import { ReactTable, RowData } from '@tanstack/react-table';
 
 import {
   Pagination,
@@ -18,12 +16,17 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/cn';
 
-interface DataTablePaginationProps<TData> {
-  table: Table<TData>;
+import { DataTableFeatures } from './use-data-table';
+
+interface DataTablePaginationProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
   className?: string;
 }
 
-export function DataTablePagination<TData>({ table, className }: DataTablePaginationProps<TData>) {
+export function DataTablePagination<TData extends RowData>({
+  table,
+  className,
+}: DataTablePaginationProps<TData>) {
   return (
     <div
       className={cn('flex items-center justify-between sm:justify-end gap-4 lg:gap-8', className)}
@@ -31,13 +34,13 @@ export function DataTablePagination<TData>({ table, className }: DataTablePagina
       <div className="flex items-center gap-2">
         <p className="text-sm font-medium">Rows per page</p>
         <Select
-          value={`${table.getState().pagination.pageSize}`}
+          value={`${table.state.pagination.pageSize}`}
           onValueChange={(value) => {
             table.setPageSize(Number(value));
           }}
         >
           <SelectTrigger className="h-8 w-[70px]">
-            <SelectValue placeholder={table.getState().pagination.pageSize} />
+            <SelectValue placeholder={table.state.pagination.pageSize} />
           </SelectTrigger>
           <SelectContent side="top">
             {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -49,7 +52,7 @@ export function DataTablePagination<TData>({ table, className }: DataTablePagina
         </Select>
       </div>
       <div className="w-[100px] text-center text-sm font-medium">
-        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+        Page {table.state.pagination.pageIndex + 1} of {table.getPageCount()}
       </div>
       <Pagination className="w-fit m-0">
         <PaginationContent>

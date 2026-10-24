@@ -1,5 +1,4 @@
 'use client';
-'use no memo';
 
 import { DotsHorizontalIcon, TrashIcon } from '@radix-ui/react-icons';
 import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
@@ -16,6 +15,7 @@ import {
   DataTableResetFilters,
   DataTableRowSelectionIndicator,
   useDataTable,
+  type DataTableFeatures,
 } from '@/components/ui/data-table';
 import {
   DropdownMenu,
@@ -33,7 +33,7 @@ import { Paginated } from '@/lib/types/transport.types';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
 import { apiActions } from '@/server/api/actions';
 
-const columnHelper = createColumnHelper<TransactionWithAccount>();
+const columnHelper = createColumnHelper<DataTableFeatures, TransactionWithAccount>();
 
 const staticColumns = [
   columnHelper.accessor((row) => row.startedDate, {
@@ -62,7 +62,7 @@ const staticColumns = [
         <NavLink href={`/dashboard/accounts/${row.original.account.id}`}>{getValue()}</NavLink>
       </div>
     ),
-    filterFn: 'arrIncludesSome',
+    filterFn: 'arrHas',
   }),
   columnHelper.accessor((row) => row.subaccount.name, {
     id: 'subaccount',
@@ -148,9 +148,9 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
   );
 
   const columns = useMemo(() => {
-    const actionsCell: ColumnDefTemplate<CellContext<TransactionWithAccount, unknown>> = ({
-      row,
-    }) => {
+    const actionsCell: ColumnDefTemplate<
+      CellContext<DataTableFeatures, TransactionWithAccount, unknown>
+    > = ({ row }) => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -183,13 +183,13 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
       );
     };
 
-    return [
+    return columnHelper.columns([
       ...staticColumns,
       columnHelper.display({
         id: 'actions',
         cell: actionsCell,
       }),
-    ];
+    ]);
   }, [deleteTransaction, openUpdateTransactionDialog]);
 
   const table = useDataTable({
@@ -213,7 +213,8 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
       <div className="flex flex-col gap-2 sm:flex-row">
         <DataTableGlobalFilter table={table} className="sm:w-[200px]" />
         <DataTableFilter
-          column={table.getColumn('account')!}
+          table={table}
+          columnId="account"
           title="Account"
           options={accountOptions}
         />

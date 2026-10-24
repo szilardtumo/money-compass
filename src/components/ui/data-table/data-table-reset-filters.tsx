@@ -1,17 +1,20 @@
 'use client';
-'use no memo';
 
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { Table } from '@tanstack/react-table';
+import { ReactTable, RowData } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
 
-interface DataTableResetFiltersProps<TData> {
-  table: Table<TData>;
+import { DataTableFeatures } from './use-data-table';
+
+interface DataTableResetFiltersProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>;
 }
 
-export function DataTableResetFilters<TData>({ table }: DataTableResetFiltersProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0;
+export function DataTableResetFilters<TData extends RowData>({
+  table,
+}: DataTableResetFiltersProps<TData>) {
+  const isFiltered = table.state.columnFilters.length > 0;
 
   if (!isFiltered) {
     return null;
