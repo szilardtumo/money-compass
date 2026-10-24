@@ -4,7 +4,6 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import pluginImport from 'eslint-plugin-import';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginReact from 'eslint-plugin-react';
-import * as pluginReactCompiler from 'eslint-plugin-react-compiler';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import { version as reactVersion } from 'react';
@@ -52,7 +51,6 @@ export default defineConfig(
   pluginReact.configs.flat.recommended,
   pluginReact.configs.flat['jsx-runtime'],
   pluginReactHooks.configs.flat['recommended-latest'],
-  pluginReactCompiler.configs.recommended,
   pluginNext.configs.recommended,
   pluginNext.configs['core-web-vitals'],
   {
