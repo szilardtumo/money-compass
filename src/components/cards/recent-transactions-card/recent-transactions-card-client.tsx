@@ -1,6 +1,7 @@
 'use client';
 
 import { MixerVerticalIcon, PlusIcon } from '@radix-ui/react-icons';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { useCreateTransactionDialog } from '@/components/dialogs/create-transaction-dialog';
@@ -12,7 +13,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { NavLink } from '@/components/ui/nav-link';
 import { Account } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
@@ -128,9 +128,9 @@ export function RecentTransactionsCardClient({
       </CardContent>
       {groupedTransactions.length > 0 && (
         <CardFooter className="justify-center">
-          <NavLink href="/dashboard/transactions" className={buttonVariants({ variant: 'ghost' })}>
+          <Link href="/dashboard/transactions" className={buttonVariants({ variant: 'ghost' })}>
             See All
-          </NavLink>
+          </Link>
         </CardFooter>
       )}
     </Card>

@@ -1,7 +1,7 @@
 import { cn } from 'cn';
+import Link from 'next/link';
 
 import { buttonVariants } from '@/components/ui/button';
-import { NavLink } from '@/components/ui/nav-link';
 
 interface NavItemProps {
   href: string;
@@ -12,7 +12,7 @@ interface NavItemProps {
 
 export function NavItem({ href, icon: Icon, isSelected = false, children }: NavItemProps) {
   return (
-    <NavLink
+    <Link
       href={href}
       className={cn(
         buttonVariants({ variant: isSelected ? 'default' : 'ghost' }),
@@ -21,6 +21,6 @@ export function NavItem({ href, icon: Icon, isSelected = false, children }: NavI
     >
       {Icon}
       <span className="overflow-hidden text-ellipsis">{children}</span>
-    </NavLink>
+    </Link>
   );
 }

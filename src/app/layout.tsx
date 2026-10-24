@@ -5,7 +5,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 
-import { GlobalProgress } from '@/app/_components/global-progress';
 import { GlobalProviders } from '@/app/_components/global-providers';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -26,7 +25,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GlobalProviders>
           <Analytics />
           <SpeedInsights />
-          <GlobalProgress />
           <Toaster />
           {children}
         </GlobalProviders>

@@ -1,7 +1,8 @@
+import Link from 'next/link';
+
 import { AccountAvatar } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Currency } from '@/components/ui/currency';
-import { NavLink } from '@/components/ui/nav-link';
 import { apiQueries } from '@/server/api/queries';
 
 import { AccountActionsDropdown } from './account-actions-dropdown';
@@ -25,12 +26,12 @@ export async function AccountsCard() {
           <div key={account.id} className="flex items-center gap-4">
             <AccountAvatar category={account.category} className="hidden sm:flex" />
             <div className="space-y-1">
-              <NavLink
+              <Link
                 href={`/dashboard/accounts/${account.id}`}
                 className="text-sm font-medium leading-none"
               >
                 {account.name}
-              </NavLink>
+              </Link>
               <p className="text-sm text-muted-foreground">
                 <span className="capitalize">{account.category}</span>
               </p>
