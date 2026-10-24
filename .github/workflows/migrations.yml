@@ -3,7 +3,7 @@ name: 'Apply migrations to remote database'
 on:
   push:
     branches:
-      - '$default-branch'
+      - main
 jobs:
   apply-migrations:
     runs-on: ubuntu-latest
