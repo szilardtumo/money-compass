@@ -1,8 +1,8 @@
 'use no memo';
 
-import { CheckIcon, PlusCircledIcon } from '@radix-ui/react-icons';
 import { ReactTable, RowData } from '@tanstack/react-table';
 import { cn } from 'cn';
+import { CheckIcon, CirclePlusIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -53,7 +53,7 @@ export function DataTableFilter<TData extends RowData>({
         <Button
           variant="outline"
           size="sm"
-          icon={PlusCircledIcon}
+          icon={CirclePlusIcon}
           className={cn('border-dashed', className)}
         >
           {title}
@@ -115,7 +115,7 @@ export function DataTableFilter<TData extends RowData>({
                           : 'opacity-50 [&_svg]:invisible',
                       )}
                     >
-                      <CheckIcon />
+                      <CheckIcon className="size-4" />
                     </div>
                     {option.icon && <option.icon className="mr-2 text-muted-foreground" />}
                     <span>{option.label}</span>

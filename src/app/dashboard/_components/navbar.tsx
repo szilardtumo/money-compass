@@ -1,11 +1,11 @@
 import {
-  CardStackIcon,
-  CounterClockwiseClockIcon,
-  CubeIcon,
-  HamburgerMenuIcon,
-  MixIcon,
-  PieChartIcon,
-} from '@radix-ui/react-icons';
+  ChartPieIcon,
+  FlaskConicalIcon,
+  HistoryIcon,
+  LayoutDashboardIcon,
+  MenuIcon,
+  WalletCardsIcon,
+} from 'lucide-react';
 import { Suspense } from 'react';
 
 import { AccountSection } from '@/app/dashboard/_components/account-section';
@@ -57,22 +57,19 @@ function NavbarContent() {
       </div>
       <Separator />
       <nav className="flex flex-col gap-1 p-2">
-        <NavItem href="/dashboard" icon={<CubeIcon className="mr-2" />}>
+        <NavItem href="/dashboard" icon={<LayoutDashboardIcon className="size-4 mr-2" />}>
           Dashboard
         </NavItem>
-        <NavItem
-          href="/dashboard/transactions"
-          icon={<CounterClockwiseClockIcon className="mr-2" />}
-        >
+        <NavItem href="/dashboard/transactions" icon={<HistoryIcon className="size-4 mr-2" />}>
           Transactions
         </NavItem>
-        <NavItem href="/dashboard/statistics" icon={<PieChartIcon className="mr-2" />}>
+        <NavItem href="/dashboard/statistics" icon={<ChartPieIcon className="size-4 mr-2" />}>
           Statistics
         </NavItem>
 
         <Separator className="my-2" />
 
-        <NavItem href="/dashboard/accounts" icon={<CardStackIcon className="mr-2" />}>
+        <NavItem href="/dashboard/accounts" icon={<WalletCardsIcon className="size-4 mr-2" />}>
           All Accounts
         </NavItem>
         <Suspense fallback={<NavbarAccountItemsSkeleton />}>
@@ -83,7 +80,7 @@ function NavbarContent() {
           <>
             <Separator className="my-2" />
 
-            <NavItem href="/dashboard/test" icon={<MixIcon className="mr-2" />}>
+            <NavItem href="/dashboard/test" icon={<FlaskConicalIcon className="size-4 mr-2" />}>
               Test
             </NavItem>
           </>
@@ -101,7 +98,7 @@ export function Navbar() {
         <Sheet>
           <SheetTrigger asChild>
             <Button size="icon" variant="outline" className="m-[10px]">
-              <HamburgerMenuIcon />
+              <MenuIcon className="size-4" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-6">

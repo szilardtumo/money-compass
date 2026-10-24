@@ -1,0 +1,9 @@
+DROP VIEW "public"."balances";--> statement-breakpoint
+-- Corrections set a target balance. Recompute their amounts from the stored balances, so the derived balances keep showing these targets.
+UPDATE "transactions" SET "amount" = "transactions"."balance" - coalesce("previous"."balance", 0)
+FROM (SELECT "id", lag("balance") OVER (PARTITION BY "subaccount_id" ORDER BY "started_date", "sequence") AS "balance" FROM "transactions") AS "previous"
+WHERE "previous"."id" = "transactions"."id" AND "transactions"."type" = 'correction' AND abs("transactions"."amount" - ("transactions"."balance" - coalesce("previous"."balance", 0))) > 0.0001;--> statement-breakpoint
+ALTER TABLE "transactions" DROP COLUMN "balance";--> statement-breakpoint
+CREATE VIEW "public"."transaction_balances" WITH (security_invoker = true) AS (select id as transaction_id, sum(amount) over (partition by subaccount_id order by started_date, sequence) as balance from transactions);--> statement-breakpoint
+CREATE VIEW "public"."balances" WITH (security_invoker = true) AS (select subaccount_id, sum(amount) as balance, max(started_date) as last_transaction_date from transactions group by subaccount_id);--> statement-breakpoint
+ALTER POLICY "transactions_allow_all_for_owner_policy" ON "transactions" TO authenticated USING ("transactions"."user_id" = (select auth.uid())) WITH CHECK ("transactions"."user_id" = (select auth.uid()) AND EXISTS (SELECT 1 FROM "subaccounts" JOIN "accounts" ON "accounts"."id" = "subaccounts"."account_id" WHERE ("subaccounts"."id" = "transactions"."subaccount_id" and "accounts"."user_id" = (select auth.uid()))));

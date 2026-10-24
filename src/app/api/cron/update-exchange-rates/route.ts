@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 import type { NextRequest } from 'next/server';
 
-import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { env } from '@/lib/env';
 import { apiQueries } from '@/server/api/queries';
 import { getAdminDb, schema } from '@/server/db';
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         set: { rate: sql`EXCLUDED.rate` },
       });
 
-    revalidateTag({ tag: CACHE_TAGS.currencies });
+    revalidateTag('currencies', 'max');
     return Response.json({ success: true, exchangeRates });
   } catch (error) {
     return Response.json({ success: false, error: (error as Error).message }, { status: 500 });

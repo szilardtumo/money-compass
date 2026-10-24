@@ -1,8 +1,8 @@
 'use client';
 
-import { CaretSortIcon, CaretUpIcon } from '@radix-ui/react-icons';
 import { ReactTable, RowData, flexRender } from '@tanstack/react-table';
 import { cn } from 'cn';
+import { ChevronUpIcon, ChevronsUpDownIcon } from 'lucide-react';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -63,14 +63,14 @@ export function DataTable<TData extends RowData>({
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getIsSorted() ? (
-                          <CaretUpIcon
+                          <ChevronUpIcon
                             className={cn(
-                              'transition-transform',
+                              'size-4 transition-transform',
                               header.column.getIsSorted() === 'desc' && 'rotate-180',
                             )}
                           />
                         ) : (
-                          <CaretSortIcon />
+                          <ChevronsUpDownIcon className="size-4" />
                         )}
                       </Toggle>
                     ) : (

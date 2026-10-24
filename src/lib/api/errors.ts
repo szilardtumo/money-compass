@@ -15,24 +15,10 @@ export class MissingExchangeRateError extends Error {
   }
 }
 
-export class MissingSubaccountError extends Error {
-  constructor(subaccountId: string) {
-    super(`Missing subaccount with ID: ${subaccountId}`);
-    this.name = 'MissingSubaccountError';
-  }
-}
-
 export class AuthenticationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'AuthenticationError';
-  }
-}
-
-export class GocardlessError extends Error {
-  constructor(error: unknown) {
-    super(error instanceof Error ? error.message : 'Unknown error');
-    this.name = 'GocardlessError';
   }
 }
 

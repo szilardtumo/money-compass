@@ -1,7 +1,7 @@
 'use client';
 
-import { Cross2Icon } from '@radix-ui/react-icons';
 import { ReactTable, RowData } from '@tanstack/react-table';
+import { XIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
@@ -24,7 +24,7 @@ export function DataTableResetFilters<TData extends RowData>({
     <Button
       variant="ghost"
       size="sm"
-      icon={Cross2Icon}
+      icon={XIcon}
       iconPlacement="right"
       onClick={() => table.resetColumnFilters()}
       className="h-8 px-2"

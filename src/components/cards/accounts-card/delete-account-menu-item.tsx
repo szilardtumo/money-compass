@@ -1,6 +1,6 @@
 'use client';
 
-import { TrashIcon } from '@radix-ui/react-icons';
+import { Trash2Icon } from 'lucide-react';
 
 import { DropdownMenuItem, DropdownMenuShortcut } from '@/components/ui/dropdown-menu';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
@@ -24,7 +24,7 @@ export function DeleteAccountMenuItem({ accountId }: DeleteAccountMenuItemProps)
     <DropdownMenuItem onSelect={() => executeDeleteAccount({ accountId })}>
       Delete
       <DropdownMenuShortcut>
-        <TrashIcon />
+        <Trash2Icon className="size-4" />
       </DropdownMenuShortcut>
     </DropdownMenuItem>
   );

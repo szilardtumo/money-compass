@@ -3,10 +3,6 @@
     {
       "path": "/api/cron/update-exchange-rates",
       "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/sync-integrations",
-      "schedule": "0 0 * * *"
     }
   ]
 }

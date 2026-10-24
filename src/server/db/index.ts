@@ -43,12 +43,12 @@ async function getDb(claims?: SupabaseClaims | null) {
     rls: (async (transaction, ...rest) => {
       return await drizzleClient.transaction(
         async (tx) => {
-          // Supabase's auth.uid() and auth.jwt() read these settings. Both are local to the transaction.
+          // Supabase's auth.uid() and auth.jwt() read the claims settings. All three settings,
+          // including the role, are local to the transaction.
           // https://supabase.com/docs/guides/database/postgres/row-level-security#helper-functions
           await tx.execute(
-            sql`select set_config('request.jwt.claims', ${JSON.stringify(claims)}, true), set_config('request.jwt.claim.sub', ${claims.sub}, true)`,
+            sql`select set_config('request.jwt.claims', ${JSON.stringify(claims)}, true), set_config('request.jwt.claim.sub', ${claims.sub}, true), set_config('role', 'authenticated', true)`,
           );
-          await tx.execute(sql`set local role authenticated`);
           return await transaction(tx);
         },
         ...rest,

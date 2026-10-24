@@ -18,10 +18,6 @@ const serverEnvSchema = z.object({
   SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT_ID: z.string().optional(),
   SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET: z.string().optional(),
 
-  // GoCardless
-  GOCARDLESS_SECRET_ID: z.string(),
-  GOCARDLESS_SECRET_KEY: z.string(),
-
   // Cron Jobs
   CRON_SECRET: z.string(),
 

@@ -1,8 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, TriangleAlertIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useTransition } from 'react';
@@ -87,7 +86,7 @@ export default function ResetPasswordPage() {
         {searchParams.has('error') ? (
           <>
             <Alert variant="destructive">
-              <ExclamationTriangleIcon className="size-4" />
+              <TriangleAlertIcon className="size-4" />
               <AlertTitle>{searchParams.get('error_code')}</AlertTitle>
               <AlertDescription>{searchParams.get('error_description')}</AlertDescription>
             </Alert>

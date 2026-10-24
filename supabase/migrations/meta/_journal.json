@@ -57,6 +57,20 @@
       "when": 1792830814495,
       "tag": "20261024083334_nasty_mongoose",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792846259803,
+      "tag": "20261024125059_derive_balances",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792846265818,
+      "tag": "20261024125105_drop_timescaledb",
+      "breakpoints": true
     }
   ]
 }

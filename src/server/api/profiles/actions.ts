@@ -1,9 +1,9 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
-import { CACHE_TAGS, updateTag } from '@/lib/api/cache';
 import { schema } from '@/server/db';
 
 export const updateProfile = authenticatedActionClient
@@ -26,5 +26,5 @@ export const updateProfile = authenticatedActionClient
         });
     });
 
-    updateTag({ tag: CACHE_TAGS.profiles, userId: ctx.userId });
+    revalidatePath('/dashboard', 'layout');
   });

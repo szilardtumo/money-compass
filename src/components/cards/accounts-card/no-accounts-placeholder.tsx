@@ -1,4 +1,4 @@
-import { IdCardIcon } from '@radix-ui/react-icons';
+import { IdCardIcon } from 'lucide-react';
 
 import {
   PlaceholderArea,

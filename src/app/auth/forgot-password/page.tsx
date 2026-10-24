@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircledIcon } from '@radix-ui/react-icons';
+import { CircleCheckIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
       <CardContent className="flex flex-col gap-8">
         {isSubmitSuccessful && !errors.root && (
           <Alert variant="success">
-            <CheckCircledIcon className="size-4" />
+            <CircleCheckIcon className="size-4" />
             <AlertDescription>
               If an account exists for this email, you will receive password reset instructions.
             </AlertDescription>

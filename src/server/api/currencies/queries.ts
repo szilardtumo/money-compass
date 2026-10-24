@@ -1,7 +1,8 @@
 import 'server-only';
 
-import { createAuthenticatedApiQuery, createPublicApiQuery } from '@/lib/api';
-import { CACHE_TAGS, cacheLife, cacheTag } from '@/lib/api/cache';
+import { cacheLife, cacheTag } from 'next/cache';
+
+import { createApiQuery } from '@/lib/api';
 import { Currency, CurrencyMapper } from '@/lib/types/currencies.types';
 import { getAdminDb } from '@/server/db';
 
@@ -12,9 +13,9 @@ import { getProfile } from '../profiles/queries';
  *
  * @returns All currencies from the database.
  */
-export const getCurrencies = createPublicApiQuery<void, Currency[]>(async () => {
+export const getCurrencies = createApiQuery<void, Currency[]>(async () => {
   'use cache';
-  cacheTag.global(CACHE_TAGS.currencies);
+  cacheTag('currencies');
   cacheLife('days');
 
   const db = await getAdminDb();
@@ -28,11 +29,10 @@ export const getCurrencies = createPublicApiQuery<void, Currency[]>(async () => 
  * @param toCurrency The currency to map the exchange rates to.
  * @returns A mapper of currency exchange rates from the database.
  */
-export const getCurrencyMapper = createPublicApiQuery<string, CurrencyMapper>(
+export const getCurrencyMapper = createApiQuery<string, CurrencyMapper>(
   async ({ input: toCurrency }) => {
     'use cache';
-    cacheTag.global(CACHE_TAGS.currencies);
-    cacheTag.id(toCurrency, CACHE_TAGS.currencyMappers);
+    cacheTag('currencies');
     cacheLife('days');
 
     const db = await getAdminDb();
@@ -58,16 +58,14 @@ export const getCurrencyMapper = createPublicApiQuery<string, CurrencyMapper>(
  *
  * @returns The main currency and its mapper.
  */
-export const getMainCurrencyWithMapper = createAuthenticatedApiQuery<
+export const getMainCurrencyWithMapper = createApiQuery<
   void,
   {
     mainCurrency: string;
     mapper: CurrencyMapper;
   }
->(async ({ ctx }) => {
-  // Profile and currencyMapper are both cached, don't cache this query
-
-  const profile = await getProfile.withContext({ ctx });
+>(async () => {
+  const profile = await getProfile();
   const mainCurrencyMapper = await getCurrencyMapper(profile.mainCurrency);
 
   return { mainCurrency: profile.mainCurrency, mapper: mainCurrencyMapper };

@@ -1,4 +1,4 @@
-import { DotsHorizontalIcon, TrashIcon } from '@radix-ui/react-icons';
+import { EllipsisIcon, Trash2Icon } from 'lucide-react';
 import Link from 'next/link';
 
 import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
@@ -54,7 +54,7 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" icon={DotsHorizontalIcon}>
+          <Button variant="ghost" size="icon" icon={EllipsisIcon}>
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
@@ -74,7 +74,7 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
           <DropdownMenuItem onClick={() => deleteTransaction(transaction.id)}>
             Delete
             <DropdownMenuShortcut>
-              <TrashIcon />
+              <Trash2Icon className="size-4" />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuGroup>

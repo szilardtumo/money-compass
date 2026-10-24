@@ -1,6 +1,6 @@
 'use client';
 
-import { MixerVerticalIcon, PlusIcon } from '@radix-ui/react-icons';
+import { PlusIcon, SlidersVerticalIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
@@ -83,14 +83,14 @@ export function RecentTransactionsCardClient({
             size="sm"
             onClick={() => openCreateTransactionDialog({ accountId: accounts[0].id })}
           >
-            <PlusIcon className=" mr-1" />
+            <PlusIcon className="size-4 mr-1" />
             Add <span className="sr-only sm:not-sr-only">&nbsp;transaction</span>
           </Button>
         )}
         {accounts.length > 1 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" icon={MixerVerticalIcon}>
+              <Button variant="outline" icon={SlidersVerticalIcon}>
                 Accounts
               </Button>
             </DropdownMenuTrigger>

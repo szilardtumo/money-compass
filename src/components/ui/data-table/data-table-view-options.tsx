@@ -1,8 +1,8 @@
 'use client';
 
-import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import { ReactTable, RowData } from '@tanstack/react-table';
 import { cn } from 'cn';
+import { SlidersHorizontalIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -31,7 +31,7 @@ export function DataTableViewOptions<TData extends RowData>({
         <Button
           variant="outline"
           size="sm"
-          icon={MixerHorizontalIcon}
+          icon={SlidersHorizontalIcon}
           className={cn('h-8', className)}
         >
           View

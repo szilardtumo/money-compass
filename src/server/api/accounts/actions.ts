@@ -1,11 +1,11 @@
 'use server';
 
 import { and, eq, inArray, sql } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 import { returnValidationErrors } from 'next-safe-action';
 import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
-import { CACHE_TAGS, updateTag } from '@/lib/api/cache';
 import { createAccountSchema, updateAccountSchema } from '@/lib/validation/accounts';
 import { apiQueries } from '@/server/api/queries';
 import { DbTx, schema } from '@/server/db';
@@ -106,7 +106,6 @@ async function _updateSubaccounts(params: UpdateSubaccountParams[], tx: DbTx): P
         .update(schema.transactions)
         .set({
           amount: sql`${schema.transactions.amount} * ${rate}`,
-          balance: sql`${schema.transactions.balance} * ${rate}`,
         })
         .where(eq(schema.transactions.subaccountId, subaccount.id));
     }),
@@ -137,7 +136,7 @@ export const createAccount = authenticatedActionClient
       }
     });
 
-    updateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
+    revalidatePath('/dashboard', 'layout');
   });
 
 export const updateAccount = authenticatedActionClient
@@ -207,7 +206,7 @@ export const updateAccount = authenticatedActionClient
       }
     });
 
-    updateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
+    revalidatePath('/dashboard', 'layout');
   });
 
 export const deleteAccount = authenticatedActionClient
@@ -217,6 +216,5 @@ export const deleteAccount = authenticatedActionClient
       tx.delete(schema.accounts).where(eq(schema.accounts.id, parsedInput.accountId)),
     );
 
-    updateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
-    updateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
+    revalidatePath('/dashboard', 'layout');
   });

@@ -12,7 +12,6 @@ import { PageHeaderTitle } from '@/components/ui/page-layout';
 import { apiQueries } from '@/server/api/queries';
 
 import { DataTableTest } from './_components/data-table-test';
-import { RecalculateBalances } from './_components/recalculate-balances';
 
 export default async function TestPage() {
   if (process.env.NODE_ENV !== 'development') {
@@ -29,8 +28,6 @@ export default async function TestPage() {
       <PageHeaderSlotContent>
         <PageHeaderTitle>Test page</PageHeaderTitle>
       </PageHeaderSlotContent>
-
-      <RecalculateBalances />
 
       <NetWorthHistoryCard />
 

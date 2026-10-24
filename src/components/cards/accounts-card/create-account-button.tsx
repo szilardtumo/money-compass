@@ -1,6 +1,6 @@
 'use client';
 
-import { PlusIcon } from '@radix-ui/react-icons';
+import { PlusIcon } from 'lucide-react';
 
 import { useCreateAccountDialog } from '@/components/dialogs/create-account-dialog';
 import { Button } from '@/components/ui/button';

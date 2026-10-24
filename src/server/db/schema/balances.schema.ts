@@ -1,22 +1,25 @@
 import { sql } from 'drizzle-orm';
-import { pgView } from 'drizzle-orm/pg-core';
+import { pgView, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { descTransactions } from '@/server/db/query-utils';
+import { numericCasted } from './utils';
 
-import { transactions } from './transactions.schema';
-
-export const balances = pgView('balances')
+// Raw SQL because drizzle-kit ignores the snake_case setting in view queries
+// https://github.com/drizzle-team/drizzle-orm/issues/3332
+export const balances = pgView('balances', {
+  subaccountId: uuid().notNull(),
+  balance: numericCasted().notNull(),
+  lastTransactionDate: timestamp({ withTimezone: true }).notNull(),
+})
   .with({ securityInvoker: true })
-  .as((qb) =>
-    qb
-      // https://github.com/drizzle-team/drizzle-orm/issues/3332
-      .selectDistinctOn([transactions.subaccountId], {
-        subaccountId: sql<string>`"subaccount_id"`.as('subaccount_id'),
-        balance: transactions.balance,
-        lastTransactionDate: sql`"started_date"`
-          .mapWith(transactions.startedDate)
-          .as('started_date'),
-      })
-      .from(transactions)
-      .orderBy(transactions.subaccountId, ...descTransactions()),
+  .as(
+    sql`select subaccount_id, sum(amount) as balance, max(started_date) as last_transaction_date from transactions group by subaccount_id`,
+  );
+
+export const transactionBalances = pgView('transaction_balances', {
+  transactionId: uuid().notNull(),
+  balance: numericCasted().notNull(),
+})
+  .with({ securityInvoker: true })
+  .as(
+    sql`select id as transaction_id, sum(amount) over (partition by subaccount_id order by started_date, sequence) as balance from transactions`,
   );

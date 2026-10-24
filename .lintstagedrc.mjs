@@ -1,3 +1,3 @@
 export default {
-  '*': ['npm run lint', 'npm run check-styles -- --write'],
+  '*': ['npm run lint', 'npm run check-styles -- --write --ignore-unknown'],
 };

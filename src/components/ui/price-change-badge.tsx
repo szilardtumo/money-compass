@@ -1,7 +1,7 @@
 import NumberFlow, { continuous } from '@number-flow/react';
-import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from '@radix-ui/react-icons';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from 'cn';
+import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from 'lucide-react';
 import * as React from 'react';
 
 const priceChangeBadgeVariants = cva(

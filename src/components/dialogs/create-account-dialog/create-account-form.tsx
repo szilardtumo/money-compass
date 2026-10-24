@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Cross1Icon, PlusIcon } from '@radix-ui/react-icons';
+import { PlusIcon, XIcon } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
@@ -29,8 +29,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
+import { Account } from '@/lib/types/accounts.types';
 import { Currency } from '@/lib/types/currencies.types';
-import { Enums } from '@/lib/types/database.types';
 import { createAccountSchema } from '@/lib/validation/accounts';
 import { apiActions } from '@/server/api/actions';
 
@@ -43,7 +43,7 @@ interface CreateAccountFormProps {
 const accountCategoryOptions = [
   { label: 'Checking', value: 'checking' },
   { label: 'Investment', value: 'investment' },
-] satisfies { label: string; value: Enums<'account_category'> }[];
+] satisfies { label: string; value: Account['category'] }[];
 
 type FormFields = z.infer<typeof createAccountSchema>;
 
@@ -190,7 +190,7 @@ export function CreateAccountForm({
                       disabled={form.formState.isSubmitting}
                       aria-label="Remove subaccount"
                     >
-                      <Cross1Icon />
+                      <XIcon className="size-4" />
                     </Button>
                   </TableCell>
                 </TableRow>

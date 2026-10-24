@@ -24,7 +24,7 @@ export default defineConfig(
       react: { version: reactVersion },
     },
   },
-  globalIgnores(['node_modules/*', '.next/*', '.yarn/*', 'src/lib/types/database.types.ts']),
+  globalIgnores(['node_modules/*', '.next/*', '.yarn/*']),
   // js, ts
   pluginJs.configs.recommended,
   tseslint.configs.recommended,

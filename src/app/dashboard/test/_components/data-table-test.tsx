@@ -1,7 +1,7 @@
 'use client';
 
-import { CubeIcon } from '@radix-ui/react-icons';
 import { createColumnHelper } from '@tanstack/react-table';
+import { BoxIcon } from 'lucide-react';
 import * as React from 'react';
 
 import {
@@ -73,7 +73,7 @@ export function DataTableTest({ accounts, transactions }: DataTableTestProps) {
       accounts.map((account) => ({
         label: account.name,
         value: account.name,
-        icon: CubeIcon,
+        icon: BoxIcon,
       })),
     [accounts],
   );

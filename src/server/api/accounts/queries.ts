@@ -2,8 +2,7 @@ import 'server-only';
 
 import { InferSelectModel } from 'drizzle-orm';
 
-import { createFullApiContext, createAuthenticatedApiQuery } from '@/lib/api';
-import { CACHE_TAGS, cacheTag } from '@/lib/api/cache';
+import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Account, Subaccount } from '@/lib/types/accounts.types';
 import { schema } from '@/server/db';
@@ -67,30 +66,24 @@ const mapAccountData = (
 /**
  * Returns the balances of all subaccounts for the user.
  */
-export const getSubaccountBalances = createAuthenticatedApiQuery<void, SubaccountBalances>(
-  async ({ ctx }) => {
-    // Set up cache tags
-    'use cache';
-    cacheTag.user(ctx.userId, CACHE_TAGS.accounts);
-    cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
+export const getSubaccountBalances = createApiQuery<void, SubaccountBalances>(async () => {
+  'use cache: private';
+  const { db } = await createApiContext();
 
-    const { db } = await createFullApiContext(ctx);
+  // Get all the balances
+  const balances = await db.rls((tx) => tx.select().from(schema.balances));
 
-    // Get all the balances
-    const balances = await db.rls((tx) => tx.select().from(schema.balances));
-
-    // Map the balances to the desired format
-    return Object.fromEntries(
-      balances.map((item) => [
-        item.subaccountId,
-        {
-          balance: item.balance ?? 0,
-          lastTransactionDate: item.lastTransactionDate ?? new Date(0),
-        },
-      ]),
-    );
-  },
-);
+  // Map the balances to the desired format
+  return Object.fromEntries(
+    balances.map((item) => [
+      item.subaccountId,
+      {
+        balance: item.balance,
+        lastTransactionDate: item.lastTransactionDate,
+      },
+    ]),
+  );
+});
 
 /**
  * Returns the list of accounts for the user with all of their subaccounts.
@@ -98,20 +91,16 @@ export const getSubaccountBalances = createAuthenticatedApiQuery<void, Subaccoun
  *
  * @returns The list of accounts for the user with all of their subaccounts.
  */
-export const getAccounts = createAuthenticatedApiQuery<void, Account[]>(async ({ ctx }) => {
-  // Set up cache tags
-  'use cache';
-  cacheTag.user(ctx.userId, CACHE_TAGS.accounts);
-  cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
-
-  const { db } = await createFullApiContext(ctx);
+export const getAccounts = createApiQuery<void, Account[]>(async () => {
+  'use cache: private';
+  const { db } = await createApiContext();
 
   // Get all the data in parallel
   const [accounts, { mainCurrency, mapper: mainCurrencyMapper }, subaccountBalances] =
     await Promise.all([
       db.rls((tx) => tx.query.accounts.findMany({ with: { subaccounts: true } })),
-      getMainCurrencyWithMapper.withContext({ ctx }),
-      getSubaccountBalances.withContext({ ctx }),
+      getMainCurrencyWithMapper(),
+      getSubaccountBalances(),
     ]);
 
   // Map the accounts to the Account type
@@ -127,14 +116,10 @@ export const getAccounts = createAuthenticatedApiQuery<void, Account[]>(async ({
  * @param accountId - The id of the account to get.
  * @returns The account with the specified id, or undefined if it is not found.
  */
-export const getAccount = createAuthenticatedApiQuery<string, Account | undefined>(
-  async ({ input: accountId, ctx }) => {
-    // Set up cache tags
-    'use cache';
-    cacheTag.id(accountId, CACHE_TAGS.accounts);
-    cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
-
-    const { db } = await createFullApiContext(ctx);
+export const getAccount = createApiQuery<string, Account | undefined>(
+  async ({ input: accountId }) => {
+    'use cache: private';
+    const { db } = await createApiContext();
 
     // Get all the data in parallel
     const [account, { mainCurrency, mapper: mainCurrencyMapper }, subaccountBalances] =
@@ -145,8 +130,8 @@ export const getAccount = createAuthenticatedApiQuery<string, Account | undefine
             with: { subaccounts: true },
           }),
         ),
-        getMainCurrencyWithMapper.withContext({ ctx }),
-        getSubaccountBalances.withContext({ ctx }),
+        getMainCurrencyWithMapper(),
+        getSubaccountBalances(),
       ]);
 
     if (!account) {

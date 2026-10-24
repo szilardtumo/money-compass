@@ -1,7 +1,7 @@
 'use client';
 
-import { DotsHorizontalIcon, TrashIcon } from '@radix-ui/react-icons';
 import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
+import { EllipsisIcon, Trash2Icon } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
 
@@ -156,7 +156,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
               <span className="sr-only">Open menu</span>
-              <DotsHorizontalIcon />
+              <EllipsisIcon className="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -175,7 +175,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
             <DropdownMenuItem onClick={() => deleteTransaction(row.original.id)}>
               Delete
               <DropdownMenuShortcut>
-                <TrashIcon />
+                <Trash2Icon className="size-4" />
               </DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -221,7 +221,7 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
         <DataTableResetFilters table={table} />
         <Button
           variant="destructive"
-          icon={TrashIcon}
+          icon={Trash2Icon}
           className="h-8 px-2.5 sm:ml-auto"
           onClick={deleteSelected}
           disabled={selectedRowCount === 0 || isDeleting || isDeletingSelected}

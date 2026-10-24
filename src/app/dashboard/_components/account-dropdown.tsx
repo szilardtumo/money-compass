@@ -1,7 +1,6 @@
 'use client';
 
-import { CaretDownIcon, ExitIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons';
-import Link from 'next/link';
+import { ChevronDownIcon, LogOutIcon, MoonIcon, SunIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback } from 'react';
@@ -75,7 +74,7 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          icon={CaretDownIcon}
+          icon={ChevronDownIcon}
           iconPlacement="right"
           className="w-full flex justify-between"
         >
@@ -92,9 +91,6 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
       <DropdownMenuContent className="w-(--radix-popper-anchor-width) min-w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/dashboard/integrations">Integrations</Link>
-        </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>App Theme</DropdownMenuSubTrigger>
           <DropdownMenuPortal>
@@ -103,19 +99,23 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
                 <DropdownMenuRadioItem value="system">
                   System
                   <DropdownMenuShortcut>
-                    {systemTheme === 'dark' ? <MoonIcon /> : <SunIcon />}
+                    {systemTheme === 'dark' ? (
+                      <MoonIcon className="size-4" />
+                    ) : (
+                      <SunIcon className="size-4" />
+                    )}
                   </DropdownMenuShortcut>
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="dark">
                   Dark
                   <DropdownMenuShortcut>
-                    <MoonIcon />
+                    <MoonIcon className="size-4" />
                   </DropdownMenuShortcut>
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="light">
                   Light
                   <DropdownMenuShortcut>
-                    <SunIcon />
+                    <SunIcon className="size-4" />
                   </DropdownMenuShortcut>
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
@@ -145,7 +145,7 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
         </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={handleLogout}>
-          <ExitIcon className="mr-2" />
+          <LogOutIcon className="size-4 mr-2" />
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

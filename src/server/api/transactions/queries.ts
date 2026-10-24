@@ -1,27 +1,27 @@
 import 'server-only';
 
-import { and, asc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 
-import { createFullApiContext, createAuthenticatedApiQuery } from '@/lib/api';
-import { CACHE_TAGS, cacheTag } from '@/lib/api/cache';
-import { MissingExchangeRateError, MissingSubaccountError } from '@/lib/api/errors';
+import { createApiContext, createApiQuery } from '@/lib/api';
+import { MissingExchangeRateError } from '@/lib/api/errors';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
+import { groupBy } from '@/lib/utils/group-by';
 import { generateTimeBuckets, TimeInterval } from '@/lib/utils/time-buckets';
 import { schema } from '@/server/db';
-import { descTransactions } from '@/server/db/query-utils';
 
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
+  balance: number;
   subaccount: typeof schema.subaccounts.$inferSelect;
 };
 
 /**
  * Maps a database transaction to the Transaction domain model with currency conversion
  *
- * @param data The database transaction with its subaccount
+ * @param data The database transaction with its balance and subaccount
  * @param mainCurrency The main currency of the user
  * @param mainCurrencyMapper The mapper of the main currency
  * @returns The mapped Transaction
@@ -67,7 +67,7 @@ const mapTransactionData = (
  * @param params The parameters for fetching transactions
  * @returns The paginated list of transactions
  */
-export const getTransactions = createAuthenticatedApiQuery<
+export const getTransactions = createApiQuery<
   {
     /** The ID of the account to filter by */
     accountId?: string;
@@ -86,19 +86,19 @@ export const getTransactions = createAuthenticatedApiQuery<
 >(
   async ({
     input: { accountId, subaccountId, fromDate, toDate, page = 0, pageSize = 20 } = {},
-    ctx,
   }) => {
-    // Cache key for all transactions for the user
-    'use cache';
-    cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
-
-    const { db } = await createFullApiContext(ctx);
+    'use cache: private';
+    const { db } = await createApiContext();
 
     // Set up the database query
     const query = db.rls((tx) =>
       tx
         .select()
         .from(schema.transactions)
+        .innerJoin(
+          schema.transactionBalances,
+          eq(schema.transactions.id, schema.transactionBalances.transactionId),
+        )
         .innerJoin(schema.subaccounts, eq(schema.transactions.subaccountId, schema.subaccounts.id))
         .where(
           and(
@@ -108,7 +108,7 @@ export const getTransactions = createAuthenticatedApiQuery<
             toDate ? lte(schema.transactions.startedDate, new Date(toDate)) : undefined,
           ),
         )
-        .orderBy(...descTransactions())
+        .orderBy(desc(schema.transactions.startedDate), desc(schema.transactions.sequence))
         .offset(page * pageSize)
         .limit(pageSize),
     );
@@ -116,7 +116,7 @@ export const getTransactions = createAuthenticatedApiQuery<
     // Run the database query and get the main currency in parallel
     const [data, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
       query,
-      getMainCurrencyWithMapper.withContext({ ctx }),
+      getMainCurrencyWithMapper(),
     ]);
 
     // Map the transactions to the Transaction domain model
@@ -125,6 +125,7 @@ export const getTransactions = createAuthenticatedApiQuery<
         mapTransactionData(
           {
             ...item.transactions,
+            balance: item.transaction_balances.balance,
             subaccount: item.subaccounts,
           },
           mainCurrency,
@@ -138,59 +139,12 @@ export const getTransactions = createAuthenticatedApiQuery<
 );
 
 /**
- * Returns a single transaction by its ID
- *
- * The transaction is converted to the user's main currency for consistent display
- *
- * @param id The ID of the transaction to fetch
- * @returns The transaction
- */
-export const getTransactionById = createAuthenticatedApiQuery<string, Transaction | undefined>(
-  async ({ input: id, ctx }) => {
-    // Cache key for the single transaction
-    'use cache';
-    cacheTag.id(id, CACHE_TAGS.transactions);
-
-    const { db } = await createFullApiContext(ctx);
-
-    // Run the database query and get the main currency in parallel
-    const [transaction, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
-      db.rls((tx) =>
-        tx.query.transactions.findFirst({
-          where: (table, { eq }) => eq(table.id, id),
-          with: { subaccount: true },
-        }),
-      ),
-      getMainCurrencyWithMapper.withContext({ ctx }),
-    ]);
-
-    // If the transaction is not found, return undefined
-    if (!transaction) {
-      return undefined;
-    }
-
-    // If the subaccount is not found, return undefined
-    if (!transaction.subaccount) {
-      throw new MissingSubaccountError(transaction.subaccountId);
-    }
-
-    // Map the transaction to the Transaction domain model
-    return mapTransactionData(
-      // Ensure subaccount is non-null
-      { ...transaction, subaccount: transaction.subaccount },
-      mainCurrency,
-      mainCurrencyMapper,
-    );
-  },
-);
-
-/**
  * Returns transaction history aggregated by time intervals
  *
- * The history includes account and subaccount balances over time,
+ * The history includes account and subaccount balances at the end of each interval,
  * with all values converted to the user's main currency
  */
-export const getTransactionHistory = createAuthenticatedApiQuery<
+export const getTransactionHistory = createApiQuery<
   {
     /** The date range to fetch the history for */
     dateRange: TimeInterval;
@@ -198,99 +152,57 @@ export const getTransactionHistory = createAuthenticatedApiQuery<
     interval: TimeInterval;
   },
   TransactionHistory[]
->(async ({ input, ctx }) => {
-  // Cache keys for the transactions and accounts for the user
-  'use cache';
-  cacheTag.user(ctx.userId, CACHE_TAGS.transactions);
-  cacheTag.user(ctx.userId, CACHE_TAGS.accounts);
+>(async ({ input }) => {
+  'use cache: private';
+  const { db } = await createApiContext();
 
-  const { db } = await createFullApiContext(ctx);
+  const timeBuckets = generateTimeBuckets(input.dateRange, input.interval);
 
   // Run the database queries in parallel
-  const [{ mainCurrency, mapper: mainCurrencyMapper }, accounts, buckets] = await Promise.all([
-    getMainCurrencyWithMapper.withContext({ ctx }),
+  const [{ mainCurrency, mapper: mainCurrencyMapper }, accounts, sums] = await Promise.all([
+    getMainCurrencyWithMapper(),
     db.rls((tx) => tx.query.accounts.findMany({ with: { subaccounts: true } })),
-    db.rls((tx) => {
-      const sorted = tx.$with('sorted').as((qb) =>
-        qb
-          .select()
-          .from(schema.transactions)
-          .where(gte(schema.transactions.startedDate, sql`now() - ${input.dateRange}::interval`))
-          .orderBy(...descTransactions()),
-      );
-
-      return tx
-        .with(sorted)
+    db.rls((tx) =>
+      tx
         .select({
-          subaccountId: sorted.subaccountId,
-          intervalStart:
-            sql<string>`time_bucket(${input.interval}::interval, ${sorted.startedDate})`.as(
-              'intervalStart',
-            ),
-          lastBalance: sql`last(${sorted.balance}, ${sorted.startedDate} )`
-            .mapWith(Number)
-            .as('lastBalance'),
+          subaccountId: schema.transactions.subaccountId,
+          // 0 for transactions before the first time bucket, n for transactions in the nth time bucket
+          bucketIndex:
+            sql<number>`width_bucket(${schema.transactions.startedDate}, array[${sql.join(
+              timeBuckets.map((date) => sql`${date.toISOString()}`),
+              sql`, `,
+            )}]::timestamptz[])`
+              .mapWith(Number)
+              .as('bucket_index'),
+          amount: sql<number>`sum(${schema.transactions.amount})`.mapWith(Number),
         })
-        .from(sorted)
-        .groupBy((table) => [table.subaccountId, table.intervalStart])
-        .orderBy((table) => asc(table.intervalStart));
-    }),
+        .from(schema.transactions)
+        .groupBy(schema.transactions.subaccountId, sql`bucket_index`),
+    ),
   ]);
 
-  // If there are no transactions in the date range, return an empty array
-  if (!buckets || buckets.length === 0) {
+  // If there are no transactions, return an empty array
+  if (sums.length === 0) {
     return [];
   }
 
-  const subaccounts = accounts.flatMap((account) => account.subaccounts);
-  const subaccountMap = Object.fromEntries(
-    subaccounts.map((subaccount) => [subaccount.id, subaccount]),
-  );
+  const sumsByBucket = groupBy(sums, (item) => String(item.bucketIndex));
 
-  // Contains the current balance of each subaccount in its original currency, and of each account in the main currency
-  //
-  // FIXME: We consider that the account has a balance of 0 at the beginning of the date range, but that's not always true
-  // We need to fetch the balance at the beginning of the date range and use that as the starting balance
-  let currentBalances: Record<string, number> = Object.fromEntries([
-    ...subaccounts.map((subaccount) => [subaccount.id, 0]),
-    ...accounts.map((account) => [account.id, 0]),
-  ]);
+  // Contains the current balance of each subaccount in its original currency
+  const currentBalances: Record<string, number> = {};
+  const addBucketToBalances = (bucketIndex: number) =>
+    sumsByBucket[bucketIndex]?.forEach((item) => {
+      currentBalances[item.subaccountId] = (currentBalances[item.subaccountId] ?? 0) + item.amount;
+    });
 
-  const dateMap = buckets.reduce(
-    (acc, item) => {
-      const date = new Date(item.intervalStart).getTime();
-      const subaccount = subaccountMap[item.subaccountId];
+  // Transactions before the date range make up the starting balances
+  addBucketToBalances(0);
 
-      if (!subaccount) {
-        throw new MissingSubaccountError(item.subaccountId);
-      }
+  const history = timeBuckets.map((date, index) => {
+    addBucketToBalances(index + 1);
 
-      const exchangeRate = mainCurrencyMapper[subaccount.currency];
-
-      if (!exchangeRate) {
-        throw new MissingExchangeRateError(subaccount.currency);
-      }
-
-      acc[date] ||= {};
-      acc[date][item.subaccountId] = item.lastBalance;
-      acc[date][subaccount.accountId] ||= 0;
-      acc[date][subaccount.accountId] += item.lastBalance * exchangeRate;
-      return acc;
-    },
-    {} as Record<number, Record<string, number>>,
-  );
-
-  // Generate time buckets for the date range and only keep the ones after the first transaction
-  // This is needed to fill in the gaps in the data, in case there are no transactions for a specific date bucket
-  const timeBuckets = generateTimeBuckets(input.dateRange, input.interval).filter(
-    (date) => date >= new Date(buckets[0]?.intervalStart),
-  );
-
-  const gapfilledData = timeBuckets.map((date) => {
-    // update the balance of the subaccounts for the current date
-    currentBalances = { ...currentBalances, ...dateMap[date.getTime()] };
     return {
-      date: date,
+      date,
       accountBalances: Object.fromEntries(
         accounts.map((account) => {
           const subaccountBalances = Object.fromEntries(
@@ -315,7 +227,10 @@ export const getTransactionHistory = createAuthenticatedApiQuery<
           return [
             account.id,
             {
-              totalBalance: currentBalances[account.id] ?? 0,
+              totalBalance: Object.values(subaccountBalances).reduce(
+                (sum, balance) => sum + balance.mainCurrencyValue,
+                0,
+              ),
               subaccountBalances,
             },
           ] as const;
@@ -325,5 +240,7 @@ export const getTransactionHistory = createAuthenticatedApiQuery<
     } satisfies TransactionHistory;
   });
 
-  return gapfilledData;
+  // Only keep the time buckets from the first one with a balance
+  const firstBucketIndex = Math.max(Math.min(...sums.map((item) => item.bucketIndex)) - 1, 0);
+  return history.slice(firstBucketIndex);
 });

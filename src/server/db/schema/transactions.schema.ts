@@ -1,7 +1,8 @@
-import { eq, relations } from 'drizzle-orm';
+import { and, eq, relations, sql } from 'drizzle-orm';
 import { index, integer, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
+import { accounts } from './accounts.schema';
 import { subaccounts } from './subaccounts.schema';
 import { numericCasted, authUid, authUidDefault } from './utils';
 
@@ -22,7 +23,6 @@ export const transactions = pgTable(
     subaccountId: uuid()
       .notNull()
       .references(() => subaccounts.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-    balance: numericCasted().notNull(),
     userId: uuid().notNull().default(authUidDefault),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     sequence: integer('sequence').generatedAlwaysAsIdentity().notNull().unique(),
@@ -34,7 +34,7 @@ export const transactions = pgTable(
       for: 'all',
       to: authenticatedRole,
       using: eq(table.userId, authUid),
-      withCheck: eq(table.userId, authUid),
+      withCheck: sql`${eq(table.userId, authUid)} AND EXISTS (SELECT 1 FROM ${subaccounts} JOIN ${accounts} ON ${eq(accounts.id, subaccounts.accountId)} WHERE ${and(eq(subaccounts.id, table.subaccountId), eq(accounts.userId, authUid))})`,
     }),
   ],
 );

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Cross1Icon, PlusIcon, ResetIcon } from '@radix-ui/react-icons';
+import { PlusIcon, RotateCcwIcon, XIcon } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
@@ -29,8 +29,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
+import { Account } from '@/lib/types/accounts.types';
 import { Currency } from '@/lib/types/currencies.types';
-import { Enums } from '@/lib/types/database.types';
 import { updateAccountSchema } from '@/lib/validation/accounts';
 import { apiActions } from '@/server/api/actions';
 
@@ -43,7 +43,7 @@ interface UpdateAccountFormProps {
 const accountCategoryOptions = [
   { label: 'Checking', value: 'checking' },
   { label: 'Investment', value: 'investment' },
-] satisfies { label: string; value: Enums<'account_category'> }[];
+] satisfies { label: string; value: Account['category'] }[];
 
 type FormFields = z.infer<typeof updateAccountSchema>;
 
@@ -213,7 +213,7 @@ export function UpdateAccountForm({
                         disabled={form.formState.isSubmitting}
                         aria-label="Reinstate subaccount"
                       >
-                        <ResetIcon />
+                        <RotateCcwIcon className="size-4" />
                       </Button>
                     ) : (
                       <Button
@@ -224,7 +224,7 @@ export function UpdateAccountForm({
                         disabled={form.formState.isSubmitting}
                         aria-label="Remove subaccount"
                       >
-                        <Cross1Icon />
+                        <XIcon className="size-4" />
                       </Button>
                     )}
                   </TableCell>

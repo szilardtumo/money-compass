@@ -1,6 +1,6 @@
 'use client';
 
-import { PlusIcon } from '@radix-ui/react-icons';
+import { PlusIcon } from 'lucide-react';
 
 import { useCreateTransactionDialog } from '@/components/dialogs/create-transaction-dialog';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ export function CreateTransactionButton() {
     <Tooltip>
       <TooltipTrigger asChild>
         <Button size="icon" onClick={() => openDialog()}>
-          <PlusIcon />
+          <PlusIcon className="size-4" />
         </Button>
       </TooltipTrigger>
       <TooltipContent>Add new transaction</TooltipContent>

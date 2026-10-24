@@ -1,6 +1,6 @@
 'use client';
 
-import { UpdateIcon } from '@radix-ui/react-icons';
+import { RefreshCwIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ export function UpdateBalancesDialog({ accounts }: UpdateBalancesDialogProps) {
     <Dialog open={open} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="card" disabled={!accounts.length}>
-          <UpdateIcon className="w-6 h-6" />
+          <RefreshCwIcon className="w-6 h-6" />
           Update balances
         </Button>
       </DialogTrigger>

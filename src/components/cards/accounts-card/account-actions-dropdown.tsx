@@ -1,4 +1,4 @@
-import { DotsHorizontalIcon } from '@radix-ui/react-icons';
+import { EllipsisIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,7 @@ export function AccountActionsDropdown({ account, className }: AccountActionsDro
       <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" icon={DotsHorizontalIcon} className={className}>
+            <Button variant="ghost" size="icon" icon={EllipsisIcon} className={className}>
               <span className="sr-only">Actions</span>
             </Button>
           </DropdownMenuTrigger>
