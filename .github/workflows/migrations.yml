@@ -20,5 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v1
+        with:
+          # Without a version, setup-cli@v1 installs 2.20.3, which can't parse config.toml
+          version: 2.121.0
       - run: supabase link --project-ref $PROJECT_ID
       - run: supabase db push
