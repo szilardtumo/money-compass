@@ -72,7 +72,7 @@ export function DataTableTest({ accounts, transactions }: DataTableTestProps) {
     () =>
       accounts.map((account) => ({
         label: account.name,
-        value: account.id,
+        value: account.name,
         icon: CubeIcon,
       })),
     [accounts],
@@ -105,20 +105,20 @@ export function DataTableTest({ accounts, transactions }: DataTableTestProps) {
           <Label htmlFor="sorting">Enable sorting</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <Switch id="sorting" onCheckedChange={setEnableGlobalFilter} />
-          <Label htmlFor="sorting">Enable global filter</Label>
+          <Switch id="global-filter" onCheckedChange={setEnableGlobalFilter} />
+          <Label htmlFor="global-filter">Enable global filter</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <Switch id="sorting" onCheckedChange={setEnableColumnFilters} />
-          <Label htmlFor="sorting">Enable column filters</Label>
+          <Switch id="column-filters" onCheckedChange={setEnableColumnFilters} />
+          <Label htmlFor="column-filters">Enable column filters</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <Switch id="sorting" onCheckedChange={setEnableColumnHiding} />
-          <Label htmlFor="sorting">Enable column hiding</Label>
+          <Switch id="column-hiding" onCheckedChange={setEnableColumnHiding} />
+          <Label htmlFor="column-hiding">Enable column hiding</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <Switch id="sorting" onCheckedChange={setEnablePagination} />
-          <Label htmlFor="sorting">Enable pagination</Label>
+          <Switch id="pagination" onCheckedChange={setEnablePagination} />
+          <Label htmlFor="pagination">Enable pagination</Label>
         </div>
       </div>
       <div className="space-y-2">
