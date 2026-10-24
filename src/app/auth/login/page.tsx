@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { SeparatorWithText } from '@/components/ui/separator-with-text';
+import { getSafeRedirectPath } from '@/lib/utils/safe-redirect';
 
 const formSchema = z.object({
   email: z.email('Invalid email'),
@@ -65,7 +66,7 @@ export default function LoginPage() {
       }
 
       startTransition(() => {
-        router.replace(searchParams.get('next') ?? '/dashboard');
+        router.replace(getSafeRedirectPath(searchParams.get('next')));
       });
     },
     [router, searchParams, setError, supabaseAuth],

@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { env } from '@/lib/env';
+import { getSafeRedirectPath } from '@/lib/utils/safe-redirect';
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -46,7 +47,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && request.nextUrl.pathname.startsWith('/auth')) {
     // already logged in, respond by redirecting the user to the next page
-    const next = request.nextUrl.searchParams.get('next') ?? '/dashboard';
+    const next = getSafeRedirectPath(request.nextUrl.searchParams.get('next'));
     return NextResponse.redirect(new URL(next, request.url));
   }
 

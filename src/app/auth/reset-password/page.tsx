@@ -22,6 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { PasswordInput, strengthRequirements } from '@/components/ui/password-input';
+import { getSafeRedirectPath } from '@/lib/utils/safe-redirect';
 
 const formSchema = z
   .object({
@@ -71,7 +72,7 @@ export default function ResetPasswordPage() {
       }
 
       startTransition(() => {
-        router.replace(searchParams.get('next') ?? '/dashboard');
+        router.replace(getSafeRedirectPath(searchParams.get('next')));
       });
     },
     [router, searchParams, setError, supabaseAuth],
