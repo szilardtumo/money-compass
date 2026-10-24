@@ -1,34 +1,38 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from 'cn';
 import { Loader2 } from 'lucide-react';
-import { Slot as SlotPrimitive } from 'radix-ui';
+import { Slot } from 'radix-ui';
 import * as React from 'react';
 
+// Based on shadcn/ui's button, without its `gap-2`: iconVariants spaces the `icon` prop so it can animate
 const buttonVariants = cva(
-  'group relative inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+  "group relative inline-flex shrink-0 items-center justify-center rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90',
-        destructive: 'bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90',
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        destructive:
+          'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
         outline:
-          'border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'font-normal p-0! relative after:absolute after:bg-primary after:bottom-2.5 after:h-px after:w-full after:origin-bottom-right after:scale-x-0 hover:after:origin-bottom-left hover:after:scale-x-100 after:transition-transform after:ease-in-out after:duration-300',
+          'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+        link: 'text-primary underline-offset-4 hover:underline',
         linkUnderlined:
           'font-normal p-0! relative after:absolute after:bg-primary after:bottom-2.5 after:h-px after:w-full after:origin-bottom-left after:scale-x-100 hover:after:origin-bottom-right hover:after:scale-x-0 after:transition-transform after:ease-in-out after:duration-300',
-        unstyled: '',
       },
       size: {
-        default: 'h-9 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-10 rounded-md px-8',
-        icon: 'h-9 w-9',
+        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
+        sm: 'h-8 rounded-md px-3 has-[>svg]:px-2.5',
+        lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',
+        icon: 'size-9',
         card: 'w-32 p-4 flex-col justify-center gap-3 whitespace-normal text-balance rounded-md',
       },
     },
-    defaultVariants: { variant: 'default', size: 'default' },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default',
+    },
   },
 );
 
@@ -67,60 +71,47 @@ const iconVariants = cva('shrink-0', {
   defaultVariants: { iconPlacement: 'left', size: 'default' },
 });
 
-export interface ButtonProps
-  extends
-    React.ComponentProps<'button'>,
-    VariantProps<typeof buttonVariants>,
-    VariantProps<typeof iconVariants> {
-  asChild?: boolean;
-  icon?: React.ElementType;
-  isLoading?: boolean;
-}
-
 function Button({
   className,
-  variant,
-  size,
+  variant = 'default',
+  size = 'default',
   asChild = false,
   icon,
   iconPlacement = 'left',
   iconAnimation,
   isLoading = false,
+  children,
   ...props
-}: ButtonProps) {
-  const Comp = asChild ? SlotPrimitive.Slot : 'button';
+}: React.ComponentProps<'button'> &
+  VariantProps<typeof buttonVariants> &
+  VariantProps<typeof iconVariants> & {
+    asChild?: boolean;
+    icon?: React.ElementType;
+    isLoading?: boolean;
+  }) {
+  const Comp = asChild ? Slot.Root : 'button';
   const Icon = isLoading ? Loader2 : icon;
+  const iconElement = Icon && (
+    <Icon
+      className={iconVariants({
+        size,
+        iconPlacement,
+        iconAnimation: isLoading ? 'spin' : iconAnimation,
+      })}
+    />
+  );
 
   return (
     <Comp
-      className={cn(
-        variant === 'unstyled' ? className : buttonVariants({ variant, size, className }),
-      )}
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     >
-      {Icon && iconPlacement === 'left' && (
-        <Icon
-          className={cn(
-            iconVariants({
-              size,
-              iconPlacement,
-              iconAnimation: isLoading ? 'spin' : iconAnimation,
-            }),
-          )}
-        />
-      )}
-      <SlotPrimitive.Slottable>{props.children}</SlotPrimitive.Slottable>
-      {Icon && iconPlacement === 'right' && (
-        <Icon
-          className={cn(
-            iconVariants({
-              size,
-              iconPlacement,
-              iconAnimation: isLoading ? 'spin' : iconAnimation,
-            }),
-          )}
-        />
-      )}
+      {iconPlacement === 'left' && iconElement}
+      <Slot.Slottable>{children}</Slot.Slottable>
+      {iconPlacement === 'right' && iconElement}
     </Comp>
   );
 }

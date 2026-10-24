@@ -1,40 +1,28 @@
 import { cn } from 'cn';
-import React from 'react';
+import * as React from 'react';
 
 import { Separator } from '@/components/ui/separator';
 
-const PageLayout = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <main ref={ref} className={cn('flex flex-col', className)} {...props} />
-  ),
-);
-PageLayout.displayName = 'PageLayout';
+function PageLayout({ className, ...props }: React.ComponentProps<'main'>) {
+  return <main className={cn('flex flex-col', className)} {...props} />;
+}
 
-const PageHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+function PageHeader({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
     <>
-      <div ref={ref} className={cn('px-4 h-14 ml-12 sm:ml-0', className)} {...props} />
+      <div className={cn('px-4 h-14 ml-12 sm:ml-0', className)} {...props} />
       <Separator />
     </>
-  ),
-);
-PageHeader.displayName = 'PageHeader';
+  );
+}
 
-const PageHeaderTitle = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, children, ...props }, ref) => (
-  <h2 ref={ref} className={cn('text-xl font-bold mr-auto', className)} {...props}>
-    {children}
-  </h2>
-));
-PageHeaderTitle.displayName = 'PageHeaderTitle';
+function PageHeaderTitle({ className, ...props }: React.ComponentProps<'h2'>) {
+  // eslint-disable-next-line jsx-a11y/heading-has-content
+  return <h2 className={cn('text-xl font-bold mr-auto', className)} {...props} />;
+}
 
-const PageContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('m-4 flex flex-col gap-4', className)} {...props} />
-  ),
-);
-PageContent.displayName = 'PageContent';
+function PageContent({ className, ...props }: React.ComponentProps<'div'>) {
+  return <div className={cn('m-4 flex flex-col gap-4', className)} {...props} />;
+}
 
 export { PageLayout, PageHeader, PageHeaderTitle, PageContent };

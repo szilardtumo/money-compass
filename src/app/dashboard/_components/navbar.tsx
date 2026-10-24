@@ -104,7 +104,7 @@ export function Navbar() {
               <HamburgerMenuIcon />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left">
+          <SheetContent side="left" className="p-6">
             <NavbarContent />
           </SheetContent>
         </Sheet>

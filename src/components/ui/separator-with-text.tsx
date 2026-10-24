@@ -1,13 +1,10 @@
-'use client';
-
-import { Separator as SeparatorPrimitive } from 'radix-ui';
 import * as React from 'react';
 
 import { Separator } from './separator';
 
-const SeparatorWithText = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<'div'>>(
-  ({ children, className, ...props }, ref) => (
-    <div className="relative" ref={ref} {...props}>
+function SeparatorWithText({ children, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div className="relative" {...props}>
       <div className="absolute inset-0 flex items-center">
         <Separator className="w-full" />
       </div>
@@ -15,8 +12,7 @@ const SeparatorWithText = React.forwardRef<HTMLDivElement, React.ComponentPropsW
         <span className="bg-background px-2 text-muted-foreground">{children}</span>
       </div>
     </div>
-  ),
-);
-SeparatorWithText.displayName = SeparatorPrimitive.Root.displayName;
+  );
+}
 
 export { SeparatorWithText };
