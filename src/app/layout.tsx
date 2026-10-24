@@ -7,7 +7,6 @@ import './globals.css';
 
 import { GlobalProgress } from '@/app/_components/global-progress';
 import { GlobalProviders } from '@/app/_components/global-providers';
-import { ErrorBoundary, PageErrorFallback } from '@/components/ui/error-boundary';
 import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -24,15 +23,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
-        <ErrorBoundary FallbackComponent={PageErrorFallback}>
-          <GlobalProviders>
-            <Analytics />
-            <SpeedInsights />
-            <GlobalProgress />
-            <Toaster />
-            {children}
-          </GlobalProviders>
-        </ErrorBoundary>
+        <GlobalProviders>
+          <Analytics />
+          <SpeedInsights />
+          <GlobalProgress />
+          <Toaster />
+          {children}
+        </GlobalProviders>
       </body>
     </html>
   );

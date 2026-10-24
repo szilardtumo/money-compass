@@ -2,6 +2,6 @@
 
 import { PageErrorFallback } from '@/components/ui/error-boundary';
 
-export default function DashboardError({ error, reset }: { error: Error; reset: () => void }) {
-  return <PageErrorFallback error={error} resetErrorBoundary={reset} />;
+export default function DashboardError({ error, retry }: { error: unknown; retry: () => void }) {
+  return <PageErrorFallback error={error} resetErrorBoundary={retry} />;
 }
