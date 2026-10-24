@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ALTER COLUMN "id" SET DEFAULT auth.uid();

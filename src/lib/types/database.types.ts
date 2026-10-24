@@ -159,7 +159,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
-          id: string;
+          id?: string;
           main_currency?: string;
         };
         Update: {
