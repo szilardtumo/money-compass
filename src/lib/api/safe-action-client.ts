@@ -2,8 +2,6 @@ import 'server-only';
 
 import { createSafeActionClient, DEFAULT_SERVER_ERROR_MESSAGE } from 'next-safe-action';
 
-import { AuthenticationError } from '@/lib/api/errors';
-
 import { createFullApiContext } from './context';
 
 export const actionClient = createSafeActionClient({
@@ -21,11 +19,8 @@ export const actionClient = createSafeActionClient({
 });
 
 export const authenticatedActionClient = actionClient.use(async ({ next }) => {
+  // Throws AuthenticationError if the request has no valid session
   const ctx = await createFullApiContext();
-
-  if (!ctx.userId) {
-    throw new AuthenticationError('User not authenticated');
-  }
 
   return next({ ctx });
 });

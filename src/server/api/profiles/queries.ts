@@ -1,25 +1,22 @@
 import 'server-only';
 
-import { User } from '@supabase/supabase-js';
-
 import { createFullApiContext, createAuthenticatedApiQuery } from '@/lib/api';
 import { CACHE_TAGS, cacheTag } from '@/lib/api/cache';
-import { AuthenticationError } from '@/lib/api/errors';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { SupabaseClaims } from '@/lib/supabase/server';
 import { Profile } from '@/lib/types/profiles.types';
 
 /**
  * Maps the user and profile data to the Profile type.
  *
- * @param user The user object from Supabase.
+ * @param claims The verified claims of the user's access token.
  * @param profile The profile object from the database.
  * @returns The mapped Profile.
  */
-const mapProfileData = (user: User, profile: Profile | undefined): Profile => {
+const mapProfileData = (claims: SupabaseClaims, profile: Profile | undefined): Profile => {
   return {
-    id: user.id,
-    email: user.email,
-    name: user.user_metadata.full_name,
+    id: claims.sub,
+    email: claims.email,
+    name: claims.user_metadata.full_name,
     mainCurrency: profile?.mainCurrency ?? 'eur',
   };
 };
@@ -33,22 +30,10 @@ export const getProfile = createAuthenticatedApiQuery<void, Profile>(async ({ ct
   'use cache';
   cacheTag.user(ctx.userId, CACHE_TAGS.profiles);
 
-  const supabase = await createServerSupabaseClient(ctx.plainCookies);
   const { db } = await createFullApiContext(ctx);
+  const profile = await db.rls((tx) => tx.query.profiles.findFirst());
 
-  const [
-    {
-      data: { user },
-      error: userError,
-    },
-    profile,
-  ] = await Promise.all([supabase.auth.getUser(), db.rls((tx) => tx.query.profiles.findFirst())]);
-
-  if (userError || !user) {
-    throw new AuthenticationError('User not found or not authenticated');
-  }
-
-  return mapProfileData(user, profile);
+  return mapProfileData(ctx.claims, profile);
 });
 
 /**

@@ -5,8 +5,9 @@ import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { cache } from 'react';
 
+import { AuthenticationError } from '@/lib/api/errors';
 import { env } from '@/lib/env';
-import { getSupabaseToken, SupabaseToken } from '@/lib/supabase/server';
+import { getSupabaseClaims, SupabaseClaims } from '@/lib/supabase/server';
 
 import * as schema from './schema';
 
@@ -26,31 +27,15 @@ if (process.env.NODE_ENV !== 'production') global.drizzleClient = drizzleClient;
 type DbTx = Parameters<Parameters<typeof drizzleClient.transaction>[0]>[0];
 
 /**
- * Returns the drizzle DB client.
+ * Retrieves the Drizzle DB client with the user's claims for Row-Level Security.
  *
- * The Supabase token will be retrieved using cookies.
- *
- * @deprecated Calling this method without parameters is deprecated. Provide the Supabase token as a parameter.
+ * @param claims The verified claims of the user. Read from the session cookies if not provided.
+ * @throws AuthenticationError if there is no authenticated user
  */
-async function getDb(): Promise<{
-  admin: typeof drizzleClient;
-  rls: typeof drizzleClient.transaction;
-}>;
-
-/**
- * Retrieves the Drizzle DB client with Supabase token for RLS.
- *
- * If no Supabase token is provided, it will be retrieved using cookies.
- *
- * @param supabaseToken - The Supabase token for Row-Level Security.
- */
-async function getDb(
-  supabaseToken: SupabaseToken,
-): Promise<{ admin: typeof drizzleClient; rls: typeof drizzleClient.transaction }>;
-
-async function getDb(supabaseToken?: SupabaseToken) {
-  if (!supabaseToken) {
-    supabaseToken = await getSupabaseToken();
+async function getDb(claims?: SupabaseClaims | null) {
+  claims ??= await getSupabaseClaims();
+  if (claims?.role !== 'authenticated') {
+    throw new AuthenticationError('User not authenticated');
   }
 
   return {
@@ -58,26 +43,13 @@ async function getDb(supabaseToken?: SupabaseToken) {
     rls: (async (transaction, ...rest) => {
       return await drizzleClient.transaction(
         async (tx) => {
-          // Supabase exposes auth.uid() and auth.jwt()
+          // Supabase's auth.uid() and auth.jwt() read these settings. Both are local to the transaction.
           // https://supabase.com/docs/guides/database/postgres/row-level-security#helper-functions
-          try {
-            await tx.execute(sql`
-                -- auth.jwt()
-                select set_config('request.jwt.claims', '${sql.raw(JSON.stringify(supabaseToken))}', TRUE);
-                -- auth.uid()
-                select set_config('request.jwt.claim.sub', '${sql.raw(supabaseToken.sub ?? '')}', TRUE);												
-                -- set local role
-                set local role ${sql.raw(supabaseToken.role ?? 'anon')};
-            `);
-            return await transaction(tx);
-          } finally {
-            await tx.execute(sql`
-                -- reset
-                select set_config('request.jwt.claims', NULL, TRUE);
-                select set_config('request.jwt.claim.sub', NULL, TRUE);
-                reset role;
-            `);
-          }
+          await tx.execute(
+            sql`select set_config('request.jwt.claims', ${JSON.stringify(claims)}, true), set_config('request.jwt.claim.sub', ${claims.sub}, true)`,
+          );
+          await tx.execute(sql`set local role authenticated`);
+          return await transaction(tx);
         },
         ...rest,
       );

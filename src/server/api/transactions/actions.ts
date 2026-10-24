@@ -6,7 +6,7 @@ import { returnValidationErrors } from 'next-safe-action';
 import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
-import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
+import { CACHE_TAGS, updateTag } from '@/lib/api/cache';
 import { formatDate } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
 import {
@@ -63,7 +63,7 @@ export const createTransaction = authenticatedActionClient
         );
     });
 
-    revalidateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
   });
 
 export const updateBalances = authenticatedActionClient
@@ -120,8 +120,8 @@ export const updateBalances = authenticatedActionClient
       }
     });
 
-    revalidateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
-    revalidateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
   });
 
 export const updateTransaction = authenticatedActionClient
@@ -211,7 +211,7 @@ export const updateTransaction = authenticatedActionClient
       }
     });
 
-    revalidateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
   });
 
 export const deleteTransactions = authenticatedActionClient
@@ -258,7 +258,7 @@ export const deleteTransactions = authenticatedActionClient
       await tx.delete(schema.transactions).where(inArray(schema.transactions.id, transactionIds));
     });
 
-    revalidateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
   });
 
 export const deleteTransaction = authenticatedActionClient

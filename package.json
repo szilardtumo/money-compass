@@ -37,7 +37,6 @@
     "cn": "^0.5.0",
     "date-fns": "^4.4.0",
     "drizzle-orm": "^0.45.4",
-    "jwt-decode": "^4.0.0",
     "lucide-react": "^1.61.0",
     "motion": "^14.6.0",
     "next": "^16.4.2",

@@ -2,12 +2,17 @@
 
 import { asc } from 'drizzle-orm';
 
-import { revalidateTag, CACHE_TAGS } from '@/lib/api/cache';
+import { updateTag, CACHE_TAGS } from '@/lib/api/cache';
 import { groupBy } from '@/lib/utils/group-by';
 import { schema, getDb } from '@/server/db';
 import { ascTransactions } from '@/server/db/query-utils';
 
 export async function _recalculateBalances() {
+  // Maintenance tool for the dev-only test page. It bypasses RLS and rewrites every user's balances.
+  if (process.env.NODE_ENV !== 'development') {
+    throw new Error('Only available in development');
+  }
+
   const db = await getDb();
 
   // Get all transactions ordered by subaccount, then by transaction date
@@ -50,5 +55,5 @@ export async function _recalculateBalances() {
     }),
   );
 
-  revalidateTag({ tag: CACHE_TAGS.transactions });
+  updateTag({ tag: CACHE_TAGS.transactions });
 }

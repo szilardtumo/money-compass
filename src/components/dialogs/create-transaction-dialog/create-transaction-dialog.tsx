@@ -1,5 +1,3 @@
-'use server';
-
 import { apiQueries } from '@/server/api/queries';
 
 import { CreateTransactionDialogClient } from './create-transaction-dialog-client';

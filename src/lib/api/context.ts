@@ -1,16 +1,14 @@
 import 'server-only';
 
-import { RequestCookie } from 'next/dist/compiled/@edge-runtime/cookies';
-import { cookies } from 'next/headers';
 import { cache } from 'react';
 
-import { getSupabaseToken, SupabaseToken } from '@/lib/supabase/server';
+import { AuthenticationError } from '@/lib/api/errors';
+import { getSupabaseClaims, SupabaseClaims } from '@/lib/supabase/server';
 import { DbClient, getDb } from '@/server/db';
 
 export interface SerializableApiContext {
-  plainCookies: RequestCookie[];
-  supabaseToken: SupabaseToken;
   userId: string;
+  claims: SupabaseClaims;
 }
 
 export interface FullApiContext extends SerializableApiContext {
@@ -18,17 +16,27 @@ export interface FullApiContext extends SerializableApiContext {
 }
 
 /**
+ * Returns the serializable context of the current user, or null if the request has no valid session.
+ *
+ * The context needs to be serializable to enable caching of API queries using 'use cache'.
+ */
+export const getSerializableApiContext = cache(async (): Promise<SerializableApiContext | null> => {
+  const claims = await getSupabaseClaims();
+  return claims && { userId: claims.sub, claims };
+});
+
+/**
  * Creates a serializable context object which will be accessible from all authenticated API functions.
  *
- * The context returned by this function needs to be serializable to enable caching of API queries using 'use cache'.
- *
+ * @throws AuthenticationError if the request has no valid session
  * @returns The context object
  */
 export const createSerializableApiContext = cache(async (): Promise<SerializableApiContext> => {
-  const plainCookies = (await cookies()).getAll();
-  const supabaseToken = await getSupabaseToken();
-
-  return { plainCookies, supabaseToken, userId: supabaseToken.sub ?? 'anon' };
+  const ctx = await getSerializableApiContext();
+  if (!ctx) {
+    throw new AuthenticationError('User not authenticated');
+  }
+  return ctx;
 });
 
 /**
@@ -41,7 +49,7 @@ export const createSerializableApiContext = cache(async (): Promise<Serializable
 export const createFullApiContext = cache(
   async (serializableCtx?: SerializableApiContext): Promise<FullApiContext> => {
     const serializableContext = serializableCtx ?? (await createSerializableApiContext());
-    const db = await getDb(serializableContext.supabaseToken);
+    const db = await getDb(serializableContext.claims);
 
     return { ...serializableContext, db };
   },

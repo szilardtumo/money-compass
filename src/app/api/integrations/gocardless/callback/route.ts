@@ -4,7 +4,10 @@ import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
 import { apiQueries } from '@/server/api/queries';
 
 export async function GET(request: NextRequest) {
-  revalidateTag({ tag: CACHE_TAGS.integrations, userId: await apiQueries.profiles.getUserId() });
+  revalidateTag(
+    { tag: CACHE_TAGS.integrations, userId: await apiQueries.profiles.getUserId() },
+    { expire: 0 },
+  );
 
   const redirectUrl = new URL('/dashboard/integrations', request.url);
 

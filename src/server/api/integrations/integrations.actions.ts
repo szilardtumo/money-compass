@@ -3,7 +3,7 @@
 import { randomUUID } from 'crypto';
 import { eq } from 'drizzle-orm';
 
-import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
+import { CACHE_TAGS, updateTag } from '@/lib/api/cache';
 import { gocardlessApi, isGocardlessError } from '@/lib/gocardless';
 import { ActionResponse } from '@/lib/types/transport.types';
 import { getUserId } from '@/server/api/profiles/queries';
@@ -37,7 +37,7 @@ export async function createGocardlessIntegration(
       });
     });
 
-    revalidateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
+    updateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
     return { success: true, data: { confirmationUrl: requisition.link } };
   } catch (err) {
     if (isGocardlessError(err)) {
@@ -132,7 +132,7 @@ export async function renewGocardlessIntegration(
       error: { code: 'unknown', message: err instanceof Error ? err.message : '' },
     };
   } finally {
-    revalidateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
+    updateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
   }
 }
 
@@ -163,7 +163,7 @@ export async function deleteIntegration(id: string): Promise<ActionResponse> {
       await tx.delete(schema.integrations).where(eq(schema.integrations.id, id));
     });
 
-    revalidateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
+    updateTag({ tag: CACHE_TAGS.integrations, userId: await getUserId() });
     return { success: true };
   } catch (err) {
     if (isGocardlessError(err)) {

@@ -3,7 +3,7 @@
 import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
-import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
+import { CACHE_TAGS, updateTag } from '@/lib/api/cache';
 import { schema } from '@/server/db';
 
 export const updateProfile = authenticatedActionClient
@@ -26,5 +26,5 @@ export const updateProfile = authenticatedActionClient
         });
     });
 
-    revalidateTag({ tag: CACHE_TAGS.profiles, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.profiles, userId: ctx.userId });
   });

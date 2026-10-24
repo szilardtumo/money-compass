@@ -1,9 +1,9 @@
 import 'server-only';
 
-import { redirect } from 'next/navigation';
+import { redirect, unstable_rethrow } from 'next/navigation';
 import { cache } from 'react';
 
-import { createSerializableApiContext, SerializableApiContext } from '@/lib/api/context';
+import { getSerializableApiContext, SerializableApiContext } from '@/lib/api/context';
 import { AuthenticationError } from '@/lib/api/errors';
 
 type ApiQueryFunction<I = void, O = void, C = undefined> = (opts: {
@@ -11,31 +11,27 @@ type ApiQueryFunction<I = void, O = void, C = undefined> = (opts: {
   ctx: C;
 }) => Promise<O>;
 
-const withErrorHandling = <I = void, O = void, C = undefined>(
-  apiQueryFn: ApiQueryFunction<I, O, C>,
-): ApiQueryFunction<I, O, C> => {
-  return async (opts) => {
-    try {
-      return await apiQueryFn(opts);
-    } catch (error) {
-      if (error instanceof AuthenticationError) {
-        // Redirect to the login page if the user is not authenticated
-        redirect('/auth/login');
+const withErrorHandling = async <O>(query: () => Promise<O>): Promise<O> => {
+  try {
+    return await query();
+  } catch (error) {
+    // Let Next.js handle its own errors (redirect, notFound, prerendering bailouts)
+    unstable_rethrow(error);
 
-        // Early return to avoid processing the error further
-        return undefined as O;
-      }
-
-      // Log all errors at the middleware level
-      console.error(`API query error:`, error);
-
-      if (error instanceof Error) {
-        error.message = `API Error: ${error.message}`;
-      }
-
-      throw error;
+    if (error instanceof AuthenticationError) {
+      // Redirect to the login page if the user is not authenticated
+      redirect('/auth/login');
     }
-  };
+
+    // Log all errors at the middleware level
+    console.error(`API query error:`, error);
+
+    if (error instanceof Error) {
+      error.message = `API Error: ${error.message}`;
+    }
+
+    throw error;
+  }
 };
 
 /**
@@ -49,10 +45,7 @@ const withErrorHandling = <I = void, O = void, C = undefined>(
 const createPublicApiQuery = <I = void, O = void>(
   apiQueryFn: ApiQueryFunction<I, O>,
 ): ((input: I) => Promise<O>) => {
-  const apiQueryFnWithMiddleware = withErrorHandling(apiQueryFn);
-  return cache(async (input) => {
-    return apiQueryFnWithMiddleware({ input, ctx: undefined });
-  });
+  return cache((input) => withErrorHandling(() => apiQueryFn({ input, ctx: undefined })));
 };
 
 interface AuthenticatedApiQuery<I, O> {
@@ -84,19 +77,23 @@ interface AuthenticatedApiQuery<I, O> {
  */
 // The Supabase session read checks the token expiry against the current time, which a plain
 // render can't do while Next.js prerenders the App Shell. A private cache scope can.
-async function createQueryApiContext() {
+async function getQueryApiContext() {
   'use cache: private';
-  return createSerializableApiContext();
+  return getSerializableApiContext();
 }
 
 const createAuthenticatedApiQuery = <I = void, O = void>(
   apiQueryFn: ApiQueryFunction<I, O, SerializableApiContext>,
 ) => {
-  const apiQueryFnWithMiddleware = withErrorHandling(apiQueryFn);
-  const fn = cache(async (input: I) => {
-    const ctx = await createQueryApiContext();
-    return apiQueryFnWithMiddleware({ input, ctx });
-  }) as AuthenticatedApiQuery<I, O>;
+  const fn = cache((input: I) =>
+    withErrorHandling(async () => {
+      const ctx = await getQueryApiContext();
+      if (!ctx) {
+        throw new AuthenticationError('User not authenticated');
+      }
+      return apiQueryFn({ input, ctx });
+    }),
+  ) as AuthenticatedApiQuery<I, O>;
 
   fn.withContext = cache(apiQueryFn) as typeof fn.withContext;
 

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 
 import { env } from '@/lib/env';
-import { apiActions } from '@/server/api/actions';
+import { adminSyncAllIntegrations } from '@/server/api/integrations/sync-integration-links';
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await apiActions.integrationLinks.adminSyncAllIntegrations();
+    await adminSyncAllIntegrations();
     return Response.json({ success: true });
   } catch (error) {
     console.error('Failed to sync integrations:', error);

@@ -5,7 +5,7 @@ import { returnValidationErrors } from 'next-safe-action';
 import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
-import { CACHE_TAGS, revalidateTag } from '@/lib/api/cache';
+import { CACHE_TAGS, updateTag } from '@/lib/api/cache';
 import { createAccountSchema, updateAccountSchema } from '@/lib/validation/accounts';
 import { apiQueries } from '@/server/api/queries';
 import { DbTx, schema } from '@/server/db';
@@ -137,7 +137,7 @@ export const createAccount = authenticatedActionClient
       }
     });
 
-    revalidateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
   });
 
 export const updateAccount = authenticatedActionClient
@@ -207,7 +207,7 @@ export const updateAccount = authenticatedActionClient
       }
     });
 
-    revalidateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
   });
 
 export const deleteAccount = authenticatedActionClient
@@ -217,6 +217,6 @@ export const deleteAccount = authenticatedActionClient
       tx.delete(schema.accounts).where(eq(schema.accounts.id, parsedInput.accountId)),
     );
 
-    revalidateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
-    revalidateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.accounts, userId: ctx.userId });
+    updateTag({ tag: CACHE_TAGS.transactions, userId: ctx.userId });
   });
