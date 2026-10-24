@@ -113,9 +113,9 @@ export function Navbar() {
       {/* Desktop */}
       <ResizablePanel
         id="navbar-panel"
-        defaultSize={20}
-        minSize={15}
-        maxSize={30}
+        defaultSize="20%"
+        minSize="15%"
+        maxSize="30%"
         className="hidden sm:flex"
       >
         <NavbarContent />

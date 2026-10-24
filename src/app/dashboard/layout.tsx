@@ -21,9 +21,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <DialogsProvider>
-      <ResizablePanelGroup direction="horizontal" className="h-full min-h-screen items-stretch">
+      <ResizablePanelGroup
+        orientation="horizontal"
+        className="h-full min-h-screen items-stretch max-sm:[&>#navbar-panel]:hidden!"
+      >
         <Navbar />
-        <ResizablePanel id="main-panel" defaultSize={80}>
+        <ResizablePanel id="main-panel" defaultSize="80%">
           <PageLayout>
             <PageHeaderSlotProvider>
               <PageHeader>
