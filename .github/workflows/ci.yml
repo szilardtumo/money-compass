@@ -12,10 +12,10 @@ jobs:
     environment:
       name: Preview
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
       - run: yarn install
       - run: yarn lint
       - run: yarn check-styles
@@ -32,10 +32,10 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
       - uses: cypress-io/github-action@v6.3.0
         with:
           build: yarn build
