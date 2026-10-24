@@ -82,12 +82,19 @@ interface AuthenticatedApiQuery<I, O> {
  * @param  apiQueryFn The function that performs the actual API query
  * @returns A deduplicated API query function with a 'withContext' method for direct context access
  */
+// The Supabase session read checks the token expiry against the current time, which a plain
+// render can't do while Next.js prerenders the App Shell. A private cache scope can.
+async function createQueryApiContext() {
+  'use cache: private';
+  return createSerializableApiContext();
+}
+
 const createAuthenticatedApiQuery = <I = void, O = void>(
   apiQueryFn: ApiQueryFunction<I, O, SerializableApiContext>,
 ) => {
   const apiQueryFnWithMiddleware = withErrorHandling(apiQueryFn);
   const fn = cache(async (input: I) => {
-    const ctx = await createSerializableApiContext();
+    const ctx = await createQueryApiContext();
     return apiQueryFnWithMiddleware({ input, ctx });
   }) as AuthenticatedApiQuery<I, O>;
 
