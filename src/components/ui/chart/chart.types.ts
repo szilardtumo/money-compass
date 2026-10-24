@@ -1,13 +1,13 @@
-import { ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import type { TooltipValueType } from 'recharts';
 
-import { ChartTooltip } from '@/components/ui/chart/chart-tooltip';
+import { ChartTooltipContent } from '@/components/ui/chart/chart-tooltip';
 
 export interface BaseChartProps<TPayload> extends React.HTMLAttributes<HTMLDivElement> {
   data: TPayload[];
   index: keyof TPayload & string;
   categories: (keyof TPayload & string)[];
   colors?: string[];
-  valueFormatter?: (value: ValueType) => string;
+  valueFormatter?: (value: TooltipValueType) => string;
 }
 
 export interface AxisProps {
@@ -34,7 +34,7 @@ export interface LegendProps {
   legendPosition?: 'top' | 'bottom';
 }
 
-type ChartTooltipProps = React.ComponentProps<typeof ChartTooltip>;
+type ChartTooltipProps = React.ComponentProps<typeof ChartTooltipContent>;
 export interface TooltipProps {
   showTooltip?: boolean;
   customTooltipContent?: React.ComponentType<ChartTooltipProps>;

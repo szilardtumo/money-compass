@@ -197,7 +197,7 @@ const AreaChart = <TPayload extends Record<string, unknown>>(props: AreaChartPro
         <XAxis
           padding={{ left: paddingValue, right: paddingValue }}
           hide={!showXAxis}
-          dataKey={index}
+          dataKey={index as string}
           interval={startEndOnly ? 'preserveStartEnd' : intervalType}
           tick={{ transform: 'translate(0, 6)' }}
           ticks={
@@ -343,7 +343,7 @@ const AreaChart = <TPayload extends Record<string, unknown>>(props: AreaChartPro
               }}
               name={category}
               type={curveType}
-              dataKey={category}
+              dataKey={category as string}
               stroke={color}
               strokeWidth={2}
               strokeLinejoin="round"
@@ -363,7 +363,7 @@ const AreaChart = <TPayload extends Record<string, unknown>>(props: AreaChartPro
                 key={category}
                 name={category}
                 type={curveType}
-                dataKey={category}
+                dataKey={category as string}
                 stroke="transparent"
                 fill="transparent"
                 legendType="none"

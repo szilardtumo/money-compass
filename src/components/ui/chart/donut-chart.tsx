@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Pie, PieChart as ReChartsDonutChart, Sector } from 'recharts';
+import { Pie, PieChart as ReChartsDonutChart, PieSectorShapeProps, Sector } from 'recharts';
 
 import { cn } from '@/lib/cn';
 
@@ -12,25 +12,6 @@ import { ChartContainer } from './chart-container';
 import { ChartTooltip, ChartTooltipContent } from './chart-tooltip';
 import { BaseChartProps, TooltipProps, ValueChangeProps } from './chart.types';
 import { chartColors } from './chart.utils';
-
-const renderInactiveShape = (props: any) => {
-  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, className, fill } = props;
-
-  return (
-    <Sector
-      cx={cx}
-      cy={cy}
-      innerRadius={innerRadius}
-      outerRadius={outerRadius}
-      startAngle={startAngle}
-      endAngle={endAngle}
-      className={className}
-      fill={fill}
-      opacity={0.3}
-      style={{ outline: 'none' }}
-    />
-  );
-};
 
 interface DonutChartProps<TPayload>
   extends BaseChartProps<TPayload>, TooltipProps, ValueChangeProps<TPayload, 'sector'> {
@@ -128,8 +109,13 @@ const DonutChart = <TPayload extends Record<string, unknown>>({
           dataKey={index}
           nameKey={category}
           onClick={handleShapeClick}
-          activeIndex={activeIndex}
-          inactiveShape={renderInactiveShape}
+          shape={(props: PieSectorShapeProps) => (
+            <Sector
+              {...props}
+              opacity={activeIndex === undefined || props.index === activeIndex ? 1 : 0.3}
+              style={{ outline: 'none' }}
+            />
+          )}
           style={{ outline: 'none' }}
         />
         {showTooltip && (

@@ -1,6 +1,6 @@
 import React from 'react';
 import * as RechartsPrimitive from 'recharts';
-import { ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import type { TooltipValueType } from 'recharts';
 
 import { cn } from '@/lib/cn';
 
@@ -9,17 +9,19 @@ import { ChartCategoryIndicator } from './chart-category-indicator';
 const ChartTooltip = (props: React.ComponentProps<typeof RechartsPrimitive.Tooltip>) => {
   return <RechartsPrimitive.Tooltip wrapperStyle={{ outline: 'none' }} {...props} />;
 };
-// Needs to be named "Tooltip" to work with the Recharts
-ChartTooltip.displayName = 'Tooltip';
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-    Omit<React.ComponentProps<'div'>, 'content'> & {
+    Omit<React.ComponentProps<'div'>, 'content'> &
+    Omit<
+      RechartsPrimitive.DefaultTooltipContentProps<TooltipValueType, number | string>,
+      'accessibilityLayer'
+    > & {
       hideLabel?: boolean;
       hideIndicator?: boolean;
       indicator?: 'line' | 'dot' | 'dashed';
-      valueFormatter?: (value: ValueType) => string;
+      valueFormatter?: (value: TooltipValueType) => string;
     }
 >(
   (
@@ -56,7 +58,9 @@ const ChartTooltipContent = React.forwardRef<
       );
     }, [label, labelFormatter, payload, hideLabel, labelClassName]);
 
-    if (!active || !payload?.length) {
+    const items = payload?.filter((item) => item.type !== 'none');
+
+    if (!active || !items?.length) {
       return null;
     }
 
@@ -70,12 +74,12 @@ const ChartTooltipContent = React.forwardRef<
       >
         {tooltipLabel}
         <div className="grid gap-1.5">
-          {payload.map((item) => {
+          {items.map((item) => {
             const indicatorColor = color || item.payload.fill || item.color;
 
             return (
               <div
-                key={item.dataKey}
+                key={String(item.dataKey)}
                 className={cn(
                   'flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground',
                   indicator === 'dot' && 'items-center',

@@ -138,7 +138,7 @@ const BarChart = <TPayload extends Record<string, unknown>>(props: BarChartProps
     return `${(value * 100).toFixed(0)}%`;
   }
 
-  function onBarClick(data: any, _: any, event: React.MouseEvent) {
+  function onBarClick(data: any, category: string, event: React.MouseEvent) {
     event.stopPropagation();
     if (!onValueChange) return;
     if (deepEqual(activeBar, { ...data.payload, value: data.value })) {
@@ -146,14 +146,14 @@ const BarChart = <TPayload extends Record<string, unknown>>(props: BarChartProps
       setActiveBar(undefined);
       onValueChange?.(null);
     } else {
-      setActiveLegend(data.tooltipPayload?.[0]?.dataKey);
+      setActiveLegend(category);
       setActiveBar({
         ...data.payload,
         value: data.value,
       });
       onValueChange?.({
         eventType: 'bar',
-        categoryClicked: data.tooltipPayload?.[0]?.dataKey,
+        categoryClicked: category,
         payload: data.payload,
       });
     }
@@ -218,7 +218,7 @@ const BarChart = <TPayload extends Record<string, unknown>>(props: BarChartProps
                   left: paddingValue,
                   right: paddingValue,
                 },
-                dataKey: index,
+                dataKey: index as string,
                 interval: startEndOnly ? 'preserveStartEnd' : intervalType,
                 ticks: startEndOnly
                   ? [String(data[0][index]), String(data[data.length - 1][index])]
@@ -260,7 +260,7 @@ const BarChart = <TPayload extends Record<string, unknown>>(props: BarChartProps
                 allowDecimals: allowDecimals,
               }
             : {
-                dataKey: index,
+                dataKey: index as string,
                 ticks: startEndOnly
                   ? [String(data[0][index]), String(data[data.length - 1][index])]
                   : undefined,
@@ -297,11 +297,11 @@ const BarChart = <TPayload extends Record<string, unknown>>(props: BarChartProps
             key={category}
             name={category}
             type="linear"
-            dataKey={category}
+            dataKey={category as string}
             stackId={stacked ? 'stack' : undefined}
             fill={colors[i % colors.length]}
             shape={(props: any) => renderShape(props, activeBar, activeLegend, layout)}
-            onClick={onBarClick}
+            onClick={(data, _, event) => onBarClick(data, category, event)}
           />
         ))}
       </RechartsBarChart>

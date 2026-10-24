@@ -10,7 +10,7 @@ const ChartLegend = RechartsPrimitive.Legend;
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<'div'> &
-    Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
+    Pick<RechartsPrimitive.DefaultLegendContentProps, 'payload' | 'verticalAlign'> & {
       hideIndicator?: boolean;
       indicator?: 'line' | 'dot' | 'dashed';
       onCategoryClick?: (category: string) => void;
@@ -30,7 +30,9 @@ const ChartLegendContent = React.forwardRef<
     },
     ref,
   ) => {
-    if (!payload?.length) {
+    const items = payload?.filter((item) => item.type !== 'none');
+
+    if (!items?.length) {
       return null;
     }
 
@@ -43,7 +45,7 @@ const ChartLegendContent = React.forwardRef<
           className,
         )}
       >
-        {payload.map((item) => {
+        {items.map((item) => {
           // @ts-expect-error payload type is wrong
           const indicatorColor = color || item.payload?.stroke || item.color;
 
@@ -58,7 +60,7 @@ const ChartLegendContent = React.forwardRef<
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                onCategoryClick?.(item.value);
+                if (item.value) onCategoryClick?.(item.value);
               }}
             >
               {!hideIndicator && (
