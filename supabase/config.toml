@@ -75,7 +75,7 @@ enabled = true
 site_url = "https://money-compass-seven.vercel.app"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
-    "http://localhost:3000/**",
+    "http://localhost:3100/**",
     "https://money-compass-seven.vercel.app/**",
     "https://money-compass-tumo-szilards-projects.vercel.app/**",
     "https://money-compass-*-tumo-szilards-projects.vercel.app/**",
