@@ -1,3 +1,5 @@
+DROP TABLE "integration_links";--> statement-breakpoint
+DROP TABLE "integrations";--> statement-breakpoint
 CREATE TABLE "integrations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid DEFAULT auth.uid() NOT NULL,

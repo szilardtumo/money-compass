@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { UserError } from '@/lib/api/errors';
 import { AUTH_COOKIE, CALLBACK_PATH, saveSession } from '@/server/api/integrations/auth';
 
 export async function GET(request: NextRequest) {
@@ -7,24 +8,26 @@ export async function GET(request: NextRequest) {
   const redirectUrl = new URL('/dashboard/integrations', request.url);
 
   try {
-    const { state, integrationId } = JSON.parse(
-      request.cookies.get(AUTH_COOKIE)?.value ?? '{}',
-    ) as { state?: string; integrationId?: string };
+    const { state, ...auth } = JSON.parse(request.cookies.get(AUTH_COOKIE)?.value ?? '{}') as {
+      state?: string;
+      integrationId?: string;
+      logoUrl?: string;
+    };
     const code = searchParams.get('code');
 
     if (searchParams.has('error')) {
-      throw new Error(searchParams.get('error_description') || searchParams.get('error')!);
+      throw new UserError(searchParams.get('error_description') || searchParams.get('error')!);
     }
     if (!code || !state || state !== searchParams.get('state')) {
-      throw new Error('The bank authorization expired. Please try again.');
+      throw new UserError('The bank authorization expired. Please try again.');
     }
 
-    await saveSession(code, integrationId);
+    await saveSession(code, auth);
   } catch (error) {
     console.error('Integration callback error:', error);
     redirectUrl.searchParams.set(
       'error',
-      error instanceof Error ? error.message : 'Failed to connect the bank.',
+      error instanceof UserError ? error.message : 'Something went wrong. Please try again.',
     );
   }
 

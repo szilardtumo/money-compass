@@ -9,34 +9,9 @@ export interface Institution {
   maxConsentSeconds: number;
 }
 
-export interface BankSession {
-  id: string;
-  expiresAt: Date;
-  institution: { name: string; country: string };
-  accounts: BankAccount[];
-}
-
-export interface BankAccount {
-  externalId: string;
-  identificationHash: string;
-  name: string;
-  iban: string | null;
-  currency: string;
-}
-
-export interface BankTransaction {
-  externalRef: string | null;
-  amount: number;
-  date: Date;
-  description: string;
-  counterpartyName: string;
-}
-
-export type IntegrationStatus = 'active' | 'expiring' | 'expired' | 'revoked';
-
 export type IntegrationAccount = InferSelectModel<typeof schema.integrationAccounts>;
 
 export type Integration = InferSelectModel<typeof schema.integrations> & {
-  status: IntegrationStatus;
+  status: 'active' | 'expiring' | 'expired' | 'revoked';
   accounts: (IntegrationAccount & { syncsToday: number })[];
 };

@@ -4,6 +4,7 @@ import { addSeconds } from 'date-fns';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { cookies, headers } from 'next/headers';
+import { after } from 'next/server';
 import { returnValidationErrors } from 'next-safe-action';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -40,16 +41,20 @@ export const startIntegrationAuth = authenticatedActionClient
     }
 
     const state = randomUUID();
-    (await cookies()).set(AUTH_COOKIE, JSON.stringify({ state, integrationId }), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: CALLBACK_PATH,
-      maxAge: 60 * 60,
-    });
+    (await cookies()).set(
+      AUTH_COOKIE,
+      JSON.stringify({ state, integrationId, logoUrl: institution.logoUrl }),
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: CALLBACK_PATH,
+        maxAge: 60 * 60,
+      },
+    );
 
     const url = await enableBanking.startAuthorization({
-      institution: { name: institution.name, country: institution.country },
+      institution: selected,
       validUntil: addSeconds(new Date(), institution.maxConsentSeconds),
       state,
       redirectUrl: new URL(CALLBACK_PATH, (await headers()).get('origin') ?? undefined).href,
@@ -66,9 +71,11 @@ export const deleteIntegration = authenticatedActionClient
     );
 
     if (integration) {
-      await enableBanking
-        .deleteSession(integration.externalId)
-        .catch((error) => console.error('Failed to close the bank session:', error));
+      after(() =>
+        enableBanking
+          .deleteSession(integration.externalId)
+          .catch((error) => console.error('Failed to close the bank session:', error)),
+      );
     }
 
     revalidatePath('/dashboard', 'layout');
@@ -119,6 +126,7 @@ export const syncIntegrationAccount = authenticatedActionClient
     const account = await ctx.db.rls((tx) =>
       tx.query.integrationAccounts.findFirst({
         where: eq(schema.integrationAccounts.id, integrationAccountId),
+        with: { integration: true },
       }),
     );
     if (!account) {

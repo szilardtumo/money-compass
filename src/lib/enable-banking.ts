@@ -4,12 +4,7 @@ import { format } from 'date-fns';
 import { createSign } from 'node:crypto';
 
 import { env } from '@/lib/env';
-import {
-  BankAccount,
-  BankSession,
-  BankTransaction,
-  Institution,
-} from '@/lib/types/integrations.types';
+import { Institution } from '@/lib/types/integrations.types';
 
 // https://enablebanking.com/docs/api/reference/
 const API_URL = 'https://api.enablebanking.com';
@@ -49,16 +44,6 @@ export class EnableBankingError extends Error {
   ) {
     super(message);
     this.name = 'EnableBankingError';
-  }
-
-  /** The session can't be used anymore, so the user has to authorize a new one. */
-  get isSessionEnded() {
-    return [
-      'EXPIRED_SESSION',
-      'CLOSED_SESSION',
-      'REVOKED_SESSION',
-      'SESSION_DOES_NOT_EXIST',
-    ].includes(this.code ?? '');
   }
 }
 
@@ -137,7 +122,7 @@ export async function startAuthorization(params: {
   return url;
 }
 
-export async function createSession(code: string): Promise<BankSession> {
+export async function createSession(code: string) {
   const session = await request<{
     session_id: string;
     accounts: Account[];
@@ -149,7 +134,7 @@ export async function createSession(code: string): Promise<BankSession> {
     id: session.session_id,
     expiresAt: new Date(session.access.valid_until),
     institution: { name: session.aspsp.name, country: session.aspsp.country },
-    accounts: session.accounts.map((account): BankAccount => ({
+    accounts: session.accounts.map((account) => ({
       externalId: account.uid,
       identificationHash: account.identification_hash,
       name: account.details || account.product || account.name || '',
@@ -186,7 +171,7 @@ export async function getBalance(accountId: string) {
  * Returns the booked transactions of the account since `dateFrom`, following all result pages.
  */
 export async function getTransactions(accountId: string, dateFrom: Date) {
-  const transactions: BankTransaction[] = [];
+  const transactions: Transaction[] = [];
   let continuationKey: string | undefined;
 
   do {
@@ -200,24 +185,23 @@ export async function getTransactions(accountId: string, dateFrom: Date) {
       `/accounts/${accountId}/transactions?${params}`,
     );
 
-    for (const transaction of page.transactions) {
-      const isDebit = transaction.credit_debit_indicator === 'DBIT';
-      // The docs don't say whether amounts are signed, so the sign comes from the indicator
-      const amount = Math.abs(Number(transaction.transaction_amount.amount));
-
-      transactions.push({
-        externalRef: transaction.entry_reference ?? transaction.transaction_id ?? null,
-        amount: isDebit ? -amount : amount,
-        date: new Date(
-          transaction.booking_date ?? transaction.value_date ?? transaction.transaction_date!,
-        ),
-        description: transaction.remittance_information?.join(' ') ?? '',
-        counterpartyName: (isDebit ? transaction.creditor?.name : transaction.debtor?.name) ?? '',
-      });
-    }
-
+    transactions.push(...page.transactions);
     continuationKey = page.continuation_key;
   } while (continuationKey);
 
-  return transactions;
+  return transactions.map((transaction) => {
+    const isDebit = transaction.credit_debit_indicator === 'DBIT';
+    // The docs don't say whether amounts are signed, so the sign comes from the indicator
+    const amount = Math.abs(Number(transaction.transaction_amount.amount));
+
+    return {
+      externalRef: transaction.entry_reference ?? transaction.transaction_id ?? null,
+      amount: isDebit ? -amount : amount,
+      date: new Date(
+        transaction.booking_date ?? transaction.value_date ?? transaction.transaction_date!,
+      ),
+      description: transaction.remittance_information?.join(' ') ?? '',
+      counterpartyName: (isDebit ? transaction.creditor?.name : transaction.debtor?.name) ?? '',
+    };
+  });
 }

@@ -75,13 +75,6 @@
     {
       "idx": 10,
       "version": "7",
-      "when": 1792915924491,
-      "tag": "20261025081204_drop_gocardless_integrations",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
       "when": 1792915927743,
       "tag": "20261025081207_enable_banking_integrations",
       "breakpoints": true

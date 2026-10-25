@@ -63,7 +63,10 @@ export function IntegrationAccountActions({
         title: 'Failed to save the link',
         description: errorMessage,
       }),
-      onSuccess: () => setDialog(undefined),
+      onSuccess: () => {
+        setDialog(undefined);
+        setSubaccountId(undefined);
+      },
     },
   );
   const { execute: sync, isPending: isSyncPending } = useActionWithToast(

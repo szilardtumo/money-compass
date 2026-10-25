@@ -1,11 +1,10 @@
 import 'server-only';
 
 import { eq, sql } from 'drizzle-orm';
+import { after } from 'next/server';
 
 import * as enableBanking from '@/lib/enable-banking';
 import { getDb, schema } from '@/server/db';
-
-import { getInstitutions } from './queries';
 
 export const AUTH_COOKIE = 'integration_auth';
 export const CALLBACK_PATH = '/api/integrations/enable-banking/callback';
@@ -13,22 +12,18 @@ export const CALLBACK_PATH = '/api/integrations/enable-banking/callback';
 /**
  * Creates the session authorized at the bank and saves it with its accounts. When renewing an
  * integration, its accounts keep their links, and the old session is closed.
- *
- * @param code The authorization code the bank redirected with.
- * @param integrationId The integration to renew.
  */
-export async function saveSession(code: string, integrationId?: string) {
+export async function saveSession(
+  code: string,
+  { integrationId, logoUrl }: { integrationId?: string; logoUrl?: string },
+) {
   const session = await enableBanking.createSession(code);
-  const institution = (await getInstitutions()).find(
-    (item) =>
-      item.name === session.institution.name && item.country === session.institution.country,
-  );
   const values = {
     provider: 'enable_banking' as const,
     externalId: session.id,
     institutionName: session.institution.name,
     institutionCountry: session.institution.country,
-    institutionLogoUrl: institution?.logoUrl ?? '',
+    institutionLogoUrl: logoUrl ?? '',
     expiresAt: session.expiresAt,
     revokedAt: null,
   };
@@ -69,8 +64,10 @@ export async function saveSession(code: string, integrationId?: string) {
   });
 
   if (oldSessionId) {
-    await enableBanking
-      .deleteSession(oldSessionId)
-      .catch((error) => console.error('Failed to close the old bank session:', error));
+    after(() =>
+      enableBanking
+        .deleteSession(oldSessionId)
+        .catch((error) => console.error('Failed to close the old bank session:', error)),
+    );
   }
 }
