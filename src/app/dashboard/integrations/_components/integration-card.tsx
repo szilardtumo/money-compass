@@ -1,4 +1,5 @@
 import { cn } from 'cn';
+import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -24,10 +25,7 @@ import { Integration } from '@/lib/types/integrations.types';
 import { formatDate, formatDateTime } from '@/lib/utils/formatters';
 import { DAILY_SYNC_LIMIT } from '@/server/api/integrations/sync';
 
-import {
-  IntegrationAccountLinkSelect,
-  IntegrationAccountSyncButton,
-} from './integration-account-actions';
+import { IntegrationAccountActions } from './integration-account-actions';
 import { IntegrationCardActions } from './integration-card-actions';
 
 const statusColor = {
@@ -40,9 +38,28 @@ const statusColor = {
 interface IntegrationCardProps {
   integration: Integration;
   accounts: Account[];
+  /** Subaccounts linked to any bank account */
+  linkedSubaccountIds: Set<string>;
 }
 
-export function IntegrationCard({ integration, accounts }: IntegrationCardProps) {
+export function IntegrationCard({
+  integration,
+  accounts,
+  linkedSubaccountIds,
+}: IntegrationCardProps) {
+  const subaccounts = new Map(
+    accounts.flatMap((item) =>
+      item.subaccounts.map((subaccount) => [
+        subaccount.id,
+        {
+          accountId: item.id,
+          label: `${item.name} / ${subaccount.name}`,
+          currency: subaccount.originalCurrency,
+        },
+      ]),
+    ),
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -78,62 +95,73 @@ export function IntegrationCard({ integration, accounts }: IntegrationCardProps)
                 <TableHead>Bank account</TableHead>
                 <TableHead>Subaccount</TableHead>
                 <TableHead>Last synced</TableHead>
+                <TableHead>
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {integration.accounts.map((account) => (
-                <TableRow key={account.id}>
-                  <TableCell>
-                    <p>
-                      {account.name || account.iban}{' '}
-                      <Badge variant="secondary" className="uppercase">
-                        {account.currency}
-                      </Badge>
-                    </p>
-                    {!!account.name && <p className="text-muted-foreground">{account.iban}</p>}
-                  </TableCell>
-                  <TableCell>
-                    <IntegrationAccountLinkSelect
-                      // Remounts the select when the subaccount is linked to another bank account
-                      key={account.subaccountId}
-                      integrationAccountId={account.id}
-                      subaccountId={account.subaccountId}
-                      options={accounts.flatMap((item) =>
-                        item.subaccounts
-                          .filter((subaccount) => subaccount.originalCurrency === account.currency)
-                          .map((subaccount) => ({
-                            label: `${item.name} / ${subaccount.name}`,
-                            value: subaccount.id,
-                          })),
+              {integration.accounts.map((account) => {
+                const linked = account.subaccountId
+                  ? subaccounts.get(account.subaccountId)
+                  : undefined;
+
+                return (
+                  <TableRow key={account.id}>
+                    <TableCell>
+                      <p>
+                        {account.name || account.iban}{' '}
+                        <Badge variant="secondary" className="uppercase">
+                          {account.currency}
+                        </Badge>
+                      </p>
+                      {!!account.name && <p className="text-muted-foreground">{account.iban}</p>}
+                    </TableCell>
+                    <TableCell>
+                      {linked ? (
+                        <Link
+                          href={`/dashboard/accounts/${linked.accountId}`}
+                          className="underline underline-offset-4"
+                        >
+                          {linked.label}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">Not linked</span>
                       )}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-between gap-2">
+                    </TableCell>
+                    <TableCell>
                       {account.lastSyncedAt ? (
-                        <div>
+                        <>
                           <p>{formatDateTime(account.lastSyncedAt)}</p>
                           <p className="text-muted-foreground">
-                            {account.syncsToday}/{DAILY_SYNC_LIMIT} syncs today
+                            {account.syncsToday} of {DAILY_SYNC_LIMIT} syncs used today
                           </p>
-                        </div>
+                        </>
                       ) : (
-                        <p className="text-muted-foreground">Never</p>
+                        <span className="text-muted-foreground">Never</span>
                       )}
-                      {!!account.subaccountId && (
-                        <IntegrationAccountSyncButton
-                          integrationAccountId={account.id}
-                          disabled={
-                            integration.status === 'expired' ||
-                            integration.status === 'revoked' ||
-                            account.syncsToday >= DAILY_SYNC_LIMIT
-                          }
-                        />
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      <IntegrationAccountActions
+                        integrationAccountId={account.id}
+                        currency={account.currency}
+                        linkedLabel={linked?.label}
+                        options={[...subaccounts]
+                          .filter(
+                            ([id, subaccount]) =>
+                              subaccount.currency === account.currency &&
+                              !linkedSubaccountIds.has(id),
+                          )
+                          .map(([id, subaccount]) => ({ label: subaccount.label, value: id }))}
+                        canSync={
+                          (integration.status === 'active' || integration.status === 'expiring') &&
+                          account.syncsToday < DAILY_SYNC_LIMIT
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         ) : (

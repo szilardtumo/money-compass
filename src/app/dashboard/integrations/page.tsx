@@ -21,6 +21,12 @@ export default async function IntegrationsPage() {
     apiQueries.accounts.getAccounts(),
   ]);
 
+  const linkedSubaccountIds = new Set(
+    integrations.flatMap((integration) =>
+      integration.accounts.flatMap((account) => account.subaccountId ?? []),
+    ),
+  );
+
   return (
     <>
       <PageHeaderSlotContent>
@@ -35,7 +41,12 @@ export default async function IntegrationsPage() {
       </Suspense>
 
       {integrations.map((integration) => (
-        <IntegrationCard key={integration.id} integration={integration} accounts={accounts} />
+        <IntegrationCard
+          key={integration.id}
+          integration={integration}
+          accounts={accounts}
+          linkedSubaccountIds={linkedSubaccountIds}
+        />
       ))}
 
       {!integrations.length && (
