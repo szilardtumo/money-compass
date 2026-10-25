@@ -7,4 +7,4 @@ export * from './profiles.schema';
 export * from './subaccounts.schema';
 export * from './transactions.schema';
 export * from './integrations.schema';
-export * from './integration-links.schema';
+export * from './integration-accounts.schema';
