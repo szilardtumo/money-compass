@@ -22,11 +22,12 @@ import {
 } from '@/components/ui/table';
 import { Account } from '@/lib/types/accounts.types';
 import { Integration } from '@/lib/types/integrations.types';
-import { formatDate, formatDateTime } from '@/lib/utils/formatters';
+import { formatDate } from '@/lib/utils/formatters';
 import { DAILY_SYNC_LIMIT } from '@/server/api/integrations/sync';
 
 import { IntegrationAccountActions } from './integration-account-actions';
 import { IntegrationCardActions } from './integration-card-actions';
+import { RelativeTime } from './relative-time';
 
 const statusColor = {
   active: 'bg-green-500',
@@ -132,7 +133,9 @@ export function IntegrationCard({
                     <TableCell>
                       {account.lastSyncedAt ? (
                         <>
-                          <p>{formatDateTime(account.lastSyncedAt)}</p>
+                          <p>
+                            <RelativeTime date={account.lastSyncedAt} />
+                          </p>
                           <p className="text-muted-foreground">
                             {account.syncsToday} of {DAILY_SYNC_LIMIT} syncs used today
                           </p>
