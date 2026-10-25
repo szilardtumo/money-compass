@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { isPast, isToday, min, subDays } from 'date-fns';
+import { isPast, isToday, max, min, subDays } from 'date-fns';
 import { and, eq, inArray } from 'drizzle-orm';
 
 import { UserError } from '@/lib/api/errors';
@@ -48,11 +48,11 @@ export async function syncAccount(
 
   const [bankBalance, bankTransactions] = await Promise.all([
     enableBanking.getBalance(account.externalId),
-    // Banks can book a transaction days later with an earlier date. The first sync starts at
-    // the link date, so it doesn't duplicate the transactions entered by hand.
+    // Banks can book a transaction days later with an earlier date, so syncs overlap by 5 days.
+    // They never go before the link date: the first correction already covers that period.
     enableBanking.getTransactions(
       account.externalId,
-      account.lastSyncedAt ? subDays(account.lastSyncedAt, 5) : account.linkedAt,
+      max([account.linkedAt, subDays(account.lastSyncedAt ?? account.linkedAt, 5)]),
     ),
   ]).catch(async (error) => {
     const sessionEnded =
