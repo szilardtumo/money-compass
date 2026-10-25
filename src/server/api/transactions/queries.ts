@@ -55,6 +55,8 @@ const mapTransactionData = (
     mainCurrency,
     startedDate: data.startedDate,
     description: data.description,
+    counterpartyName: data.counterpartyName,
+    dataSource: data.dataSource,
     createdAt: data.createdAt,
   };
 };

@@ -7,6 +7,7 @@ import { useCallback, useMemo } from 'react';
 
 import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
 import { AccountIcon } from '@/components/ui/account-avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DataTable,
@@ -43,10 +44,15 @@ const staticColumns = [
   }),
   columnHelper.accessor('description', {
     header: 'Description',
-    cell: ({ getValue }) => (
+    cell: ({ getValue, row }) => (
       <HoverCard>
         <HoverCardTrigger asChild>
-          <span className="min-w-[150px] text-ellipsis line-clamp-3">{getValue()}</span>
+          <div className="min-w-[150px]">
+            {!!row.original.counterpartyName && (
+              <p className="font-medium">{row.original.counterpartyName}</p>
+            )}
+            <p className="text-ellipsis line-clamp-3">{getValue()}</p>
+          </div>
         </HoverCardTrigger>
         <HoverCardContent className="w-80">{getValue()}</HoverCardContent>
       </HoverCard>
@@ -89,7 +95,12 @@ const staticColumns = [
   }),
   columnHelper.accessor('type', {
     header: 'Type',
-    cell: ({ getValue }) => <span className="capitalize">{getValue()}</span>,
+    cell: ({ getValue, row }) => (
+      <div className="flex items-center gap-2">
+        <span className="capitalize">{getValue()}</span>
+        {row.original.dataSource === 'integration' && <Badge variant="outline">Bank sync</Badge>}
+      </div>
+    ),
     enableSorting: false,
   }),
 ];
