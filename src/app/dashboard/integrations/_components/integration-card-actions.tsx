@@ -49,8 +49,10 @@ export function IntegrationCardActions({ integration }: IntegrationCardActionsPr
           disabled={isRenewPending}
           onClick={() =>
             executeRenew({
-              country: integration.institutionCountry,
-              institutionName: integration.institutionName,
+              institution: {
+                name: integration.institutionName,
+                country: integration.institutionCountry,
+              },
               integrationId: integration.id,
             })
           }

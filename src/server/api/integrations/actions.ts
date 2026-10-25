@@ -29,13 +29,13 @@ import { syncAccount } from './sync';
  */
 export const startIntegrationAuth = authenticatedActionClient
   .inputSchema(startIntegrationAuthSchema)
-  .action(async ({ parsedInput: { country, institutionName, integrationId } }) => {
-    const institution = (await getInstitutions(country)).find(
-      (item) => item.name === institutionName,
+  .action(async ({ parsedInput: { institution: selected, integrationId } }) => {
+    const institution = (await getInstitutions()).find(
+      (item) => item.name === selected.name && item.country === selected.country,
     );
     if (!institution) {
       returnValidationErrors(startIntegrationAuthSchema, {
-        institutionName: { _errors: ['Bank not found.'] },
+        institution: { _errors: ['Bank not found.'] },
       });
     }
 

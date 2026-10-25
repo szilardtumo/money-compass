@@ -102,10 +102,10 @@ async function request<T>(method: string, path: string, body?: object): Promise<
   return data;
 }
 
-export async function getInstitutions(country: string): Promise<Institution[]> {
+export async function getInstitutions(): Promise<Institution[]> {
   const { aspsps } = await request<{
     aspsps: { name: string; country: string; logo: string; maximum_consent_validity: number }[];
-  }>('GET', `/aspsps?country=${country}&psu_type=personal&service=AIS`);
+  }>('GET', '/aspsps?psu_type=personal&service=AIS');
 
   return aspsps.map((aspsp) => ({
     name: aspsp.name,

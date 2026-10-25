@@ -45,11 +45,11 @@ export const getIntegrations = createApiQuery<void, Integration[]>(async () => {
 });
 
 /**
- * Returns the banks of a country that support reading account information.
+ * Returns the banks of all countries that support reading account information.
  */
-export const getInstitutions = createApiQuery<string, Institution[]>(async ({ input: country }) => {
+export const getInstitutions = createApiQuery<void, Institution[]>(async () => {
   'use cache';
   cacheLife('weeks');
 
-  return enableBanking.getInstitutions(country);
+  return enableBanking.getInstitutions();
 });

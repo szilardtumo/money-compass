@@ -19,8 +19,9 @@ export const CALLBACK_PATH = '/api/integrations/enable-banking/callback';
  */
 export async function saveSession(code: string, integrationId?: string) {
   const session = await enableBanking.createSession(code);
-  const institution = (await getInstitutions(session.institution.country)).find(
-    (item) => item.name === session.institution.name,
+  const institution = (await getInstitutions()).find(
+    (item) =>
+      item.name === session.institution.name && item.country === session.institution.country,
   );
   const values = {
     provider: 'enable_banking' as const,

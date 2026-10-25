@@ -2,7 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PlusIcon } from 'lucide-react';
-import { useWatch } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
@@ -23,19 +22,18 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
-import { Institution } from '@/lib/types/integrations.types';
 import { startIntegrationAuthSchema } from '@/lib/validation/integrations';
 import { apiActions } from '@/server/api/actions';
 
+type InstitutionOption = { name: string; country: string };
+
+const toLabel = (institution: InstitutionOption) => `${institution.name} (${institution.country})`;
+
 interface AddIntegrationDialogClientProps {
-  countries: { label: string; value: string }[];
-  institutions: Institution[];
+  institutions: InstitutionOption[];
 }
 
-export function AddIntegrationDialogClient({
-  countries,
-  institutions,
-}: AddIntegrationDialogClientProps) {
+export function AddIntegrationDialogClient({ institutions }: AddIntegrationDialogClientProps) {
   const { form, handleSubmitWithAction, action } = useHookFormActionWithToast(
     apiActions.integrations.startIntegrationAuth,
     zodResolver(startIntegrationAuthSchema),
@@ -48,10 +46,8 @@ export function AddIntegrationDialogClient({
         }),
         onSuccess: ({ data }) => window.location.assign(data.url),
       },
-      formProps: { defaultValues: { country: '', institutionName: '' } },
     },
   );
-  const country = useWatch({ control: form.control, name: 'country' });
 
   return (
     <Dialog>
@@ -70,42 +66,22 @@ export function AddIntegrationDialogClient({
           <form onSubmit={handleSubmitWithAction} className="flex flex-col space-y-8">
             <FormField
               control={form.control}
-              name="country"
-              render={({ field: { onChange, ...field } }) => (
-                <FormItem>
-                  <FormLabel>Country</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      placeholder="Select country"
-                      options={countries}
-                      onValueChange={(value) => {
-                        onChange(value);
-                        form.setValue('institutionName', '');
-                      }}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="institutionName"
-              render={({ field: { onChange, ...field } }) => (
+              name="institution"
+              render={({ field: { value, onChange, ...field } }) => (
                 <FormItem>
                   <FormLabel>Bank</FormLabel>
                   <FormControl>
                     <Combobox
                       placeholder="Select bank"
-                      options={institutions
-                        .filter((institution) => institution.country === country)
-                        .map((institution) => ({
-                          label: institution.name,
-                          value: institution.name,
-                        }))}
-                      onValueChange={onChange}
-                      disabled={!country}
+                      // The combobox searches the values, so they contain the country code too
+                      options={institutions.map((institution) => ({
+                        label: toLabel(institution),
+                        value: toLabel(institution),
+                      }))}
+                      value={value && toLabel(value)}
+                      onValueChange={(label) =>
+                        onChange(institutions.find((institution) => toLabel(institution) === label))
+                      }
                       {...field}
                     />
                   </FormControl>

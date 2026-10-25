@@ -2,15 +2,14 @@ import { apiQueries } from '@/server/api/queries';
 
 import { AddIntegrationDialogClient } from './add-integration-dialog-client';
 
-const countries = [
-  { label: 'Hungary', value: 'HU' },
-  { label: 'Romania', value: 'RO' },
-];
-
 export async function AddIntegrationDialog() {
-  const institutions = await Promise.all(
-    countries.map((country) => apiQueries.integrations.getInstitutions(country.value)),
-  );
+  const institutions = await apiQueries.integrations.getInstitutions();
 
-  return <AddIntegrationDialogClient countries={countries} institutions={institutions.flat()} />;
+  return (
+    <AddIntegrationDialogClient
+      institutions={institutions
+        .map(({ name, country }) => ({ name, country }))
+        .toSorted((a, b) => a.name.localeCompare(b.name) || a.country.localeCompare(b.country))}
+    />
+  );
 }
