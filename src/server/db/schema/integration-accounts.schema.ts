@@ -11,6 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
+import { integrationSyncLogs } from './integration-sync-logs.schema';
 import { integrations } from './integrations.schema';
 import { subaccounts } from './subaccounts.schema';
 import { authUid, authUidDefault } from './utils';
@@ -50,7 +51,8 @@ export const integrationAccounts = pgTable(
   ],
 );
 
-export const integrationAccountsRelations = relations(integrationAccounts, ({ one }) => ({
+export const integrationAccountsRelations = relations(integrationAccounts, ({ one, many }) => ({
+  syncLogs: many(integrationSyncLogs),
   integration: one(integrations, {
     fields: [integrationAccounts.integrationId],
     references: [integrations.id],

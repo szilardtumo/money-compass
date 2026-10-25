@@ -143,6 +143,9 @@ export function IntegrationCard({
                       ) : (
                         <span className="text-muted-foreground">Never</span>
                       )}
+                      {account.syncLogs[0]?.error && (
+                        <p className="text-destructive">The last sync failed</p>
+                      )}
                     </TableCell>
                     <TableCell>
                       <IntegrationAccountActions
@@ -160,6 +163,7 @@ export function IntegrationCard({
                           (integration.status === 'active' || integration.status === 'expiring') &&
                           account.syncsToday < DAILY_SYNC_LIMIT
                         }
+                        syncLogs={account.syncLogs}
                       />
                     </TableCell>
                   </TableRow>

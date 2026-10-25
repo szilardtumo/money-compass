@@ -134,7 +134,7 @@ export const syncIntegrationAccount = authenticatedActionClient
     }
 
     try {
-      await syncAccount(account, ctx.db.rls);
+      await syncAccount(account, ctx.db.rls, 'manual');
     } finally {
       // A failed sync can mark the integration as revoked
       revalidatePath('/dashboard', 'layout');

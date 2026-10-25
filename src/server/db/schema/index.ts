@@ -8,3 +8,4 @@ export * from './subaccounts.schema';
 export * from './transactions.schema';
 export * from './integrations.schema';
 export * from './integration-accounts.schema';
+export * from './integration-sync-logs.schema';

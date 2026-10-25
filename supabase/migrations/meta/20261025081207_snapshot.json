@@ -1,5 +1,5 @@
 {
-  "id": "150afa0b-513f-489b-b9e5-c2909199eb6c",
+  "id": "9e2f6042-33da-4b4e-9d45-414928d9cf77",
   "prevId": "5af2a515-9fb2-440b-9245-eace28eab9f3",
   "version": "7",
   "dialect": "postgresql",
@@ -870,6 +870,118 @@
           ],
           "using": "\"integration_accounts\".\"user_id\" = (select auth.uid())",
           "withCheck": "\"integration_accounts\".\"user_id\" = (select auth.uid())"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.integration_sync_logs": {
+      "name": "integration_sync_logs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "auth.uid()"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trigger": {
+          "name": "trigger",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imported_count": {
+          "name": "imported_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "correction_amount": {
+          "name": "correction_amount",
+          "type": "numeric(65, 30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "integration_sync_logs_account_id_created_at_index": {
+          "name": "integration_sync_logs_account_id_created_at_index",
+          "columns": [
+            {
+              "expression": "account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "integration_sync_logs_account_id_integration_accounts_id_fk": {
+          "name": "integration_sync_logs_account_id_integration_accounts_id_fk",
+          "tableFrom": "integration_sync_logs",
+          "tableTo": "integration_accounts",
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "integration_sync_logs_allow_all_for_owner_policy": {
+          "name": "integration_sync_logs_allow_all_for_owner_policy",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "authenticated"
+          ],
+          "using": "\"integration_sync_logs\".\"user_id\" = (select auth.uid())",
+          "withCheck": "\"integration_sync_logs\".\"user_id\" = (select auth.uid())"
         }
       },
       "checkConstraints": {},

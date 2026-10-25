@@ -31,7 +31,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Selectbox } from '@/components/ui/selectbox';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
+import { IntegrationSyncLog } from '@/lib/types/integrations.types';
 import { apiActions } from '@/server/api/actions';
+
+import { SyncHistoryDialog } from './sync-history-dialog';
 
 interface IntegrationAccountActionsProps {
   integrationAccountId: string;
@@ -41,6 +44,7 @@ interface IntegrationAccountActionsProps {
   /** Subaccounts with the same currency that aren't linked to a bank account */
   options: { label: string; value: string }[];
   canSync: boolean;
+  syncLogs: IntegrationSyncLog[];
 }
 
 export function IntegrationAccountActions({
@@ -49,8 +53,9 @@ export function IntegrationAccountActions({
   linkedLabel,
   options,
   canSync,
+  syncLogs,
 }: IntegrationAccountActionsProps) {
-  const [dialog, setDialog] = useState<'link' | 'unlink'>();
+  const [dialog, setDialog] = useState<'link' | 'unlink' | 'history'>();
   const [subaccountId, setSubaccountId] = useState<string>();
 
   const { execute: setLink, isPending: isLinkPending } = useActionWithToast(
@@ -105,6 +110,9 @@ export function IntegrationAccountActions({
               <DropdownMenuItem onSelect={() => setDialog('link')}>
                 Change subaccount
               </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setDialog('history')}>
+                Sync history
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setDialog('unlink')}>Unlink</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -155,6 +163,13 @@ export function IntegrationAccountActions({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SyncHistoryDialog
+        open={dialog === 'history'}
+        onOpenChange={(open) => !open && setDialog(undefined)}
+        logs={syncLogs}
+        currency={currency}
+      />
 
       <AlertDialog
         open={dialog === 'unlink'}

@@ -21,6 +21,9 @@ export const getIntegrations = createApiQuery<void, Integration[]>(async () => {
             asc(accounts.createdAt),
             asc(accounts.identificationHash),
           ],
+          with: {
+            syncLogs: { orderBy: (logs, { desc }) => desc(logs.createdAt), limit: 10 },
+          },
         },
       },
       orderBy: (integrations, { asc }) => asc(integrations.createdAt),

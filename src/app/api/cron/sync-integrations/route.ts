@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const results = await Promise.allSettled(
     accounts
       .filter(({ integration }) => !integration.revokedAt && !isPast(integration.expiresAt))
-      .map((account) => syncAccount(account, db.admin.transaction.bind(db.admin))),
+      .map((account) => syncAccount(account, db.admin.transaction.bind(db.admin), 'cron')),
   );
   const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
   errors.forEach((error) => console.error('Integration sync error:', error));
