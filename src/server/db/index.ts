@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { sql } from 'drizzle-orm';
-import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { cache } from 'react';
 
@@ -12,17 +12,14 @@ import { getSupabaseClaims, SupabaseClaims } from '@/lib/supabase/server';
 import * as schema from './schema';
 
 declare global {
-  var drizzleClient: PostgresJsDatabase<typeof schema> | undefined;
+  var postgresClient: postgres.Sql | undefined;
 }
 
-const drizzleClient =
-  global.drizzleClient ||
-  drizzle({
-    client: postgres(env.DATABASE_URL, { prepare: false }),
-    schema,
-    casing: 'snake_case',
-  });
-if (process.env.NODE_ENV !== 'production') global.drizzleClient = drizzleClient;
+// Only the connection outlives hot reloads in development. Drizzle is rebuilt, so it sees schema changes.
+const postgresClient = global.postgresClient ?? postgres(env.DATABASE_URL, { prepare: false });
+if (process.env.NODE_ENV !== 'production') global.postgresClient = postgresClient;
+
+const drizzleClient = drizzle({ client: postgresClient, schema, casing: 'snake_case' });
 
 type DbTx = Parameters<Parameters<typeof drizzleClient.transaction>[0]>[0];
 
