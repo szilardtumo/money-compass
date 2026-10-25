@@ -70,6 +70,7 @@ async function request<T>(method: string, path: string, body?: object): Promise<
     method,
     headers: { Authorization: `Bearer ${createJwt()}`, 'Content-Type': 'application/json' },
     body: body && JSON.stringify(body),
+    signal: AbortSignal.timeout(60_000),
   });
   // Error responses from proxies and empty DELETE responses aren't JSON
   const data = (await response.json().catch(() => ({}))) as T & {
@@ -189,19 +190,33 @@ export async function getTransactions(accountId: string, dateFrom: Date) {
     continuationKey = page.continuation_key;
   } while (continuationKey);
 
+  const occurrences = new Map<string, number>();
+
   return transactions.map((transaction) => {
     const isDebit = transaction.credit_debit_indicator === 'DBIT';
     // The docs don't say whether amounts are signed, so the sign comes from the indicator
     const amount = Math.abs(Number(transaction.transaction_amount.amount));
+    const date =
+      transaction.booking_date ?? transaction.value_date ?? transaction.transaction_date!;
+    const description = transaction.remittance_information?.join(' ') ?? '';
+    const counterpartyName =
+      (isDebit ? transaction.creditor?.name : transaction.debtor?.name) ?? '';
+
+    // Without a bank reference, the transaction's content identifies it. Identical transactions
+    // share a date, so their order in the response is the same on every sync.
+    const content = [date, isDebit ? -amount : amount, counterpartyName, description].join('|');
+    const occurrence = occurrences.get(content) ?? 0;
+    occurrences.set(content, occurrence + 1);
 
     return {
-      externalRef: transaction.entry_reference ?? transaction.transaction_id ?? null,
+      externalRef:
+        transaction.entry_reference ??
+        transaction.transaction_id ??
+        `derived:${content}|${occurrence}`,
       amount: isDebit ? -amount : amount,
-      date: new Date(
-        transaction.booking_date ?? transaction.value_date ?? transaction.transaction_date!,
-      ),
-      description: transaction.remittance_information?.join(' ') ?? '',
-      counterpartyName: (isDebit ? transaction.creditor?.name : transaction.debtor?.name) ?? '',
+      date: new Date(date),
+      description,
+      counterpartyName,
     };
   });
 }

@@ -76,8 +76,15 @@ export async function syncAccount(
   });
 
   await transaction(async (tx) => {
+    // Waits for a concurrent sync of the account, so the balance below includes its correction
+    await tx
+      .select({ id: schema.integrationAccounts.id })
+      .from(schema.integrationAccounts)
+      .where(eq(schema.integrationAccounts.id, account.id))
+      .for('update');
+
     const now = new Date();
-    const refs = bankTransactions.flatMap((item) => item.externalRef ?? []);
+    const refs = bankTransactions.map((item) => item.externalRef);
     const [known, [current]] = await Promise.all([
       refs.length
         ? tx
@@ -96,9 +103,7 @@ export async function syncAccount(
         .where(eq(schema.balances.subaccountId, subaccountId)),
     ]);
     const knownRefs = new Set(known.map((item) => item.externalRef));
-    const imported = bankTransactions.filter(
-      (item) => !item.externalRef || !knownRefs.has(item.externalRef),
-    );
+    const imported = bankTransactions.filter((item) => !knownRefs.has(item.externalRef));
     const correction = Number(
       (
         bankBalance -

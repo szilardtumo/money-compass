@@ -113,7 +113,7 @@ export const setIntegrationAccountLink = authenticatedActionClient
 
       await tx
         .update(schema.integrationAccounts)
-        .set({ subaccountId, linkedAt: subaccountId ? new Date() : null, lastSyncedAt: null })
+        .set({ subaccountId, linkedAt: subaccountId ? new Date() : null })
         .where(eq(schema.integrationAccounts.id, integrationAccountId));
     });
 

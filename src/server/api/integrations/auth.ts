@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, notInArray, sql } from 'drizzle-orm';
 import { after } from 'next/server';
 
 import * as enableBanking from '@/lib/enable-banking';
@@ -59,6 +59,19 @@ export async function saveSession(
           },
         });
     }
+
+    // The bank stopped sharing these accounts, so their IDs don't work with the new session
+    await tx.delete(schema.integrationAccounts).where(
+      and(
+        eq(schema.integrationAccounts.integrationId, integration.id),
+        session.accounts.length
+          ? notInArray(
+              schema.integrationAccounts.identificationHash,
+              session.accounts.map((account) => account.identificationHash),
+            )
+          : undefined,
+      ),
+    );
 
     return old?.externalId;
   });
