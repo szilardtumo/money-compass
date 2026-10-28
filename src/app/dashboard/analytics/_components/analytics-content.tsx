@@ -58,8 +58,7 @@ async function TransactionsSheetContent({ params }: { params: AnalyticsParams })
       toDate: new Date(end.getTime() - 1).toISOString(),
       categoryId: params.category === 'uncategorized' ? null : (params.category ?? undefined),
       merchantId: params.merchant,
-      // Categories and merchants list what counts in analytics
-      excluded: params.excluded,
+      side: params.excluded ? 'excluded' : params.view,
       pageSize: 500,
     }),
     apiQueries.categories.getCategories(),

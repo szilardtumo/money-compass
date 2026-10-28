@@ -69,7 +69,7 @@ export function MerchantsTableClient({
             </button>
           ),
         }),
-        columnHelper.accessor((row) => row.category?.name ?? 'Uncategorized', {
+        columnHelper.accessor((row) => row.category?.id ?? 'uncategorized', {
           id: 'category',
           header: 'Category',
           filterFn: 'arrHas',
@@ -116,11 +116,10 @@ export function MerchantsTableClient({
   );
 
   const categoryOptions = useMemo(
-    () =>
-      ['Uncategorized', ...categories.map((category) => category.name)].map((name) => ({
-        label: name,
-        value: name,
-      })),
+    () => [
+      { label: 'Uncategorized', value: 'uncategorized' },
+      ...categories.map((category) => ({ label: category.name, value: category.id })),
+    ],
     [categories],
   );
 
@@ -133,7 +132,7 @@ export function MerchantsTableClient({
     initialSorting: [{ id: 'yearTotal', desc: true }],
     // Starts as a review list while there are merchants to categorize
     initialColumnFilters: merchants.some((merchant) => !merchant.category)
-      ? [{ id: 'category', value: ['Uncategorized'] }]
+      ? [{ id: 'category', value: ['uncategorized'] }]
       : [],
   });
 

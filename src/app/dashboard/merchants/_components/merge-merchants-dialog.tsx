@@ -51,7 +51,7 @@ export function MergeMerchantsDialog({
           </DialogDescription>
         </DialogHeader>
         <Selectbox
-          key={String(open)}
+          key={merchants.map((merchant) => merchant.id).join()}
           options={merchants.map((merchant) => ({ label: merchant.name, value: merchant.id }))}
           value={targetId}
           onValueChange={setTargetId}

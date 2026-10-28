@@ -27,9 +27,11 @@ export async function GET(request: NextRequest) {
     activeAccounts.map((account) => syncAccount(account, transaction, 'cron')),
   );
   // Once per user, after all their accounts brought their new merchants
-  for (const userId of new Set(activeAccounts.map((account) => account.userId))) {
-    await enrichMerchants(transaction, userId);
-  }
+  await Promise.all(
+    [...new Set(activeAccounts.map((account) => account.userId))].map((userId) =>
+      enrichMerchants(transaction, userId),
+    ),
+  );
   const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
   errors.forEach((error) => console.error('Integration sync error:', error));
 

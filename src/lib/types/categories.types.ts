@@ -1,5 +1,11 @@
 export type CategoryKind = 'expense' | 'income' | 'excluded';
 
+export const CATEGORY_KINDS: { kind: CategoryKind; label: string }[] = [
+  { kind: 'expense', label: 'Spending' },
+  { kind: 'income', label: 'Income' },
+  { kind: 'excluded', label: 'Excluded from analytics' },
+];
+
 export interface Category {
   id: string;
   name: string;

@@ -84,7 +84,7 @@ const staticColumns = [
     filterFn: 'arrHas',
   }),
   columnHelper.accessor(
-    (row) => row.category?.name ?? (row.excluded ? 'Excluded' : 'Uncategorized'),
+    (row) => row.category?.id ?? (row.excluded ? 'excluded' : 'uncategorized'),
     {
       id: 'category',
       header: 'Category',
@@ -166,11 +166,11 @@ export function TransactionsTableClient({
   );
 
   const categoryOptions = useMemo(
-    () =>
-      ['Uncategorized', 'Excluded', ...categories.map((category) => category.name)].map((name) => ({
-        label: name,
-        value: name,
-      })),
+    () => [
+      { label: 'Uncategorized', value: 'uncategorized' },
+      { label: 'Exchanges, top-ups, corrections', value: 'excluded' },
+      ...categories.map((category) => ({ label: category.name, value: category.id })),
+    ],
     [categories],
   );
 

@@ -23,6 +23,27 @@ interface DeleteCategoryDialogProps {
 }
 
 export function DeleteCategoryDialog({ category, categories, onClose }: DeleteCategoryDialogProps) {
+  return (
+    <Dialog open={!!category} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        {category && (
+          <DeleteCategoryForm
+            key={category.id}
+            category={category}
+            categories={categories}
+            onClose={onClose}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteCategoryForm({
+  category,
+  categories,
+  onClose,
+}: DeleteCategoryDialogProps & { category: CategoryWithCounts }) {
   const [replacementId, setReplacementId] = useState<string>();
   const { execute, isExecuting } = useActionWithToast(apiActions.categories.deleteCategory, {
     loadingToast: 'Deleting category...',
@@ -30,40 +51,34 @@ export function DeleteCategoryDialog({ category, categories, onClose }: DeleteCa
     errorToast: 'Failed to delete the category. Please try again later.',
     onSuccess: onClose,
   });
-  const options = categories
-    .filter((item) => item.id !== category?.id)
-    .map((item) => ({ label: item.name, value: item.id }));
 
   return (
-    <Dialog open={!!category} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Delete {category?.name}</DialogTitle>
-          <DialogDescription>
-            Its {category?.merchantCount} merchants, and the transactions set to it directly, move
-            to the category you choose.
-          </DialogDescription>
-        </DialogHeader>
-        <Selectbox
-          key={category?.id}
-          options={options}
-          value={undefined}
-          onValueChange={setReplacementId}
-          placeholder="Move them to..."
-        />
-        <DialogFooter>
-          <Button
-            variant="destructive"
-            disabled={
-              !category || !options.some((item) => item.value === replacementId) || isExecuting
-            }
-            isLoading={isExecuting}
-            onClick={() => category && replacementId && execute({ id: category.id, replacementId })}
-          >
-            Delete
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <>
+      <DialogHeader>
+        <DialogTitle>Delete {category.name}</DialogTitle>
+        <DialogDescription>
+          Its {category.merchantCount} merchants, and the transactions set to it directly, move to
+          the category you choose.
+        </DialogDescription>
+      </DialogHeader>
+      <Selectbox
+        options={categories
+          .filter((item) => item.id !== category.id)
+          .map((item) => ({ label: item.name, value: item.id }))}
+        value={replacementId}
+        onValueChange={setReplacementId}
+        placeholder="Move them to..."
+      />
+      <DialogFooter>
+        <Button
+          variant="destructive"
+          disabled={!replacementId || isExecuting}
+          isLoading={isExecuting}
+          onClick={() => replacementId && execute({ id: category.id, replacementId })}
+        >
+          Delete
+        </Button>
+      </DialogFooter>
+    </>
   );
 }

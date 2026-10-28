@@ -1,10 +1,11 @@
 import 'server-only';
 
-import { and, count, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
+import { AnalyticsSide } from '@/lib/types/analytics.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
@@ -12,7 +13,7 @@ import { groupBy } from '@/lib/utils/group-by';
 import { generateTimeBuckets, TimeInterval } from '@/lib/utils/time-buckets';
 import { schema } from '@/server/db';
 
-import { categoryColumns, isExcluded, joinCategory } from '../categories/joins';
+import { analyticsSide, categoryColumns, joinCategory } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
@@ -90,8 +91,8 @@ export const getTransactions = createApiQuery<
     categoryId?: string | null;
     /** The ID of the merchant to filter by */
     merchantId?: string;
-    /** Only transactions that count in analytics (false) or that don't (true) */
-    excluded?: boolean;
+    /** Where the transactions count in analytics */
+    side?: AnalyticsSide | 'excluded';
     /** The page number to fetch */
     page?: number;
     /** The number of transactions per page */
@@ -107,7 +108,7 @@ export const getTransactions = createApiQuery<
       toDate,
       categoryId,
       merchantId,
-      excluded,
+      side,
       page = 0,
       pageSize = 20,
     } = {},
@@ -118,24 +119,8 @@ export const getTransactions = createApiQuery<
     const linkedSubaccount = alias(schema.subaccounts, 'linked_subaccount');
 
     // Set up the database query
-    const query = db.rls((tx) => {
-      const merchantCounts = tx
-        .select({
-          merchantId: schema.merchantAliases.merchantId,
-          transactionCount: count().as('transaction_count'),
-        })
-        .from(schema.transactions)
-        .innerJoin(
-          schema.merchantAliases,
-          and(
-            eq(schema.merchantAliases.userId, schema.transactions.userId),
-            eq(schema.merchantAliases.key, schema.transactions.merchantKey),
-          ),
-        )
-        .groupBy(schema.merchantAliases.merchantId)
-        .as('merchant_counts');
-
-      return joinCategory(
+    const query = db.rls(async (tx) => {
+      const rows = await joinCategory(
         tx
           .select({
             transaction: schema.transactions,
@@ -143,13 +128,9 @@ export const getTransactions = createApiQuery<
             subaccount: schema.subaccounts,
             linkedAmount: linked.amount,
             linkedCurrency: linkedSubaccount.currency,
-            merchant: {
-              id: schema.merchants.id,
-              name: schema.merchants.name,
-              transactionCount: merchantCounts.transactionCount,
-            },
+            merchant: { id: schema.merchants.id, name: schema.merchants.name },
             category: categoryColumns,
-            excluded: isExcluded,
+            side: analyticsSide,
           })
           .from(schema.transactions)
           .innerJoin(
@@ -164,7 +145,6 @@ export const getTransactions = createApiQuery<
           .leftJoin(linkedSubaccount, eq(linked.subaccountId, linkedSubaccount.id))
           .$dynamic(),
       )
-        .leftJoin(merchantCounts, eq(merchantCounts.merchantId, schema.merchants.id))
         .where(
           and(
             accountId ? eq(schema.subaccounts.accountId, accountId) : undefined,
@@ -174,12 +154,38 @@ export const getTransactions = createApiQuery<
             categoryId === null ? isNull(schema.categories.id) : undefined,
             categoryId ? eq(schema.categories.id, categoryId) : undefined,
             merchantId ? eq(schema.merchants.id, merchantId) : undefined,
-            excluded === undefined ? undefined : sql`${isExcluded} = ${excluded}`,
+            side ? sql`${analyticsSide} = ${side}` : undefined,
           ),
         )
         .orderBy(desc(schema.transactions.startedDate), desc(schema.transactions.sequence))
         .offset(page * pageSize)
         .limit(pageSize);
+
+      // The size of the merchants, for "All 107 from Lidl" in the category picker
+      const merchantIds = [...new Set(rows.flatMap((row) => row.merchant?.id ?? []))];
+      const merchantCounts = merchantIds.length
+        ? await tx
+            .select({ merchantId: schema.merchantAliases.merchantId, value: count() })
+            .from(schema.merchantAliases)
+            .innerJoin(
+              schema.transactions,
+              and(
+                eq(schema.transactions.userId, schema.merchantAliases.userId),
+                eq(schema.transactions.merchantKey, schema.merchantAliases.key),
+              ),
+            )
+            .where(inArray(schema.merchantAliases.merchantId, merchantIds))
+            .groupBy(schema.merchantAliases.merchantId)
+        : [];
+      const countsById = new Map(merchantCounts.map((item) => [item.merchantId, item.value]));
+
+      return rows.map((row) => ({
+        ...row,
+        merchant: row.merchant && {
+          ...row.merchant,
+          transactionCount: countsById.get(row.merchant.id) ?? 0,
+        },
+      }));
     });
 
     // Run the database query and get the main currency in parallel
@@ -202,7 +208,7 @@ export const getTransactions = createApiQuery<
                 : null,
             merchant: item.merchant,
             category: item.category,
-            excluded: item.excluded,
+            excluded: item.side === 'excluded',
           },
           mainCurrency,
           mainCurrencyMapper,

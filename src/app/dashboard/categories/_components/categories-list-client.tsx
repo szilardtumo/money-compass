@@ -6,20 +6,16 @@ import { useState } from 'react';
 import { CategoryIcon } from '@/components/categories/category-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CategoryKind, CategoryWithCounts } from '@/lib/types/categories.types';
+import { CATEGORY_KINDS, CategoryKind, CategoryWithCounts } from '@/lib/types/categories.types';
 
 import { CategoryDialog } from './category-dialog';
 import { DeleteCategoryDialog } from './delete-category-dialog';
 
-const KINDS: { kind: CategoryKind; title: string; description: string }[] = [
-  { kind: 'expense', title: 'Spending', description: 'Counts in the spending of analytics.' },
-  { kind: 'income', title: 'Income', description: 'Counts in the income of analytics.' },
-  {
-    kind: 'excluded',
-    title: 'Excluded from analytics',
-    description: 'For money that moves between your own accounts, and anything else to leave out.',
-  },
-];
+const DESCRIPTIONS: Record<CategoryKind, string> = {
+  expense: 'Counts in the spending of analytics.',
+  income: 'Counts in the income of analytics.',
+  excluded: 'For money that moves between your own accounts, and anything else to leave out.',
+};
 
 export function CategoriesListClient({ categories }: { categories: CategoryWithCounts[] }) {
   // undefined: closed, null: a new category
@@ -34,11 +30,11 @@ export function CategoriesListClient({ categories }: { categories: CategoryWithC
         </Button>
       </div>
 
-      {KINDS.map(({ kind, title, description }) => (
+      {CATEGORY_KINDS.map(({ kind, label }) => (
         <Card key={kind}>
           <CardHeader>
-            <CardTitle>{title}</CardTitle>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <CardTitle>{label}</CardTitle>
+            <p className="text-sm text-muted-foreground">{DESCRIPTIONS[kind]}</p>
           </CardHeader>
           <CardContent>
             <ul className="divide-y">

@@ -3,12 +3,11 @@ import 'server-only';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { PgSelect } from 'drizzle-orm/pg-core';
 
+import { AnalyticsSide } from '@/lib/types/analytics.types';
+import { TYPES_WITHOUT_MERCHANT } from '@/lib/utils/merchants';
 import { schema } from '@/server/db';
 
 const t = schema.transactions;
-
-// Exchanges, top-ups and corrections move money between the user's accounts or fix a balance
-const TYPES_EXCLUDED_BY_DEFAULT = ['exchange', 'topup', 'correction'];
 
 /**
  * Left joins the merchant of a transactions query and the transaction's category: its own, else
@@ -30,8 +29,14 @@ export function joinCategory<T extends PgSelect>(query: T) {
     );
 }
 
-/** Whether a transaction of a joinCategory query is left out of analytics */
-export const isExcluded = sql<boolean>`coalesce(${schema.categories.kind} = 'excluded', ${inArray(t.type, TYPES_EXCLUDED_BY_DEFAULT)})`;
+/**
+ * Where a transaction of a joinCategory query counts in analytics. Uncategorized ones count by
+ * their direction, except refunds, which lower the spending.
+ */
+export const analyticsSide = sql<AnalyticsSide | 'excluded'>`case
+  when coalesce(${schema.categories.kind} = 'excluded', ${inArray(t.type, TYPES_WITHOUT_MERCHANT)}) then 'excluded'
+  when ${schema.categories.kind} = 'income' or (${schema.categories.kind} is null and ${t.amount} > 0 and ${t.type} <> 'refund') then 'income'
+  else 'spending' end`;
 
 export const categoryColumns = {
   id: schema.categories.id,

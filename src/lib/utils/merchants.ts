@@ -1,5 +1,6 @@
-// Exchanges, top-ups and corrections move money between the user's own accounts or fix a balance
-const TYPES_WITHOUT_MERCHANT = new Set(['exchange', 'topup', 'correction']);
+// Exchanges, top-ups and corrections move money between the user's own accounts or fix a balance.
+// They have no merchant, and don't count in analytics unless they get a category of their own.
+export const TYPES_WITHOUT_MERCHANT = ['exchange', 'topup', 'correction'];
 
 // Card processors that prefix the merchant's name, like "Payu*emag.ro" or "Helopay Iron Bar"
 const PROCESSOR_PREFIX = /^(payu|paypal|sumup|sq|zettle|otpmobl)\s*[*_]\s*|^helopay\s+/;
@@ -23,7 +24,7 @@ interface TransactionFields {
  * has no merchant.
  */
 export function getMerchantName({ type, counterpartyName, description }: TransactionFields) {
-  if (TYPES_WITHOUT_MERCHANT.has(type)) {
+  if (TYPES_WITHOUT_MERCHANT.includes(type)) {
     return null;
   }
 

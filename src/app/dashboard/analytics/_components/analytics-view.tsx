@@ -24,8 +24,6 @@ import {
 
 import { AnalyticsParams, getAnalyticsHref } from './analytics-params';
 
-const UNCATEGORIZED_COLOR = '#a1a1aa';
-
 const getChange = ({ amount, previousAmount }: { amount: number; previousAmount: number }) =>
   previousAmount ? (amount - previousAmount) / Math.abs(previousAmount) : 0;
 
@@ -179,7 +177,7 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
                   .map((item) => ({
                     name: item.category?.name ?? 'Uncategorized',
                     amount: item.amount,
-                    fill: item.category?.color ?? UNCATEGORIZED_COLOR,
+                    fill: item.category?.color ?? '#a1a1aa',
                   }))}
                 index="amount"
                 categories={['name']}

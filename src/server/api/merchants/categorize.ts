@@ -12,8 +12,6 @@ import { DbClient, DbTx, schema } from '@/server/db';
 // Bank card types. Their names are businesses, while transfers name people, which never go to the LLM.
 const CARD_TYPES = ['card_payment', 'refund', 'atm', 'fee', 'reward'];
 const BATCH_SIZE = 100;
-// Keeps a run within the function time limit. The rest waits for the next sync.
-const MAX_PER_RUN = 300;
 
 /**
  * Serializes the merchant writes of a user, because the syncs of several accounts can bring the
@@ -126,7 +124,8 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
           .from(m)
           .where(and(eq(m.userId, userId), isNull(m.autoCheckedAt)))
           .orderBy(m.name)
-          .limit(MAX_PER_RUN),
+          // Keeps a run within the function time limit. The rest waits for the next sync.
+          .limit(300),
         tx
           .select({ name: m.name })
           .from(m)

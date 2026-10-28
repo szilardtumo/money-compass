@@ -14,14 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Selectbox } from '@/components/ui/selectbox';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
-import { Category, CategoryKind } from '@/lib/types/categories.types';
+import { Category, CATEGORY_KINDS, CategoryKind } from '@/lib/types/categories.types';
 import { apiActions } from '@/server/api/actions';
-
-const kindOptions = [
-  { label: 'Spending', value: 'expense' },
-  { label: 'Income', value: 'income' },
-  { label: 'Excluded from analytics', value: 'excluded' },
-] satisfies { label: string; value: CategoryKind }[];
 
 interface CategoryDialogProps {
   open: boolean;
@@ -79,7 +73,7 @@ function CategoryForm({ category, onClose }: Omit<CategoryDialogProps, 'open'>) 
       <div className="flex flex-col gap-2">
         <Label>Type</Label>
         <Selectbox
-          options={kindOptions}
+          options={CATEGORY_KINDS.map(({ kind, label }) => ({ label, value: kind }))}
           value={kind}
           onValueChange={(value) => value && setKind(value as CategoryKind)}
         />

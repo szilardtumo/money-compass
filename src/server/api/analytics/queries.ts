@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { and, count, eq, gte, lt, sql, sum } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
@@ -14,17 +15,11 @@ import {
 } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
-import { categoryColumns, isExcluded, joinCategory } from '../categories/joins';
+import { analyticsSide, categoryColumns, joinCategory } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 const t = schema.transactions;
 const SIDES: AnalyticsSide[] = ['spending', 'income'];
-
-// Uncategorized transactions count as spending or income by their direction
-const side = sql<AnalyticsSide | 'excluded'>`case
-  when ${isExcluded} then 'excluded'
-  when ${schema.categories.kind} = 'income' or (${schema.categories.kind} is null and ${t.amount} > 0) then 'income'
-  else 'spending' end`;
 
 /**
  * Returns the spending and income of a period by category and merchant, compared to the period
@@ -43,6 +38,8 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
   const chartStart = getPeriodRange(chartPeriods[0]).start;
   const previousStart = getPeriodRange(shiftPeriod(period, -1)).start;
   const { start, end } = getPeriodRange(period);
+  // The merchant's own category, while the side follows each transaction's category
+  const merchantCategory = alias(schema.categories, 'merchant_category');
   const bucket = sql<string>`to_char(date_trunc(${period.unit}, ${t.startedDate} at time zone 'UTC'), ${period.unit === 'month' ? 'YYYY-MM' : 'YYYY'})`;
 
   const [rows, merchantRows, { mainCurrency, mapper }] = await Promise.all([
@@ -51,7 +48,7 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
         tx
           .select({
             period: bucket.as('period'),
-            side: side.as('side'),
+            side: analyticsSide.as('side'),
             category: categoryColumns,
             currency: schema.subaccounts.currency,
             amount: sum(t.amount).mapWith(Number),
@@ -69,9 +66,15 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
         tx
           .select({
             isCurrent: sql<boolean>`${t.startedDate} >= ${start.toISOString()}`.as('is_current'),
-            side: side.as('side'),
+            side: analyticsSide.as('side'),
             merchant: { id: schema.merchants.id, name: schema.merchants.name },
-            category: categoryColumns,
+            category: {
+              id: merchantCategory.id,
+              name: merchantCategory.name,
+              kind: merchantCategory.kind,
+              icon: merchantCategory.icon,
+              color: merchantCategory.color,
+            },
             currency: schema.subaccounts.currency,
             amount: sum(t.amount).mapWith(Number),
             transactionCount: count(),
@@ -80,12 +83,13 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
           .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
           .$dynamic(),
       )
+        .leftJoin(merchantCategory, eq(merchantCategory.id, schema.merchants.categoryId))
         .where(and(gte(t.startedDate, previousStart), lt(t.startedDate, end)))
         .groupBy(
           sql`is_current`,
           sql`side`,
           schema.merchants.id,
-          schema.categories.id,
+          merchantCategory.id,
           schema.subaccounts.currency,
         ),
     ),

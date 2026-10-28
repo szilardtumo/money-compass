@@ -12,8 +12,8 @@ import { categoryColumns } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 /**
- * Returns the merchants of the user with their raw names, transaction counts and the sum of their
- * last 12 months in the main currency.
+ * Returns the merchants of the user that have transactions, with their raw names, transaction
+ * counts and the sum of their last 12 months in the main currency.
  */
 export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
   'use cache: private';
@@ -92,5 +92,6 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
     }
   }
 
-  return [...result.values()];
+  // Deleting or editing transactions can leave a merchant without any
+  return [...result.values()].filter((merchant) => merchant.transactionCount);
 });

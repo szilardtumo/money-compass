@@ -13,15 +13,9 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Category, CategoryKind } from '@/lib/types/categories.types';
+import { Category, CATEGORY_KINDS } from '@/lib/types/categories.types';
 
 import { CategoryIcon } from './category-badge';
-
-const GROUPS: { kind: CategoryKind; heading: string }[] = [
-  { kind: 'expense', heading: 'Spending' },
-  { kind: 'income', heading: 'Income' },
-  { kind: 'excluded', heading: 'Excluded from analytics' },
-];
 
 interface CategoryPickerProps {
   categories: Category[];
@@ -78,8 +72,8 @@ export function CategoryPicker({
                   <CommandSeparator />
                 </>
               )}
-              {GROUPS.map(({ kind, heading }) => (
-                <CommandGroup key={kind} heading={heading}>
+              {CATEGORY_KINDS.map(({ kind, label }) => (
+                <CommandGroup key={kind} heading={label}>
                   {categories
                     .filter((category) => category.kind === kind)
                     .map((category) => (
