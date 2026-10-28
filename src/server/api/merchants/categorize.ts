@@ -9,8 +9,13 @@ import { env } from '@/lib/env';
 import { getMerchantName } from '@/lib/utils/merchants';
 import { DbClient, DbTx, schema } from '@/server/db';
 
-// Bank card types. Their names are businesses, while transfers name people, which never go to the LLM.
+// Bank card types. Their names are businesses, while transfers name people, which never go to the
+// LLM. Neither do the descriptions the user typed for manual transactions.
 const CARD_TYPES = ['card_payment', 'refund', 'atm', 'fee', 'reward'];
+const isCardTransaction = and(
+  inArray(schema.transactions.type, CARD_TYPES),
+  eq(schema.transactions.dataSource, 'integration'),
+);
 const BATCH_SIZE = 100;
 
 /**
@@ -58,6 +63,7 @@ export async function assignMerchants(tx: DbTx, userId: string) {
       type: t.type,
       counterpartyName: t.counterpartyName,
       description: t.description,
+      isCard: sql<boolean>`${isCardTransaction}`,
     })
     .from(t)
     .leftJoin(
@@ -77,7 +83,7 @@ export async function assignMerchants(tx: DbTx, userId: string) {
   const values = newKeys.map((item) => ({
     key: item.key!,
     name: getMerchantName(item) ?? item.key!,
-    autoCheckedAt: CARD_TYPES.includes(item.type) ? null : now,
+    autoCheckedAt: item.isCard ? null : now,
   }));
   // A merchant with the same name already exists when the LLM renamed another one to it
   const merchants = await tx
@@ -144,12 +150,7 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
                       eq(schema.transactions.merchantKey, schema.merchantAliases.key),
                     ),
                   )
-                  .where(
-                    and(
-                      eq(schema.merchantAliases.merchantId, m.id),
-                      inArray(schema.transactions.type, CARD_TYPES),
-                    ),
-                  ),
+                  .where(and(eq(schema.merchantAliases.merchantId, m.id), isCardTransaction)),
               ),
             ),
           ),
