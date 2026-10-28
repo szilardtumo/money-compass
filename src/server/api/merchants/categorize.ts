@@ -103,8 +103,10 @@ const SYSTEM_PROMPT = `You clean up merchant names from bank card statements and
 
 For each merchant, return:
 - input: the merchant's name exactly as given.
-- name: the merchant's common brand name, without store numbers, cities, legal forms (Srl, Kft, Ltd) or payment processor prefixes (Payu*, Sumup*). Branches of one chain get the same name. If the merchant is one of the existing merchants, return that name exactly. Keep the original name, cleaned up, if you don't recognize the brand.
-- category: one of the given categories, or null if you can't tell what the business sells from its name. Don't guess.`;
+- name: the merchant's common brand name, without store numbers, cities or legal forms (Srl, Kft, Ltd). Branches of one chain get the same name. If the merchant is one of the existing merchants, return that name exactly. Keep the original name, cleaned up, if you don't recognize the brand.
+  - A payment processor (PayPal, Payu, Sumup, Zettle, Stripe) is not the merchant: "Paypal *Kinguin" is Kinguin. Use the processor's name only when no seller follows it.
+  - Keep the word that says what the business is when a place comes first: "Westend Gyógyszertár" is a pharmacy in the Westend mall, not the mall. A city or a street alone is never a name.
+- category: one of the given categories, or null if you can't tell what the business sells. Use what you know about local chains in the countries of the account currencies. Don't guess.`;
 
 /**
  * Asks the LLM for a clean name and a category for the user's new card merchants. A merchant whose
@@ -121,8 +123,8 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
 
   try {
     const m = schema.merchants;
-    const { pending, existingNames, categories } = await transaction(async (tx) => {
-      const [pending, existing, categories] = await Promise.all([
+    const { pending, existingNames, categories, currencies } = await transaction(async (tx) => {
+      const [pending, existing, categories, currencies] = await Promise.all([
         tx
           .select({ id: m.id, name: m.name })
           .from(m)
@@ -150,8 +152,18 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
           .select({ id: schema.categories.id, name: schema.categories.name })
           .from(schema.categories)
           .where(eq(schema.categories.userId, userId)),
+        tx
+          .selectDistinct({ currency: schema.subaccounts.currency })
+          .from(schema.subaccounts)
+          .innerJoin(schema.accounts, eq(schema.accounts.id, schema.subaccounts.accountId))
+          .where(eq(schema.accounts.userId, userId)),
       ]);
-      return { pending, existingNames: existing.map((item) => item.name), categories };
+      return {
+        pending,
+        existingNames: existing.map((item) => item.name),
+        categories,
+        currencies: currencies.map((item) => item.currency.toUpperCase()),
+      };
     });
     if (!pending.length || !categories.length) {
       return;
@@ -185,6 +197,7 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
               role: 'user',
               content: JSON.stringify({
                 categories: categoryNames,
+                accountCurrencies: currencies,
                 existingMerchants: existingNames,
                 merchants: batch.map((merchant, index) => ({ index, name: merchant.name })),
               }),
