@@ -6,7 +6,7 @@ import {
   primaryKey,
   text,
   timestamp,
-  unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
@@ -26,7 +26,8 @@ export const merchants = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    unique().on(table.userId, table.name),
+    // Names that differ only in case belong to the same merchant
+    uniqueIndex('merchants_user_id_lower_name_index').on(table.userId, sql`lower(${table.name})`),
     index().on(table.categoryId),
     pgPolicy('merchants_allow_all_for_owner_policy', {
       as: 'permissive',

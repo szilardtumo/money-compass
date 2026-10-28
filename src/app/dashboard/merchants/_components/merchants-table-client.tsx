@@ -110,6 +110,7 @@ export function MerchantsTableClient({
 
   const table = useDataTable({
     columns,
+    getRowId: (row) => row.id,
     data: merchants,
     enablePagination: true,
     enableRowSelection: true,

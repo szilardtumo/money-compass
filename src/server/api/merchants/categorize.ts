@@ -81,26 +81,28 @@ export async function assignMerchants(tx: DbTx, userId: string) {
     name: getMerchantName(item) ?? item.key!,
     autoCheckedAt: item.isCard ? null : now,
   }));
-  // A merchant with the same name already exists when the LLM renamed another one to it
-  const merchants = await tx
+  // A merchant with the same name, in any case, exists when the LLM renamed another one to it
+  await tx
     .insert(schema.merchants)
     .values(values.map(({ name, autoCheckedAt }) => ({ userId, name, autoCheckedAt })))
-    .onConflictDoUpdate({
-      target: [schema.merchants.userId, schema.merchants.name],
-      set: { name: sql`excluded.name` },
-    })
-    .returning({ id: schema.merchants.id, name: schema.merchants.name });
-  const idsByName = new Map(merchants.map((merchant) => [merchant.name, merchant.id]));
-
-  await tx
-    .insert(schema.merchantAliases)
-    .values(values.map(({ key, name }) => ({ userId, key, merchantId: idsByName.get(name)! })))
     .onConflictDoNothing();
+  // Matched in SQL, so the names compare like the unique index does
+  await tx.execute(sql`
+    insert into ${schema.merchantAliases} (user_id, key, merchant_id)
+    select ${userId}::uuid, new_key.key, ${schema.merchants.id}
+    from (values ${sql.join(
+      values.map(({ key, name }) => sql`(${key}, ${name})`),
+      sql`, `,
+    )}) as new_key (key, name)
+    join ${schema.merchants} on ${schema.merchants.userId} = ${userId}
+      and lower(${schema.merchants.name}) = lower(new_key.name)
+    on conflict do nothing`);
 }
 
 const SYSTEM_PROMPT = `You clean up merchant names from bank card statements and categorize the merchants.
 
 For each merchant, return:
+- input: the merchant's name exactly as given.
 - name: the merchant's common brand name, without store numbers, cities, legal forms (Srl, Kft, Ltd) or payment processor prefixes (Payu*, Sumup*). Branches of one chain get the same name. If the merchant is one of the existing merchants, return that name exactly. Keep the original name, cleaned up, if you don't recognize the brand.
 - category: one of the given categories, or null if you can't tell what the business sells from its name. Don't guess.`;
 
@@ -161,6 +163,7 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
         merchants: z.array(
           z.object({
             index: z.number(),
+            input: z.string(),
             name: z.string(),
             category: z.enum(categoryNames).nullable(),
           }),
@@ -214,9 +217,12 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
           for (const result of results) {
             const merchant = byId.get(batch[result.index]?.id ?? '');
             const name = result.name.trim();
-            if (!merchant || merchant.autoCheckedAt || !name) {
+            // The echoed name guards against answers that point at the wrong merchant
+            if (!merchant || merchant.autoCheckedAt || result.input !== merchant.name || !name) {
               continue;
             }
+            // A repeated index is skipped
+            merchant.autoCheckedAt = new Date();
 
             const categoryId =
               merchant.categoryId ??

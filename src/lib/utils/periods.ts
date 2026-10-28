@@ -10,7 +10,7 @@ export interface Period {
 }
 
 export function parsePeriod(value: string | undefined, now = new Date()): Period {
-  const match = value?.match(/^(\d{4})(?:-(\d{2}))?$/);
+  const match = value?.match(/^(\d{4})(?:-(0[1-9]|1[0-2]))?$/);
   if (!match) {
     return { unit: 'month', year: now.getUTCFullYear(), month: now.getUTCMonth() };
   }

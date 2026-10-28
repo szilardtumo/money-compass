@@ -49,6 +49,8 @@ export type DataTableFeatures = typeof dataTableFeatures;
 interface UseDataTableOptions<TData extends RowData> {
   data: TableOptions<DataTableFeatures, TData>['data'];
   columns: TableOptions<DataTableFeatures, TData>['columns'];
+  /** Keeps the selection on the same rows when the data reloads in another order */
+  getRowId?: TableOptions<DataTableFeatures, TData>['getRowId'];
   enableSorting?: boolean;
   enableRowSelection?: boolean;
   enablePagination?: boolean;
@@ -65,6 +67,7 @@ export function useDataTable<TData extends RowData>(options: UseDataTableOptions
     features: dataTableFeatures,
     data: options.data,
     columns: options.columns,
+    getRowId: options.getRowId,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,

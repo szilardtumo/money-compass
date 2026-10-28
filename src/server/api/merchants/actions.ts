@@ -76,6 +76,8 @@ export const renameMerchant = authenticatedActionClient
 
       if (other && other.id !== merchant.id) {
         await mergeMerchant(tx, merchant, other);
+        // The user chose it, so the LLM leaves it alone
+        await tx.update(m).set({ autoCheckedAt: new Date() }).where(eq(m.id, other.id));
         return other.name;
       }
 

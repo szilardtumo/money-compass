@@ -253,6 +253,7 @@ export function TransactionsTableClient({
 
   const table = useDataTable({
     columns,
+    getRowId: (row) => row.id,
     data: transactionsWithAccount,
     enablePagination: true,
     enableRowSelection: true,

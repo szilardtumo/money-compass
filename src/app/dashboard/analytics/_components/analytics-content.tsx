@@ -70,12 +70,18 @@ async function TransactionsSheetContent({ params }: { params: AnalyticsParams })
       categoryId: params.category === 'uncategorized' ? null : params.category,
       merchantId: params.merchant,
       side: params.excluded ? 'excluded' : params.view,
-      pageSize: 500,
+      // One more than shown, to tell whether the list is cut
+      pageSize: 501,
     }),
     apiQueries.categories.getCategories(),
   ]);
 
   return (
-    <TransactionsSheet params={params} transactions={transactions.data} categories={categories} />
+    <TransactionsSheet
+      params={params}
+      transactions={transactions.data.slice(0, 500)}
+      isCut={transactions.data.length > 500}
+      categories={categories}
+    />
   );
 }

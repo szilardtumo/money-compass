@@ -20,13 +20,20 @@ import { AnalyticsParams, getAnalyticsHref } from './analytics-params';
 interface TransactionsSheetProps {
   params: AnalyticsParams;
   transactions: Transaction[];
+  /** Whether there are more transactions than the latest ones shown */
+  isCut: boolean;
   categories: Category[];
 }
 
 /**
  * The transactions of a category, a merchant, or the excluded ones in the selected period.
  */
-export function TransactionsSheet({ params, transactions, categories }: TransactionsSheetProps) {
+export function TransactionsSheet({
+  params,
+  transactions,
+  isCut,
+  categories,
+}: TransactionsSheetProps) {
   const router = useRouter();
   const title = params.excluded
     ? 'Excluded from analytics'
@@ -49,8 +56,10 @@ export function TransactionsSheet({ params, transactions, categories }: Transact
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
           <SheetDescription>
-            {formatPeriodLabel(parsePeriod(params.period))}, {transactions.length} transaction
-            {transactions.length === 1 ? '' : 's'}
+            {formatPeriodLabel(parsePeriod(params.period))},{' '}
+            {isCut
+              ? `the latest ${transactions.length} transactions`
+              : `${transactions.length} transaction${transactions.length === 1 ? '' : 's'}`}
           </SheetDescription>
         </SheetHeader>
         <ul className="flex flex-col divide-y px-4">

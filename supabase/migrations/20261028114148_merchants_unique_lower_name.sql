@@ -1,0 +1,2 @@
+ALTER TABLE "merchants" DROP CONSTRAINT "merchants_userId_name_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "merchants_user_id_lower_name_index" ON "merchants" USING btree ("user_id",lower("name"));

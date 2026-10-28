@@ -1,12 +1,12 @@
 import 'server-only';
 
-import { asc, count } from 'drizzle-orm';
+import { asc, count, countDistinct, eq } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { Category, CategoryWithCounts } from '@/lib/types/categories.types';
 import { schema } from '@/server/db';
 
-import { categoryColumns, joinCategory } from './joins';
+import { categoryColumns, isAliasOfTransaction, joinCategory } from './joins';
 
 const t = schema.transactions;
 
@@ -36,9 +36,18 @@ export const getCategoriesWithCounts = createApiQuery<void, CategoryWithCounts[]
     getCategories(),
     db.rls((tx) =>
       Promise.all([
+        // Merchants without transactions are hidden on the merchants page too
         tx
-          .select({ categoryId: schema.merchants.categoryId, value: count() })
+          .select({
+            categoryId: schema.merchants.categoryId,
+            value: countDistinct(schema.merchants.id),
+          })
           .from(schema.merchants)
+          .innerJoin(
+            schema.merchantAliases,
+            eq(schema.merchantAliases.merchantId, schema.merchants.id),
+          )
+          .innerJoin(t, isAliasOfTransaction)
           .groupBy(schema.merchants.categoryId),
         joinCategory(
           tx.select({ categoryId: schema.categories.id, value: count() }).from(t).$dynamic(),
