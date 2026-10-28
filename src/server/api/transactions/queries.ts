@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
@@ -16,6 +17,7 @@ import { getMainCurrencyWithMapper } from '../currencies/queries';
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
   balance: number;
   subaccount: typeof schema.subaccounts.$inferSelect;
+  linkedTransaction: Transaction['linkedTransaction'];
 };
 
 /**
@@ -58,6 +60,7 @@ const mapTransactionData = (
     counterpartyName: data.counterpartyName,
     dataSource: data.dataSource,
     createdAt: data.createdAt,
+    linkedTransaction: data.linkedTransaction,
   };
 };
 
@@ -91,6 +94,8 @@ export const getTransactions = createApiQuery<
   }) => {
     'use cache: private';
     const { db } = await createApiContext();
+    const linked = alias(schema.transactions, 'linked');
+    const linkedSubaccount = alias(schema.subaccounts, 'linked_subaccount');
 
     // Set up the database query
     const query = db.rls((tx) =>
@@ -102,6 +107,8 @@ export const getTransactions = createApiQuery<
           eq(schema.transactions.id, schema.transactionBalances.transactionId),
         )
         .innerJoin(schema.subaccounts, eq(schema.transactions.subaccountId, schema.subaccounts.id))
+        .leftJoin(linked, eq(schema.transactions.linkedTransactionId, linked.id))
+        .leftJoin(linkedSubaccount, eq(linked.subaccountId, linkedSubaccount.id))
         .where(
           and(
             accountId ? eq(schema.subaccounts.accountId, accountId) : undefined,
@@ -129,6 +136,10 @@ export const getTransactions = createApiQuery<
             ...item.transactions,
             balance: item.transaction_balances.balance,
             subaccount: item.subaccounts,
+            linkedTransaction:
+              item.linked && item.linked_subaccount
+                ? { amount: item.linked.amount, currency: item.linked_subaccount.currency }
+                : null,
           },
           mainCurrency,
           mainCurrencyMapper,

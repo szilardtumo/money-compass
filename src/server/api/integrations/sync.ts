@@ -1,7 +1,8 @@
 import 'server-only';
 
 import { isPast, isToday, max, min, subDays } from 'date-fns';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 
 import { UserError } from '@/lib/api/errors';
 import * as enableBanking from '@/lib/enable-banking';
@@ -13,6 +14,29 @@ export const DAILY_SYNC_LIMIT = 2;
 
 export function getTodaySyncCount(account: IntegrationAccount) {
   return account.lastSyncedAt && isToday(account.lastSyncedAt) ? account.syncCount : 0;
+}
+
+/**
+ * Links the two legs of each exchange between the user's subaccounts. The bank gives both legs the
+ * same reference, and they can arrive in the syncs of different accounts, so every sync links all
+ * unlinked legs.
+ */
+export async function linkTransactions(tx: DbTx, userId: string) {
+  const other = alias(schema.transactions, 'other');
+
+  await tx
+    .update(schema.transactions)
+    .set({ linkedTransactionId: other.id })
+    .from(other)
+    .where(
+      and(
+        eq(schema.transactions.userId, userId),
+        isNull(schema.transactions.linkedTransactionId),
+        eq(other.userId, userId),
+        eq(other.externalRef, schema.transactions.externalRef),
+        ne(other.subaccountId, schema.transactions.subaccountId),
+      ),
+    );
 }
 
 /**
@@ -147,6 +171,8 @@ export async function syncAccount(
         )
         .onConflictDoNothing();
     }
+
+    await linkTransactions(tx, account.userId);
 
     await tx
       .update(schema.integrationAccounts)

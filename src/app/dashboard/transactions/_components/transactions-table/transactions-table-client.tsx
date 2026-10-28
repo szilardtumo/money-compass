@@ -31,7 +31,7 @@ import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Account } from '@/lib/types/accounts.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
-import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
+import { formatCurrency, formatDateTime, formatExchange } from '@/lib/utils/formatters';
 import { apiActions } from '@/server/api/actions';
 
 const columnHelper = createColumnHelper<DataTableFeatures, TransactionWithAccount>();
@@ -52,6 +52,9 @@ const staticColumns = [
               <p className="font-medium">{row.original.counterpartyName}</p>
             )}
             <p className="text-ellipsis line-clamp-3">{getValue()}</p>
+            {row.original.linkedTransaction && (
+              <p>{formatExchange(row.original, row.original.linkedTransaction)}</p>
+            )}
           </div>
         </HoverCardTrigger>
         <HoverCardContent className="w-80">{getValue()}</HoverCardContent>

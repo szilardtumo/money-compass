@@ -1,0 +1,3 @@
+ALTER TABLE "transactions" ADD COLUMN "linked_transaction_id" uuid;--> statement-breakpoint
+ALTER TABLE "transactions" ADD CONSTRAINT "transactions_linked_transaction_id_transactions_id_fk" FOREIGN KEY ("linked_transaction_id") REFERENCES "public"."transactions"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "transactions_linked_transaction_id_index" ON "transactions" USING btree ("linked_transaction_id");

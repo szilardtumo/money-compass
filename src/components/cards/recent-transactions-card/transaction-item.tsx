@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { TransactionWithAccount } from '@/lib/types/transactions.types';
-import { formatCurrency, formatTime } from '@/lib/utils/formatters';
+import { formatCurrency, formatExchange, formatTime } from '@/lib/utils/formatters';
 import { apiActions } from '@/server/api/actions';
 
 interface TransactionItemProps {
@@ -50,6 +50,9 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
         </p>
         {!!transaction.counterpartyName && !!transaction.description && (
           <p className="text-sm line-clamp-2">{transaction.description}</p>
+        )}
+        {transaction.linkedTransaction && (
+          <p className="text-sm">{formatExchange(transaction, transaction.linkedTransaction)}</p>
         )}
         <p className="mt-0 text-sm text-muted-foreground">
           {formatTime(transaction.startedDate)} •{' '}

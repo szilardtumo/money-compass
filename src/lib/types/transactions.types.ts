@@ -15,6 +15,8 @@ export interface Transaction {
   counterpartyName: string;
   dataSource: 'integration' | 'manual';
   createdAt: Date;
+  /** The other leg of an exchange, in its own currency */
+  linkedTransaction: { amount: number; currency: string } | null;
 }
 
 export interface TransactionWithAccount extends Transaction {

@@ -1,5 +1,6 @@
 import { and, eq, relations, sql } from 'drizzle-orm';
 import {
+  AnyPgColumn,
   index,
   integer,
   jsonb,
@@ -32,6 +33,10 @@ export const transactions = pgTable(
       .notNull(),
     // The transaction as the bank sent it, for features that need more than the columns above
     bankData: jsonb(),
+    // The other leg of an exchange between two subaccounts
+    linkedTransactionId: uuid().references((): AnyPgColumn => transactions.id, {
+      onDelete: 'set null',
+    }),
     subaccountId: uuid()
       .notNull()
       .references(() => subaccounts.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
@@ -41,6 +46,7 @@ export const transactions = pgTable(
   },
   (table) => [
     index().on(table.userId, table.subaccountId, table.startedDate.desc(), table.sequence.desc()),
+    index().on(table.linkedTransactionId),
     // The sync skips known transactions with "on conflict do nothing". NULL references never conflict.
     uniqueIndex().on(table.subaccountId, table.externalRef),
     pgPolicy('transactions_allow_all_for_owner_policy', {

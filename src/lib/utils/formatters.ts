@@ -1,5 +1,7 @@
 import { format } from 'date-fns';
 
+import { Transaction } from '@/lib/types/transactions.types';
+
 export function formatCurrency(
   value: number,
   currency: string,
@@ -10,6 +12,19 @@ export function formatCurrency(
     currency,
     ...options,
   }).format(value);
+}
+
+/**
+ * Formats both legs of an exchange, the sold amount first, like "RON 537.01 → €100.00".
+ */
+export function formatExchange(
+  { amount, originalCurrency }: Pick<Transaction, 'amount' | 'originalCurrency'>,
+  linkedTransaction: NonNullable<Transaction['linkedTransaction']>,
+) {
+  return [{ amount: amount.originalValue, currency: originalCurrency }, linkedTransaction]
+    .toSorted((a, b) => a.amount - b.amount)
+    .map((leg) => formatCurrency(Math.abs(leg.amount), leg.currency))
+    .join(' → ');
 }
 
 export function getCurrencySymbol(currency: string) {
