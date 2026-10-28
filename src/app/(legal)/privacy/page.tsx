@@ -37,7 +37,15 @@ export default function PrivacyPage() {
       <p>
         The app runs on <a href="https://vercel.com">Vercel</a>, and stores its data and user
         accounts in <a href="https://supabase.com">Supabase</a>. The data isn&apos;t sold, and the
-        app doesn&apos;t send it to anyone besides these services and Enable Banking.
+        app doesn&apos;t send it to anyone besides these services, Enable Banking and Anthropic.
+      </p>
+
+      <h2>Categories</h2>
+      <p>
+        To categorize your spending, the app sends the merchant names of new card payments, like
+        &quot;Lidl 216 Cluj&quot;, to <a href="https://www.anthropic.com">Anthropic</a>&apos;s
+        Claude. It sends no amounts, dates or account details, and no names from transfers, which
+        are usually people.
       </p>
 
       <h2>Questions</h2>
