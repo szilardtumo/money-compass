@@ -2,6 +2,7 @@ import { and, eq, relations, sql } from 'drizzle-orm';
 import {
   index,
   integer,
+  jsonb,
   pgPolicy,
   pgTable,
   text,
@@ -29,6 +30,8 @@ export const transactions = pgTable(
     dataSource: text({ enum: ['integration', 'manual'] })
       .default('manual')
       .notNull(),
+    // The transaction as the bank sent it, for features that need more than the columns above
+    bankData: jsonb(),
     subaccountId: uuid()
       .notNull()
       .references(() => subaccounts.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
