@@ -7,7 +7,10 @@ import { alias } from 'drizzle-orm/pg-core';
 import { UserError } from '@/lib/api/errors';
 import * as enableBanking from '@/lib/enable-banking';
 import { Integration, IntegrationAccount } from '@/lib/types/integrations.types';
+import { getMerchantKey } from '@/lib/utils/merchants';
 import { DbClient, DbTx, schema } from '@/server/db';
+
+import { assignMerchants } from '../merchants/categorize';
 
 // PSD2 lets banks refuse more than 4 requests a day made without the user, and a sync makes 2
 export const DAILY_SYNC_LIMIT = 2;
@@ -163,6 +166,7 @@ export async function syncAccount(
             description: item.description,
             counterpartyName: item.counterpartyName,
             type: item.type,
+            merchantKey: getMerchantKey(item),
             bankData: item.bankData,
             dataSource: 'integration' as const,
             subaccountId,
@@ -173,6 +177,7 @@ export async function syncAccount(
     }
 
     await linkTransactions(tx, account.userId);
+    await assignMerchants(tx, account.userId);
 
     await tx
       .update(schema.integrationAccounts)

@@ -1,13 +1,14 @@
 'use server';
 
 import { isBefore, max } from 'date-fns';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { returnValidationErrors } from 'next-safe-action';
 import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
 import { formatDate } from '@/lib/utils/formatters';
+import { getMerchantKey } from '@/lib/utils/merchants';
 import {
   createTransactionSchema,
   deleteTransactionsSchema,
@@ -17,19 +18,23 @@ import {
 import { apiQueries } from '@/server/api/queries';
 import { schema } from '@/server/db';
 
+import { assignMerchants } from '../merchants/categorize';
+
 export const createTransaction = authenticatedActionClient
   .inputSchema(createTransactionSchema)
   .action(async ({ parsedInput: params, ctx }) => {
-    await ctx.db.rls((tx) =>
-      tx.insert(schema.transactions).values({
+    await ctx.db.rls(async (tx) => {
+      await tx.insert(schema.transactions).values({
         type: params.type,
         amount: params.amount,
         subaccountId: params.subaccountId,
         startedDate: params.date,
         completedDate: params.date,
         description: params.description,
-      }),
-    );
+        merchantKey: getMerchantKey({ ...params, counterpartyName: '' }),
+      });
+      await assignMerchants(tx, ctx.userId);
+    });
 
     revalidatePath('/dashboard', 'layout');
   });
@@ -93,8 +98,8 @@ export const updateBalances = authenticatedActionClient
 export const updateTransaction = authenticatedActionClient
   .inputSchema(updateTransactionSchema)
   .action(async ({ parsedInput: params, ctx }) => {
-    const [transaction] = await ctx.db.rls((tx) =>
-      tx
+    const [transaction] = await ctx.db.rls(async (tx) => {
+      const result = await tx
         .update(schema.transactions)
         .set({
           type: params.type,
@@ -102,10 +107,14 @@ export const updateTransaction = authenticatedActionClient
           description: params.description,
           startedDate: params.date,
           completedDate: params.date,
+          // A synced transaction keeps its merchant when its description is edited
+          merchantKey: sql`case when ${schema.transactions.dataSource} = 'manual' then ${getMerchantKey({ ...params, counterpartyName: '' })} else ${schema.transactions.merchantKey} end`,
         })
         .where(eq(schema.transactions.id, params.id))
-        .returning({ id: schema.transactions.id }),
-    );
+        .returning({ id: schema.transactions.id });
+      await assignMerchants(tx, ctx.userId);
+      return result;
+    });
 
     if (!transaction) {
       returnValidationErrors(updateTransactionSchema, {
