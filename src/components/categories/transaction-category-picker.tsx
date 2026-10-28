@@ -7,13 +7,7 @@ import { Transaction } from '@/lib/types/transactions.types';
 import { apiActions } from '@/server/api/actions';
 
 import { CategoryBadge } from './category-badge';
-import { CategoryPicker } from './category-picker';
-
-const toasts = {
-  loadingToast: 'Updating category...',
-  successToast: 'Category updated!',
-  errorToast: 'Failed to update the category. Please try again later.',
-};
+import { CATEGORY_TOASTS, CategoryPicker } from './category-picker';
 
 interface TransactionCategoryPickerProps {
   transaction: Pick<Transaction, 'id' | 'merchant' | 'category' | 'categorySource' | 'excluded'>;
@@ -31,11 +25,11 @@ export function TransactionCategoryPicker({
   const { merchant } = transaction;
   const { execute: setTransactionCategory } = useActionWithToast(
     apiActions.transactions.setTransactionCategory,
-    toasts,
+    CATEGORY_TOASTS,
   );
   const { execute: setMerchantCategory } = useActionWithToast(
     apiActions.merchants.setMerchantCategory,
-    toasts,
+    CATEGORY_TOASTS,
   );
 
   const setForTransaction = (categoryId: string | null) =>

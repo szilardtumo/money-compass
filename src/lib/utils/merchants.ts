@@ -15,7 +15,8 @@ const IGNORED_WORDS = new Set(
 
 interface TransactionFields {
   type: string;
-  counterpartyName: string;
+  /** Manual transactions have none */
+  counterpartyName?: string;
   description: string;
 }
 

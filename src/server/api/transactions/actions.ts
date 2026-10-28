@@ -32,7 +32,7 @@ export const createTransaction = authenticatedActionClient
         startedDate: params.date,
         completedDate: params.date,
         description: params.description,
-        merchantKey: getMerchantKey({ ...params, counterpartyName: '' }),
+        merchantKey: getMerchantKey(params),
       });
       await assignMerchants(tx, ctx.userId);
     });
@@ -109,7 +109,7 @@ export const updateTransaction = authenticatedActionClient
           startedDate: params.date,
           completedDate: params.date,
           // A synced transaction keeps its merchant when its description is edited
-          merchantKey: sql`case when ${schema.transactions.dataSource} = 'manual' then ${getMerchantKey({ ...params, counterpartyName: '' })} else ${schema.transactions.merchantKey} end`,
+          merchantKey: sql`case when ${schema.transactions.dataSource} = 'manual' then ${getMerchantKey(params)} else ${schema.transactions.merchantKey} end`,
         })
         .where(eq(schema.transactions.id, params.id))
         .returning({ id: schema.transactions.id });

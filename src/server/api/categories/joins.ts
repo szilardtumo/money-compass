@@ -9,19 +9,19 @@ import { schema } from '@/server/db';
 
 const t = schema.transactions;
 
+/** The join condition of a transaction and the alias that assigns it to a merchant */
+export const isAliasOfTransaction = and(
+  eq(schema.merchantAliases.userId, t.userId),
+  eq(schema.merchantAliases.key, t.merchantKey),
+)!;
+
 /**
  * Left joins the merchant of a transactions query and the transaction's category: its own, else
  * its merchant's.
  */
 export function joinCategory<T extends PgSelect>(query: T) {
   return query
-    .leftJoin(
-      schema.merchantAliases,
-      and(
-        eq(schema.merchantAliases.userId, t.userId),
-        eq(schema.merchantAliases.key, t.merchantKey),
-      ),
-    )
+    .leftJoin(schema.merchantAliases, isAliasOfTransaction)
     .leftJoin(schema.merchants, eq(schema.merchants.id, schema.merchantAliases.merchantId))
     .leftJoin(
       schema.categories,

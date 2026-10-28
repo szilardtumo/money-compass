@@ -19,7 +19,6 @@ import { analyticsSide, categoryColumns, joinCategory } from '../categories/join
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 const t = schema.transactions;
-const SIDES: AnalyticsSide[] = ['spending', 'income'];
 
 /**
  * Returns the spending and income of a period by category and merchant, compared to the period
@@ -122,10 +121,11 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
     spending: 0,
     income: 0,
   }));
-  const categories = { spending: new Map(), income: new Map() } as Record<
-    AnalyticsSide,
-    Map<string | null, Analytics['categories'][AnalyticsSide][number]>
-  >;
+  type CategoryTotal = Analytics['categories'][AnalyticsSide][number];
+  const categories = {
+    spending: new Map<string | null, CategoryTotal>(),
+    income: new Map<string | null, CategoryTotal>(),
+  };
   let excludedCount = 0;
 
   for (const row of rows) {
@@ -149,10 +149,11 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
     add(total, row.period === currentParam, amount, row.transactionCount);
   }
 
-  const merchants = { spending: new Map(), income: new Map() } as Record<
-    AnalyticsSide,
-    Map<string, Analytics['merchants'][AnalyticsSide][number]>
-  >;
+  type MerchantTotal = Analytics['merchants'][AnalyticsSide][number];
+  const merchants = {
+    spending: new Map<string, MerchantTotal>(),
+    income: new Map<string, MerchantTotal>(),
+  };
   for (const row of merchantRows) {
     if (row.side === 'excluded' || !row.merchant) {
       continue;
@@ -180,12 +181,14 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
     mainCurrency,
     totals: { spending: totalOf('spending'), income: totalOf('income') },
     chart,
-    categories: Object.fromEntries(
-      SIDES.map((key) => [key, byAmount(categories[key].values())]),
-    ) as Analytics['categories'],
-    merchants: Object.fromEntries(
-      SIDES.map((key) => [key, byAmount(merchants[key].values()).slice(0, 50)]),
-    ) as Analytics['merchants'],
+    categories: {
+      spending: byAmount(categories.spending.values()),
+      income: byAmount(categories.income.values()),
+    },
+    merchants: {
+      spending: byAmount(merchants.spending.values()).slice(0, 50),
+      income: byAmount(merchants.income.values()).slice(0, 50),
+    },
     excludedCount,
   };
 });

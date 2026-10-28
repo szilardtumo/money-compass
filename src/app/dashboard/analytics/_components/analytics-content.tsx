@@ -2,6 +2,7 @@ import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { z } from 'zod';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatPeriodParam, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
 import { apiQueries } from '@/server/api/queries';
 
@@ -31,16 +32,14 @@ export async function AnalyticsContent({
     excluded: getParam(query.excluded) === '1',
   };
 
-  const analytics = await apiQueries.analytics.getAnalytics({ period: params.period });
   const hasSheet = !!(params.category || params.merchant || params.excluded);
 
+  // Siblings, so the analytics and the sheet's transactions load in parallel
   return (
     <>
-      <AnalyticsView
-        analytics={analytics}
-        params={params}
-        currentMonth={formatPeriodParam(parsePeriod(undefined))}
-      />
+      <Suspense fallback={<Skeleton className="h-[720px]" />}>
+        <AnalyticsData params={params} currentMonth={formatPeriodParam(parsePeriod(undefined))} />
+      </Suspense>
       {hasSheet && (
         <Suspense fallback={null}>
           <TransactionsSheetContent params={params} />
@@ -50,13 +49,25 @@ export async function AnalyticsContent({
   );
 }
 
+async function AnalyticsData({
+  params,
+  currentMonth,
+}: {
+  params: AnalyticsParams;
+  currentMonth: string;
+}) {
+  const analytics = await apiQueries.analytics.getAnalytics({ period: params.period });
+
+  return <AnalyticsView analytics={analytics} params={params} currentMonth={currentMonth} />;
+}
+
 async function TransactionsSheetContent({ params }: { params: AnalyticsParams }) {
   const { start, end } = getPeriodRange(parsePeriod(params.period));
   const [transactions, categories] = await Promise.all([
     apiQueries.transactions.getTransactions({
       fromDate: start.toISOString(),
       toDate: new Date(end.getTime() - 1).toISOString(),
-      categoryId: params.category === 'uncategorized' ? null : (params.category ?? undefined),
+      categoryId: params.category === 'uncategorized' ? null : params.category,
       merchantId: params.merchant,
       side: params.excluded ? 'excluded' : params.view,
       pageSize: 500,

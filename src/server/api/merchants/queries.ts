@@ -1,14 +1,14 @@
 import 'server-only';
 
 import { subYears } from 'date-fns';
-import { and, count, eq, getTableColumns, gte, max, sql } from 'drizzle-orm';
+import { count, eq, gte, max, sql } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Merchant } from '@/lib/types/categories.types';
 import { schema } from '@/server/db';
 
-import { categoryColumns } from '../categories/joins';
+import { categoryColumns, isAliasOfTransaction } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 /**
@@ -25,7 +25,7 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
   const [merchants, aliasStats, { mapper }] = await Promise.all([
     db.rls((tx) =>
       tx
-        .select({ ...getTableColumns(schema.merchants), category: categoryColumns })
+        .select({ id: schema.merchants.id, name: schema.merchants.name, category: categoryColumns })
         .from(schema.merchants)
         .leftJoin(schema.categories, eq(schema.categories.id, schema.merchants.categoryId)),
     ),
@@ -43,7 +43,7 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
           lastSeen: max(t.startedDate),
         })
         .from(a)
-        .leftJoin(t, and(eq(t.userId, a.userId), eq(t.merchantKey, a.key)))
+        .leftJoin(t, isAliasOfTransaction)
         .leftJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
         .groupBy(a.merchantId, a.key, schema.subaccounts.currency),
     ),

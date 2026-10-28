@@ -1,6 +1,5 @@
 'use client';
 
-import { cn } from 'cn';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -126,7 +125,7 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
       {categorizedShare < 1 && (
         <p className="text-sm text-muted-foreground">
           {formatPercent(categorizedShare, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}{' '}
-          of this {params.view === 'spending' ? 'spending' : 'income'} is categorized.{' '}
+          of this {params.view} is categorized.{' '}
           <Link href="/dashboard/merchants" className="font-medium underline">
             Review merchants
           </Link>
@@ -235,18 +234,15 @@ function LinkTabs({
   className?: string;
 }) {
   return (
-    <nav className={cn('inline-flex rounded-lg bg-muted p-1', className)}>
-      {tabs.map((tab) => (
-        <Link
-          key={tab.label}
-          href={tab.href}
-          aria-current={tab.active ? 'page' : undefined}
-          className="rounded-md px-3 py-1 text-sm font-medium text-muted-foreground aria-[current=page]:bg-background aria-[current=page]:text-foreground aria-[current=page]:shadow-sm"
-        >
-          {tab.label}
-        </Link>
-      ))}
-    </nav>
+    <Tabs value={tabs.find((tab) => tab.active)?.label} className={className}>
+      <TabsList>
+        {tabs.map((tab) => (
+          <TabsTrigger key={tab.label} value={tab.label} asChild>
+            <Link href={tab.href}>{tab.label}</Link>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 }
 

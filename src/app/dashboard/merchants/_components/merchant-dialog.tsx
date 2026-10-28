@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 
-import { CategoryBadge } from '@/components/categories/category-badge';
-import { CategoryPicker } from '@/components/categories/category-picker';
+import { MerchantCategoryPicker } from '@/components/categories/merchant-category-picker';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -73,14 +72,6 @@ function MerchantDialogContent({
       onSuccess: ({ data }) => data?.mergedInto && onClose(),
     },
   );
-  const { execute: setMerchantCategory } = useActionWithToast(
-    apiActions.merchants.setMerchantCategory,
-    {
-      loadingToast: 'Updating category...',
-      successToast: 'Category updated!',
-      errorToast: 'Failed to update the category. Please try again later.',
-    },
-  );
 
   return (
     <>
@@ -120,16 +111,7 @@ function MerchantDialogContent({
 
       <div className="flex items-center gap-2">
         <Label>Category</Label>
-        <CategoryPicker
-          categories={categories}
-          value={merchant.category?.id ?? null}
-          onSelect={(categoryId) => setMerchantCategory({ merchantIds: [merchant.id], categoryId })}
-          clearLabel="No category"
-        >
-          <button type="button" className="cursor-pointer" aria-label="Change category">
-            <CategoryBadge category={merchant.category} />
-          </button>
-        </CategoryPicker>
+        <MerchantCategoryPicker merchant={merchant} categories={categories} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -143,7 +125,8 @@ function MerchantDialogContent({
                 <span className="text-muted-foreground">{alias.transactionCount}</span>
                 <MoveAliasButton
                   aliasKey={alias.key}
-                  merchants={merchants.filter((item) => item.id !== merchant.id)}
+                  merchants={merchants}
+                  currentMerchantId={merchant.id}
                   onMoved={() => merchant.aliases.length === 1 && onClose()}
                 />
               </li>
@@ -157,10 +140,12 @@ function MerchantDialogContent({
 function MoveAliasButton({
   aliasKey,
   merchants,
+  currentMerchantId,
   onMoved,
 }: {
   aliasKey: string;
   merchants: Merchant[];
+  currentMerchantId: string;
   onMoved: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -185,7 +170,8 @@ function MoveAliasButton({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0" align="end">
-        <Command>
+        {/* Filtered here, because cmdk is slow with all merchants */}
+        <Command shouldFilter={false}>
           <CommandInput
             placeholder="Merchant or new name..."
             className="h-9"
@@ -202,15 +188,22 @@ function MoveAliasButton({
               </CommandGroup>
             )}
             <CommandGroup heading="Merchants">
-              {merchants.map((merchant) => (
-                <CommandItem
-                  key={merchant.id}
-                  value={merchant.name}
-                  onSelect={() => move({ merchantId: merchant.id })}
-                >
-                  {merchant.name}
-                </CommandItem>
-              ))}
+              {merchants
+                .filter(
+                  (merchant) =>
+                    merchant.id !== currentMerchantId &&
+                    merchant.name.toLowerCase().includes(search.trim().toLowerCase()),
+                )
+                .slice(0, 50)
+                .map((merchant) => (
+                  <CommandItem
+                    key={merchant.id}
+                    value={merchant.name}
+                    onSelect={() => move({ merchantId: merchant.id })}
+                  >
+                    {merchant.name}
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>

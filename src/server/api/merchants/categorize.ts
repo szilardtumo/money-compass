@@ -9,6 +9,8 @@ import { env } from '@/lib/env';
 import { getMerchantName } from '@/lib/utils/merchants';
 import { DbClient, DbTx, schema } from '@/server/db';
 
+import { isAliasOfTransaction } from '../categories/joins';
+
 // Bank card types. Their names are businesses, while transfers name people, which never go to the
 // LLM. Neither do the descriptions the user typed for manual transactions.
 const CARD_TYPES = ['card_payment', 'refund', 'atm', 'fee', 'reward'];
@@ -66,13 +68,7 @@ export async function assignMerchants(tx: DbTx, userId: string) {
       isCard: sql<boolean>`${isCardTransaction}`,
     })
     .from(t)
-    .leftJoin(
-      schema.merchantAliases,
-      and(
-        eq(schema.merchantAliases.userId, t.userId),
-        eq(schema.merchantAliases.key, t.merchantKey),
-      ),
-    )
+    .leftJoin(schema.merchantAliases, isAliasOfTransaction)
     .where(and(eq(t.userId, userId), isNotNull(t.merchantKey), isNull(schema.merchantAliases.key)))
     .orderBy(t.merchantKey, asc(t.startedDate));
   if (!newKeys.length) {
@@ -143,13 +139,7 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
                 tx
                   .select({ key: schema.merchantAliases.key })
                   .from(schema.merchantAliases)
-                  .innerJoin(
-                    schema.transactions,
-                    and(
-                      eq(schema.transactions.userId, schema.merchantAliases.userId),
-                      eq(schema.transactions.merchantKey, schema.merchantAliases.key),
-                    ),
-                  )
+                  .innerJoin(schema.transactions, isAliasOfTransaction)
                   .where(and(eq(schema.merchantAliases.merchantId, m.id), isCardTransaction)),
               ),
             ),
@@ -234,10 +224,11 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
               null;
             const target = byName.get(name.toLowerCase());
 
+            byName.delete(merchant.name.toLowerCase());
+
             if (target && target.id !== merchant.id) {
               await mergeMerchant(tx, { id: merchant.id, categoryId }, target);
               target.categoryId ??= categoryId;
-              byName.delete(merchant.name.toLowerCase());
               continue;
             }
 
@@ -245,7 +236,6 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
               .update(m)
               .set({ name, categoryId, autoCheckedAt: new Date() })
               .where(eq(m.id, merchant.id));
-            byName.delete(merchant.name.toLowerCase());
             byName.set(name.toLowerCase(), { ...merchant, name, categoryId });
           }
 

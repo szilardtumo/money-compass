@@ -1,4 +1,4 @@
-import { eq, relations, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import {
   index,
   pgPolicy,
@@ -63,12 +63,3 @@ export const merchantAliases = pgTable(
     }),
   ],
 );
-
-export const merchantsRelations = relations(merchants, ({ one, many }) => ({
-  category: one(categories, { fields: [merchants.categoryId], references: [categories.id] }),
-  aliases: many(merchantAliases),
-}));
-
-export const merchantAliasesRelations = relations(merchantAliases, ({ one }) => ({
-  merchant: one(merchants, { fields: [merchantAliases.merchantId], references: [merchants.id] }),
-}));

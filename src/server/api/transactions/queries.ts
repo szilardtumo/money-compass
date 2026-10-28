@@ -13,7 +13,12 @@ import { groupBy } from '@/lib/utils/group-by';
 import { generateTimeBuckets, TimeInterval } from '@/lib/utils/time-buckets';
 import { schema } from '@/server/db';
 
-import { analyticsSide, categoryColumns, joinCategory } from '../categories/joins';
+import {
+  analyticsSide,
+  categoryColumns,
+  isAliasOfTransaction,
+  joinCategory,
+} from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
@@ -151,8 +156,11 @@ export const getTransactions = createApiQuery<
             subaccountId ? eq(schema.transactions.subaccountId, subaccountId) : undefined,
             fromDate ? gte(schema.transactions.startedDate, new Date(fromDate)) : undefined,
             toDate ? lte(schema.transactions.startedDate, new Date(toDate)) : undefined,
-            categoryId === null ? isNull(schema.categories.id) : undefined,
-            categoryId ? eq(schema.categories.id, categoryId) : undefined,
+            categoryId === null
+              ? isNull(schema.categories.id)
+              : categoryId
+                ? eq(schema.categories.id, categoryId)
+                : undefined,
             merchantId ? eq(schema.merchants.id, merchantId) : undefined,
             side ? sql`${analyticsSide} = ${side}` : undefined,
           ),
@@ -167,13 +175,7 @@ export const getTransactions = createApiQuery<
         ? await tx
             .select({ merchantId: schema.merchantAliases.merchantId, value: count() })
             .from(schema.merchantAliases)
-            .innerJoin(
-              schema.transactions,
-              and(
-                eq(schema.transactions.userId, schema.merchantAliases.userId),
-                eq(schema.transactions.merchantKey, schema.merchantAliases.key),
-              ),
-            )
+            .innerJoin(schema.transactions, isAliasOfTransaction)
             .where(inArray(schema.merchantAliases.merchantId, merchantIds))
             .groupBy(schema.merchantAliases.merchantId)
         : [];

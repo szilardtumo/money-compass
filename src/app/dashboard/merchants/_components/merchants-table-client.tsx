@@ -4,8 +4,8 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { MergeIcon, TagIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { CategoryBadge } from '@/components/categories/category-badge';
-import { CategoryPicker } from '@/components/categories/category-picker';
+import { CATEGORY_TOASTS, CategoryPicker } from '@/components/categories/category-picker';
+import { MerchantCategoryPicker } from '@/components/categories/merchant-category-picker';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,13 +42,9 @@ export function MerchantsTableClient({
   const [openMerchantId, setOpenMerchantId] = useState<string>();
   const [mergeOpen, setMergeOpen] = useState(false);
 
-  const { execute: setMerchantCategory, executeAsync: setMerchantsCategory } = useActionWithToast(
+  const { executeAsync: setMerchantsCategory } = useActionWithToast(
     apiActions.merchants.setMerchantCategory,
-    {
-      loadingToast: 'Updating category...',
-      successToast: 'Category updated!',
-      errorToast: 'Failed to update the category. Please try again later.',
-    },
+    CATEGORY_TOASTS,
   );
 
   const columns = useMemo(
@@ -75,18 +71,7 @@ export function MerchantsTableClient({
           filterFn: 'arrHas',
           enableSorting: false,
           cell: ({ row }) => (
-            <CategoryPicker
-              categories={categories}
-              value={row.original.category?.id ?? null}
-              onSelect={(categoryId) =>
-                setMerchantCategory({ merchantIds: [row.original.id], categoryId })
-              }
-              clearLabel="No category"
-            >
-              <button type="button" className="cursor-pointer" aria-label="Change category">
-                <CategoryBadge category={row.original.category} />
-              </button>
-            </CategoryPicker>
+            <MerchantCategoryPicker merchant={row.original} categories={categories} />
           ),
         }),
         columnHelper.accessor('transactionCount', {
@@ -112,7 +97,7 @@ export function MerchantsTableClient({
           },
         }),
       ]),
-    [categories, mainCurrency, setMerchantCategory],
+    [categories, mainCurrency],
   );
 
   const categoryOptions = useMemo(

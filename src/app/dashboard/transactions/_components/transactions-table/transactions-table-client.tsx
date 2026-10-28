@@ -83,15 +83,6 @@ const staticColumns = [
     ),
     filterFn: 'arrHas',
   }),
-  columnHelper.accessor(
-    (row) => row.category?.id ?? (row.excluded ? 'excluded' : 'uncategorized'),
-    {
-      id: 'category',
-      header: 'Category',
-      filterFn: 'arrHas',
-      enableSorting: false,
-    },
-  ),
   columnHelper.accessor((row) => row.subaccount.name, {
     id: 'subaccount',
     header: 'Subaccount',
@@ -240,15 +231,18 @@ export function TransactionsTableClient({
     };
 
     return columnHelper.columns([
-      ...staticColumns.map((column) =>
-        column.id === 'category'
-          ? {
-              ...column,
-              cell: ({ row }: CellContext<DataTableFeatures, TransactionWithAccount, unknown>) => (
-                <TransactionCategoryPicker transaction={row.original} categories={categories} />
-              ),
-            }
-          : column,
+      ...staticColumns,
+      columnHelper.accessor(
+        (row) => row.category?.id ?? (row.excluded ? 'excluded' : 'uncategorized'),
+        {
+          id: 'category',
+          header: 'Category',
+          filterFn: 'arrHas',
+          enableSorting: false,
+          cell: ({ row }) => (
+            <TransactionCategoryPicker transaction={row.original} categories={categories} />
+          ),
+        },
       ),
       columnHelper.display({
         id: 'actions',

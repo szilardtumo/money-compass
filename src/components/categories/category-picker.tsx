@@ -17,6 +17,12 @@ import { Category, CATEGORY_KINDS } from '@/lib/types/categories.types';
 
 import { CategoryIcon } from './category-badge';
 
+export const CATEGORY_TOASTS = {
+  loadingToast: 'Updating category...',
+  successToast: 'Category updated!',
+  errorToast: 'Failed to update the category. Please try again later.',
+};
+
 interface CategoryPickerProps {
   categories: Category[];
   value: string | null;
