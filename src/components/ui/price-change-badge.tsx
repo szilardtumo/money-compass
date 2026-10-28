@@ -35,16 +35,19 @@ const priceChangeBadgeVariants = cva(
 export interface PriceChangeBadgeProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof priceChangeBadgeVariants> {
   percent: number;
+  /** Shows an increase as negative, like more spending */
+  invert?: boolean;
 }
 
-function PriceChangeBadge({ className, percent, variant, ...props }: PriceChangeBadgeProps) {
-  const changeType = percent === 0 ? 'neutral' : percent < 0 ? 'negative' : 'positive';
-  const Icon =
-    changeType === 'neutral'
-      ? ArrowRightIcon
-      : changeType === 'negative'
-        ? ArrowDownIcon
-        : ArrowUpIcon;
+function PriceChangeBadge({
+  className,
+  percent,
+  invert,
+  variant,
+  ...props
+}: PriceChangeBadgeProps) {
+  const changeType = percent === 0 ? 'neutral' : percent < 0 !== !!invert ? 'negative' : 'positive';
+  const Icon = percent === 0 ? ArrowRightIcon : percent < 0 ? ArrowDownIcon : ArrowUpIcon;
 
   return (
     <div className={cn(priceChangeBadgeVariants({ changeType, variant }), className)} {...props}>
