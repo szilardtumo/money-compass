@@ -41,7 +41,7 @@ export function TransactionCategoryPicker({
   const setForTransaction = (categoryId: string | null) =>
     setTransactionCategory({ transactionIds: [transaction.id], categoryId });
   const setForMerchant = (merchantId: string, categoryId: string) =>
-    setMerchantCategory({ merchantId, categoryId, transactionId: transaction.id });
+    setMerchantCategory({ merchantIds: [merchantId], categoryId, transactionId: transaction.id });
 
   return (
     <CategoryPicker

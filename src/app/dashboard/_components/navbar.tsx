@@ -1,9 +1,12 @@
 import {
+  ChartColumnIcon,
   ChartPieIcon,
   FlaskConicalIcon,
   HistoryIcon,
   LayoutDashboardIcon,
   MenuIcon,
+  StoreIcon,
+  TagsIcon,
   WalletCardsIcon,
 } from 'lucide-react';
 import { Suspense } from 'react';
@@ -65,6 +68,15 @@ function NavbarContent() {
         </NavItem>
         <NavItem href="/dashboard/statistics" icon={<ChartPieIcon className="size-4 mr-2" />}>
           Statistics
+        </NavItem>
+        <NavItem href="/dashboard/analytics" icon={<ChartColumnIcon className="size-4 mr-2" />}>
+          Analytics
+        </NavItem>
+        <NavItem href="/dashboard/merchants" icon={<StoreIcon className="size-4 mr-2" />}>
+          Merchants
+        </NavItem>
+        <NavItem href="/dashboard/categories" icon={<TagsIcon className="size-4 mr-2" />}>
+          Categories
         </NavItem>
 
         <Separator className="my-2" />

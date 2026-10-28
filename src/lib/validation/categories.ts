@@ -24,7 +24,7 @@ export const setTransactionCategorySchema = z.object({
 });
 
 export const setMerchantCategorySchema = z.object({
-  merchantId: z.uuid(),
+  merchantIds: z.array(z.uuid()).min(1),
   categoryId: z.uuid().nullable(),
   /** A transaction of the merchant whose own category is removed, so it follows the merchant */
   transactionId: z.uuid().optional(),

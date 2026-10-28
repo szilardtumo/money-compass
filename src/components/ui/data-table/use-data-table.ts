@@ -52,11 +52,13 @@ interface UseDataTableOptions<TData extends RowData> {
   enableSorting?: boolean;
   enableRowSelection?: boolean;
   enablePagination?: boolean;
+  initialSorting?: SortingState;
+  initialColumnFilters?: ColumnFiltersState;
 }
 
 export function useDataTable<TData extends RowData>(options: UseDataTableOptions<TData>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = useState(options.initialSorting ?? []);
+  const [columnFilters, setColumnFilters] = useState(options.initialColumnFilters ?? []);
   const [rowSelection, setRowSelection] = useState({});
 
   const table = useTable<DataTableFeatures, TData>({

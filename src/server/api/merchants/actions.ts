@@ -38,21 +38,17 @@ async function findMerchantByName(tx: DbTx, name: string) {
 }
 
 /**
- * Sets the category of a merchant, for all its past and future transactions except the ones with
+ * Sets the category of merchants, for all their past and future transactions except the ones with
  * their own category.
  */
 export const setMerchantCategory = authenticatedActionClient
   .inputSchema(setMerchantCategorySchema)
-  .action(async ({ parsedInput: { merchantId, categoryId, transactionId }, ctx }) => {
+  .action(async ({ parsedInput: { merchantIds, categoryId, transactionId }, ctx }) => {
     await ctx.db.rls(async (tx) => {
-      const [merchant] = await tx
+      await tx
         .update(m)
         .set({ categoryId, autoCheckedAt: new Date() })
-        .where(eq(m.id, merchantId))
-        .returning({ id: m.id });
-      if (!merchant) {
-        throw new NotFoundError('merchant', merchantId);
-      }
+        .where(inArray(m.id, merchantIds));
 
       if (transactionId) {
         await tx
