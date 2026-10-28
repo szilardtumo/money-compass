@@ -1,13 +1,13 @@
 'use server';
 
-import { and, count, eq, inArray, ne } from 'drizzle-orm';
+import { and, count, eq, inArray, isNotNull, ne } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 import { authenticatedActionClient } from '@/lib/api';
 import { NotFoundError } from '@/lib/api/errors';
 import {
   mergeMerchantsSchema,
-  moveMerchantAliasSchema,
+  moveMerchantKeySchema,
   renameMerchantSchema,
   setMerchantCategorySchema,
 } from '@/lib/validation/categories';
@@ -105,24 +105,27 @@ export const mergeMerchants = authenticatedActionClient
   });
 
 /**
- * Moves one raw name of a merchant, with its transactions, to another merchant, or to a new one
- * with the given name and the category of the merchant it leaves. A merchant left without names is
- * deleted.
+ * Moves the transactions of one raw name (merchant key) to another merchant, or to a new one with
+ * the given name and the category of the merchant they leave. A merchant left without transactions
+ * is deleted.
  */
-export const moveMerchantAlias = authenticatedActionClient
-  .inputSchema(moveMerchantAliasSchema)
+export const moveMerchantKey = authenticatedActionClient
+  .inputSchema(moveMerchantKeySchema)
   .action(async ({ parsedInput: { key, target }, ctx }) => {
     await ctx.db.rls(async (tx) => {
       await lockMerchants(tx, ctx.userId);
-      const [alias] = await tx
-        .select({ merchantId: schema.merchantAliases.merchantId })
-        .from(schema.merchantAliases)
-        .where(eq(schema.merchantAliases.key, key));
-      if (!alias) {
+      const [transaction] = await tx
+        .select({ merchantId: schema.transactions.merchantId })
+        .from(schema.transactions)
+        .where(
+          and(eq(schema.transactions.merchantKey, key), isNotNull(schema.transactions.merchantId)),
+        )
+        .limit(1);
+      if (!transaction) {
         throw new NotFoundError('merchant name', key);
       }
 
-      const source = await getMerchant(tx, alias.merchantId);
+      const source = await getMerchant(tx, transaction.merchantId!);
       const destination =
         'merchantId' in target
           ? await getMerchant(tx, target.merchantId)
@@ -143,15 +146,15 @@ export const moveMerchantAlias = authenticatedActionClient
       }
 
       await tx
-        .update(schema.merchantAliases)
+        .update(schema.transactions)
         .set({ merchantId: destination.id })
-        .where(eq(schema.merchantAliases.key, key));
+        .where(eq(schema.transactions.merchantKey, key));
 
-      const [{ value: aliasesLeft }] = await tx
+      const [{ value: transactionsLeft }] = await tx
         .select({ value: count() })
-        .from(schema.merchantAliases)
-        .where(eq(schema.merchantAliases.merchantId, source.id));
-      if (!aliasesLeft) {
+        .from(schema.transactions)
+        .where(eq(schema.transactions.merchantId, source.id));
+      if (!transactionsLeft) {
         await tx.delete(m).where(eq(m.id, source.id));
       }
     });

@@ -15,6 +15,7 @@ import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { accounts } from './accounts.schema';
 import { categories } from './categories.schema';
+import { merchants } from './merchants.schema';
 import { subaccounts } from './subaccounts.schema';
 import { numericCasted, authUid, authUidDefault } from './utils';
 
@@ -38,8 +39,10 @@ export const transactions = pgTable(
     linkedTransactionId: uuid().references((): AnyPgColumn => transactions.id, {
       onDelete: 'set null',
     }),
-    // The normalized merchant name (see getMerchantKey), null for types without a merchant
+    // The normalized merchant name (see getMerchantKey), null for types without a merchant. New
+    // transactions join the merchant of the other transactions with the same key.
     merchantKey: text(),
+    merchantId: uuid().references(() => merchants.id, { onDelete: 'set null' }),
     // The transaction's own category, which overrides the merchant's
     categoryId: uuid().references(() => categories.id, { onDelete: 'set null' }),
     subaccountId: uuid()
@@ -53,6 +56,7 @@ export const transactions = pgTable(
     index().on(table.userId, table.subaccountId, table.startedDate.desc(), table.sequence.desc()),
     index().on(table.linkedTransactionId),
     index().on(table.userId, table.merchantKey),
+    index().on(table.merchantId),
     index().on(table.categoryId),
     // The sync skips known transactions with "on conflict do nothing". NULL references never conflict.
     uniqueIndex().on(table.subaccountId, table.externalRef),
@@ -61,7 +65,7 @@ export const transactions = pgTable(
       for: 'all',
       to: authenticatedRole,
       using: eq(table.userId, authUid),
-      withCheck: sql`${eq(table.userId, authUid)} AND EXISTS (SELECT 1 FROM ${subaccounts} JOIN ${accounts} ON ${eq(accounts.id, subaccounts.accountId)} WHERE ${and(eq(subaccounts.id, table.subaccountId), eq(accounts.userId, authUid))}) AND (${table.categoryId} IS NULL OR EXISTS (SELECT 1 FROM ${categories} WHERE ${categories.id} = ${table.categoryId} AND ${categories.userId} = ${authUid}))`,
+      withCheck: sql`${eq(table.userId, authUid)} AND EXISTS (SELECT 1 FROM ${subaccounts} JOIN ${accounts} ON ${eq(accounts.id, subaccounts.accountId)} WHERE ${and(eq(subaccounts.id, table.subaccountId), eq(accounts.userId, authUid))}) AND (${table.categoryId} IS NULL OR EXISTS (SELECT 1 FROM ${categories} WHERE ${categories.id} = ${table.categoryId} AND ${categories.userId} = ${authUid})) AND (${table.merchantId} IS NULL OR EXISTS (SELECT 1 FROM ${merchants} WHERE ${merchants.id} = ${table.merchantId} AND ${merchants.userId} = ${authUid}))`,
     }),
   ],
 );

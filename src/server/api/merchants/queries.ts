@@ -1,14 +1,14 @@
 import 'server-only';
 
 import { subYears } from 'date-fns';
-import { count, eq, gte, max, sql } from 'drizzle-orm';
+import { count, eq, gte, isNotNull, max, sql } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Merchant } from '@/lib/types/categories.types';
 import { schema } from '@/server/db';
 
-import { categoryColumns, isAliasOfTransaction } from '../categories/joins';
+import { categoryColumns } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 /**
@@ -19,10 +19,9 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
   'use cache: private';
   const { db } = await createApiContext();
   const t = schema.transactions;
-  const a = schema.merchantAliases;
   const yearAgo = subYears(new Date(), 1);
 
-  const [merchants, aliasStats, { mapper }] = await Promise.all([
+  const [merchants, stats, { mapper }] = await Promise.all([
     db.rls((tx) =>
       tx
         .select({ id: schema.merchants.id, name: schema.merchants.name, category: categoryColumns })
@@ -32,8 +31,8 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
     db.rls((tx) =>
       tx
         .select({
-          merchantId: a.merchantId,
-          key: a.key,
+          merchantId: t.merchantId,
+          key: t.merchantKey,
           currency: schema.subaccounts.currency,
           transactionCount: count(t.id),
           yearTotal:
@@ -42,10 +41,10 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
             ),
           lastSeen: max(t.startedDate),
         })
-        .from(a)
-        .leftJoin(t, isAliasOfTransaction)
-        .leftJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
-        .groupBy(a.merchantId, a.key, schema.subaccounts.currency),
+        .from(t)
+        .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+        .where(isNotNull(t.merchantId))
+        .groupBy(t.merchantId, t.merchantKey, schema.subaccounts.currency),
     ),
     getMainCurrencyWithMapper(),
   ]);
@@ -57,7 +56,7 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
         id: merchant.id,
         name: merchant.name,
         category: merchant.category,
-        aliases: [],
+        keys: [],
         transactionCount: 0,
         yearTotal: 0,
         lastSeen: null,
@@ -65,29 +64,27 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
     ]),
   );
 
-  for (const stat of aliasStats) {
-    const merchant = result.get(stat.merchantId);
+  for (const stat of stats) {
+    const merchant = result.get(stat.merchantId!);
     if (!merchant) {
       continue;
     }
 
     // A key can have transactions in several currencies, so it can appear more than once
-    const alias = merchant.aliases.find((item) => item.key === stat.key);
-    if (alias) {
-      alias.transactionCount += stat.transactionCount;
+    const existing = merchant.keys.find((item) => item.key === stat.key);
+    if (existing) {
+      existing.transactionCount += stat.transactionCount;
     } else {
-      merchant.aliases.push({ key: stat.key, transactionCount: stat.transactionCount });
+      merchant.keys.push({ key: stat.key!, transactionCount: stat.transactionCount });
     }
     merchant.transactionCount += stat.transactionCount;
 
-    if (stat.currency) {
-      const rate = mapper[stat.currency];
-      if (!rate) {
-        throw new MissingExchangeRateError(stat.currency);
-      }
-      merchant.yearTotal += stat.yearTotal * rate;
+    const rate = mapper[stat.currency];
+    if (!rate) {
+      throw new MissingExchangeRateError(stat.currency);
     }
-    if (stat.lastSeen && (!merchant.lastSeen || stat.lastSeen > merchant.lastSeen)) {
+    merchant.yearTotal += stat.yearTotal * rate;
+    if (!merchant.lastSeen || stat.lastSeen! > merchant.lastSeen) {
       merchant.lastSeen = stat.lastSeen;
     }
   }

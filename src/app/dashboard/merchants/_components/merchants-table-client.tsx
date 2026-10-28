@@ -60,8 +60,8 @@ export function MerchantsTableClient({
               onClick={() => setOpenMerchantId(row.original.id)}
             >
               {row.original.name}
-              {row.original.aliases.length > 1 && (
-                <Badge variant="outline">{row.original.aliases.length} names</Badge>
+              {row.original.keys.length > 1 && (
+                <Badge variant="outline">{row.original.keys.length} names</Badge>
               )}
             </button>
           ),

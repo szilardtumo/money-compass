@@ -42,7 +42,7 @@ export const mergeMerchantsSchema = z.object({
   targetId: z.uuid(),
 });
 
-export const moveMerchantAliasSchema = z.object({
+export const moveMerchantKeySchema = z.object({
   key: z.string().min(1),
   target: z.union([z.object({ merchantId: z.uuid() }), z.object({ name: merchantName })]),
 });

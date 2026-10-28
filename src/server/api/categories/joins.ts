@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { PgSelect } from 'drizzle-orm/pg-core';
 
 import { AnalyticsSide } from '@/lib/types/analytics.types';
@@ -9,20 +9,13 @@ import { schema } from '@/server/db';
 
 const t = schema.transactions;
 
-/** The join condition of a transaction and the alias that assigns it to a merchant */
-export const isAliasOfTransaction = and(
-  eq(schema.merchantAliases.userId, t.userId),
-  eq(schema.merchantAliases.key, t.merchantKey),
-)!;
-
 /**
  * Left joins the merchant of a transactions query and the transaction's category: its own, else
  * its merchant's.
  */
 export function joinCategory<T extends PgSelect>(query: T) {
   return query
-    .leftJoin(schema.merchantAliases, isAliasOfTransaction)
-    .leftJoin(schema.merchants, eq(schema.merchants.id, schema.merchantAliases.merchantId))
+    .leftJoin(schema.merchants, eq(schema.merchants.id, t.merchantId))
     .leftJoin(
       schema.categories,
       eq(schema.categories.id, sql`coalesce(${t.categoryId}, ${schema.merchants.categoryId})`),

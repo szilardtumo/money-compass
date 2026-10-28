@@ -13,12 +13,7 @@ import { groupBy } from '@/lib/utils/group-by';
 import { generateTimeBuckets, TimeInterval } from '@/lib/utils/time-buckets';
 import { schema } from '@/server/db';
 
-import {
-  analyticsSide,
-  categoryColumns,
-  isAliasOfTransaction,
-  joinCategory,
-} from '../categories/joins';
+import { analyticsSide, categoryColumns, joinCategory } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
@@ -173,11 +168,10 @@ export const getTransactions = createApiQuery<
       const merchantIds = [...new Set(rows.flatMap((row) => row.merchant?.id ?? []))];
       const merchantCounts = merchantIds.length
         ? await tx
-            .select({ merchantId: schema.merchantAliases.merchantId, value: count() })
-            .from(schema.merchantAliases)
-            .innerJoin(schema.transactions, isAliasOfTransaction)
-            .where(inArray(schema.merchantAliases.merchantId, merchantIds))
-            .groupBy(schema.merchantAliases.merchantId)
+            .select({ merchantId: schema.transactions.merchantId, value: count() })
+            .from(schema.transactions)
+            .where(inArray(schema.transactions.merchantId, merchantIds))
+            .groupBy(schema.transactions.merchantId)
         : [];
       const countsById = new Map(merchantCounts.map((item) => [item.merchantId, item.value]));
 

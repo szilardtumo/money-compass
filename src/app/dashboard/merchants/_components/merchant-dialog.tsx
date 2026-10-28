@@ -117,17 +117,17 @@ function MerchantDialogContent({
       <div className="flex flex-col gap-2">
         <Label>Names from the bank</Label>
         <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto">
-          {merchant.aliases
+          {merchant.keys
             .toSorted((a, b) => b.transactionCount - a.transactionCount)
-            .map((alias) => (
-              <li key={alias.key} className="flex items-center gap-2 text-sm">
-                <span className="mr-auto">{alias.key}</span>
-                <span className="text-muted-foreground">{alias.transactionCount}</span>
-                <MoveAliasButton
-                  aliasKey={alias.key}
+            .map((item) => (
+              <li key={item.key} className="flex items-center gap-2 text-sm">
+                <span className="mr-auto">{item.key}</span>
+                <span className="text-muted-foreground">{item.transactionCount}</span>
+                <MoveKeyButton
+                  merchantKey={item.key}
                   merchants={merchants}
                   currentMerchantId={merchant.id}
-                  onMoved={() => merchant.aliases.length === 1 && onClose()}
+                  onMoved={() => merchant.keys.length === 1 && onClose()}
                 />
               </li>
             ))}
@@ -137,20 +137,20 @@ function MerchantDialogContent({
   );
 }
 
-function MoveAliasButton({
-  aliasKey,
+function MoveKeyButton({
+  merchantKey,
   merchants,
   currentMerchantId,
   onMoved,
 }: {
-  aliasKey: string;
+  merchantKey: string;
   merchants: Merchant[];
   currentMerchantId: string;
   onMoved: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const { execute } = useActionWithToast(apiActions.merchants.moveMerchantAlias, {
+  const { execute } = useActionWithToast(apiActions.merchants.moveMerchantKey, {
     loadingToast: 'Moving...',
     successToast: 'Moved!',
     errorToast: 'Failed to move. Please try again later.',
@@ -158,7 +158,7 @@ function MoveAliasButton({
   });
 
   const move = (target: { merchantId: string } | { name: string }) => {
-    execute({ key: aliasKey, target });
+    execute({ key: merchantKey, target });
     setOpen(false);
   };
 

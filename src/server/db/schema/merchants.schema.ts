@@ -1,14 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
-import {
-  index,
-  pgPolicy,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { index, pgPolicy, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { categories } from './categories.schema';
@@ -35,32 +26,6 @@ export const merchants = pgTable(
       to: authenticatedRole,
       using: eq(table.userId, authUid),
       withCheck: sql`${eq(table.userId, authUid)} AND (${table.categoryId} IS NULL OR EXISTS (SELECT 1 FROM ${categories} WHERE ${categories.id} = ${table.categoryId} AND ${categories.userId} = ${authUid}))`,
-    }),
-  ],
-);
-
-/**
- * The normalized raw names (see getMerchantKey) that belong to a merchant. A transaction belongs to
- * the merchant of its merchant_key, so merging or splitting merchants only moves aliases.
- */
-export const merchantAliases = pgTable(
-  'merchant_aliases',
-  {
-    userId: uuid().notNull().default(authUidDefault),
-    key: text().notNull(),
-    merchantId: uuid()
-      .notNull()
-      .references(() => merchants.id, { onDelete: 'cascade' }),
-  },
-  (table) => [
-    primaryKey({ columns: [table.userId, table.key] }),
-    index().on(table.merchantId),
-    pgPolicy('merchant_aliases_allow_all_for_owner_policy', {
-      as: 'permissive',
-      for: 'all',
-      to: authenticatedRole,
-      using: eq(table.userId, authUid),
-      withCheck: sql`${eq(table.userId, authUid)} AND EXISTS (SELECT 1 FROM ${merchants} WHERE ${merchants.id} = ${table.merchantId} AND ${merchants.userId} = ${authUid})`,
     }),
   ],
 );

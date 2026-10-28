@@ -110,6 +110,12 @@ export const updateTransaction = authenticatedActionClient
         });
       }
 
+      // A synced transaction keeps the merchant of the bank's text when its description is edited,
+      // and loses it when its new type has none
+      const merchantKey = getMerchantKey(
+        transaction.dataSource === 'manual' ? params : { ...transaction, type: params.type },
+      );
+
       await tx
         .update(schema.transactions)
         .set({
@@ -118,11 +124,9 @@ export const updateTransaction = authenticatedActionClient
           description: params.description,
           startedDate: params.date,
           completedDate: params.date,
-          // A synced transaction keeps the merchant of the bank's text when its description is
-          // edited, and loses it when its new type has none
-          merchantKey: getMerchantKey(
-            transaction.dataSource === 'manual' ? params : { ...transaction, type: params.type },
-          ),
+          merchantKey,
+          // A new key gets its merchant from assignMerchants
+          ...(merchantKey !== transaction.merchantKey && { merchantId: null }),
         })
         .where(eq(schema.transactions.id, params.id));
       await assignMerchants(tx, ctx.userId);

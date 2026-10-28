@@ -3,13 +3,12 @@ import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { and, asc, desc, eq, exists, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
 import { env } from '@/lib/env';
 import { getMerchantName, normalizeMerchantName } from '@/lib/utils/merchants';
 import { DbClient, DbTx, schema } from '@/server/db';
-
-import { isAliasOfTransaction } from '../categories/joins';
 
 // Bank card types. Their names are businesses, while transfers name people, which never go to the
 // LLM. Neither do the descriptions the user typed for manual transactions.
@@ -28,8 +27,8 @@ export async function lockMerchants(tx: DbTx, userId: string) {
 }
 
 /**
- * Moves the aliases, and with them the transactions, of a merchant to another one and deletes it.
- * The target keeps its category, or takes the source's if it has none.
+ * Moves the transactions of a merchant to another one and deletes it. The target keeps its
+ * category, or takes the source's if it has none.
  */
 export async function mergeMerchant(
   tx: DbTx,
@@ -37,9 +36,9 @@ export async function mergeMerchant(
   target: { id: string; categoryId: string | null },
 ) {
   await tx
-    .update(schema.merchantAliases)
+    .update(schema.transactions)
     .set({ merchantId: target.id })
-    .where(eq(schema.merchantAliases.merchantId, source.id));
+    .where(eq(schema.transactions.merchantId, source.id));
   if (!target.categoryId && source.categoryId) {
     await tx
       .update(schema.merchants)
@@ -70,14 +69,30 @@ export async function findMerchantByName(tx: DbTx, userId: string, name: string)
 }
 
 /**
- * Creates a merchant for every merchant key of the user's transactions that has none yet, named
- * after the first transaction with that key, and without a category. Card merchants then wait for
- * enrichMerchants. Sets the user explicitly, because the cron job has no user session.
+ * Gives the user's transactions without a merchant the merchant of the other transactions with the
+ * same key. New keys get a new merchant, named after their first card transaction (else their first
+ * transaction) and without a category, and card merchants then wait for enrichMerchants. Sets the
+ * user explicitly, because the cron job has no user session.
  */
 export async function assignMerchants(tx: DbTx, userId: string) {
   await lockMerchants(tx, userId);
 
   const t = schema.transactions;
+  const other = alias(t, 'other');
+  await tx
+    .update(t)
+    .set({ merchantId: other.merchantId })
+    .from(other)
+    .where(
+      and(
+        eq(t.userId, userId),
+        isNull(t.merchantId),
+        eq(other.userId, userId),
+        eq(other.merchantKey, t.merchantKey),
+        isNotNull(other.merchantId),
+      ),
+    );
+
   const newKeys = await tx
     .selectDistinctOn([t.merchantKey], {
       key: t.merchantKey,
@@ -86,8 +101,7 @@ export async function assignMerchants(tx: DbTx, userId: string) {
       description: t.description,
     })
     .from(t)
-    .leftJoin(schema.merchantAliases, isAliasOfTransaction)
-    .where(and(eq(t.userId, userId), isNotNull(t.merchantKey), isNull(schema.merchantAliases.key)))
+    .where(and(eq(t.userId, userId), isNotNull(t.merchantKey), isNull(t.merchantId)))
     // The first card transaction of a key, else its first transaction
     .orderBy(t.merchantKey, desc(isCardTransaction), asc(t.startedDate));
   if (!newKeys.length) {
@@ -105,15 +119,14 @@ export async function assignMerchants(tx: DbTx, userId: string) {
     .onConflictDoNothing();
   // Matched in SQL, so the names compare like the unique index does
   await tx.execute(sql`
-    insert into ${schema.merchantAliases} (user_id, key, merchant_id)
-    select ${userId}::uuid, new_key.key, ${schema.merchants.id}
+    update ${t} set merchant_id = ${schema.merchants.id}
     from (values ${sql.join(
       values.map(({ key, name }) => sql`(${key}, ${name})`),
       sql`, `,
     )}) as new_key (key, name)
     join ${schema.merchants} on ${schema.merchants.userId} = ${userId}
       and lower(${schema.merchants.name}) = lower(new_key.name)
-    on conflict do nothing`);
+    where ${t.userId} = ${userId} and ${t.merchantId} is null and ${t.merchantKey} = new_key.key`);
 }
 
 const SYSTEM_PROMPT = `You clean up merchant names from bank card statements and categorize the merchants.
@@ -145,10 +158,9 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
     const [pending, existing, categories, currencies] = await transaction((tx) => {
       const hasCardTransaction = exists(
         tx
-          .select({ key: schema.merchantAliases.key })
-          .from(schema.merchantAliases)
-          .innerJoin(schema.transactions, isAliasOfTransaction)
-          .where(and(eq(schema.merchantAliases.merchantId, m.id), isCardTransaction)),
+          .select({ id: schema.transactions.id })
+          .from(schema.transactions)
+          .where(and(eq(schema.transactions.merchantId, m.id), isCardTransaction)),
       );
 
       return Promise.all([
