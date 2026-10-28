@@ -1,7 +1,7 @@
 'use server';
 
 import { isBefore, max } from 'date-fns';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { returnValidationErrors } from 'next-safe-action';
 import { z } from 'zod';
@@ -99,8 +99,18 @@ export const updateBalances = authenticatedActionClient
 export const updateTransaction = authenticatedActionClient
   .inputSchema(updateTransactionSchema)
   .action(async ({ parsedInput: params, ctx }) => {
-    const [transaction] = await ctx.db.rls(async (tx) => {
-      const result = await tx
+    await ctx.db.rls(async (tx) => {
+      const [transaction] = await tx
+        .select()
+        .from(schema.transactions)
+        .where(eq(schema.transactions.id, params.id));
+      if (!transaction) {
+        returnValidationErrors(updateTransactionSchema, {
+          id: { _errors: ['Transaction not found.'] },
+        });
+      }
+
+      await tx
         .update(schema.transactions)
         .set({
           type: params.type,
@@ -108,20 +118,15 @@ export const updateTransaction = authenticatedActionClient
           description: params.description,
           startedDate: params.date,
           completedDate: params.date,
-          // A synced transaction keeps its merchant when its description is edited
-          merchantKey: sql`case when ${schema.transactions.dataSource} = 'manual' then ${getMerchantKey(params)} else ${schema.transactions.merchantKey} end`,
+          // A synced transaction keeps the merchant of the bank's text when its description is
+          // edited, and loses it when its new type has none
+          merchantKey: getMerchantKey(
+            transaction.dataSource === 'manual' ? params : { ...transaction, type: params.type },
+          ),
         })
-        .where(eq(schema.transactions.id, params.id))
-        .returning({ id: schema.transactions.id });
+        .where(eq(schema.transactions.id, params.id));
       await assignMerchants(tx, ctx.userId);
-      return result;
     });
-
-    if (!transaction) {
-      returnValidationErrors(updateTransactionSchema, {
-        id: { _errors: ['Transaction not found.'] },
-      });
-    }
 
     revalidatePath('/dashboard', 'layout');
   });

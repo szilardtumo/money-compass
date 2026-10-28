@@ -2,22 +2,21 @@ import 'server-only';
 
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
-import { and, asc, eq, exists, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, exists, inArray, isNotNull, isNull, ne, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { env } from '@/lib/env';
-import { getMerchantName } from '@/lib/utils/merchants';
+import { getMerchantName, normalizeMerchantName } from '@/lib/utils/merchants';
 import { DbClient, DbTx, schema } from '@/server/db';
 
 import { isAliasOfTransaction } from '../categories/joins';
 
 // Bank card types. Their names are businesses, while transfers name people, which never go to the
 // LLM. Neither do the descriptions the user typed for manual transactions.
-const CARD_TYPES = ['card_payment', 'refund', 'atm', 'fee', 'reward'];
 const isCardTransaction = and(
-  inArray(schema.transactions.type, CARD_TYPES),
+  inArray(schema.transactions.type, ['card_payment', 'refund', 'atm', 'fee', 'reward']),
   eq(schema.transactions.dataSource, 'integration'),
-);
+)!;
 const BATCH_SIZE = 100;
 
 /**
@@ -70,7 +69,8 @@ export async function assignMerchants(tx: DbTx, userId: string) {
     .from(t)
     .leftJoin(schema.merchantAliases, isAliasOfTransaction)
     .where(and(eq(t.userId, userId), isNotNull(t.merchantKey), isNull(schema.merchantAliases.key)))
-    .orderBy(t.merchantKey, asc(t.startedDate));
+    // The first card transaction of a key, else its first transaction
+    .orderBy(t.merchantKey, desc(isCardTransaction), asc(t.startedDate));
   if (!newKeys.length) {
     return;
   }
@@ -199,50 +199,56 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
         const results = response.parsed_output.merchants;
         await transaction(async (tx) => {
           await lockMerchants(tx, userId);
-          // Read again under the lock: the user or another run may have changed them meanwhile
-          const current = await tx
-            .select({
-              id: m.id,
-              name: m.name,
-              categoryId: m.categoryId,
-              autoCheckedAt: m.autoCheckedAt,
-            })
-            .from(m)
-            .where(eq(m.userId, userId));
-          const byId = new Map(current.map((merchant) => [merchant.id, merchant]));
-          const byName = new Map(
-            current.map((merchant) => [merchant.name.toLowerCase(), merchant]),
-          );
+          const handled = new Set<string>();
 
           for (const result of results) {
-            const merchant = byId.get(batch[result.index]?.id ?? '');
+            const pending = batch[result.index];
             const name = result.name.trim();
-            // The echoed name guards against answers that point at the wrong merchant
-            if (!merchant || merchant.autoCheckedAt || result.input !== merchant.name || !name) {
+            // The echoed name guards against answers that point at the wrong merchant, and a
+            // repeated index is skipped
+            if (
+              !pending ||
+              handled.has(pending.id) ||
+              normalizeMerchantName(result.input) !== normalizeMerchantName(pending.name) ||
+              !name
+            ) {
               continue;
             }
-            // A repeated index is skipped
-            merchant.autoCheckedAt = new Date();
+            handled.add(pending.id);
+
+            // Read under the lock: the user or another run may have handled it meanwhile
+            const [merchant] = await tx
+              .select({ id: m.id, categoryId: m.categoryId })
+              .from(m)
+              .where(and(eq(m.id, pending.id), isNull(m.autoCheckedAt)));
+            if (!merchant) {
+              continue;
+            }
 
             const categoryId =
               merchant.categoryId ??
               categories.find((category) => category.name === result.category)?.id ??
               null;
-            const target = byName.get(name.toLowerCase());
+            // Compared like the unique index compares names
+            const [target] = await tx
+              .select({ id: m.id, categoryId: m.categoryId })
+              .from(m)
+              .where(
+                and(
+                  eq(m.userId, userId),
+                  ne(m.id, merchant.id),
+                  sql`lower(${m.name}) = lower(${name})`,
+                ),
+              );
 
-            byName.delete(merchant.name.toLowerCase());
-
-            if (target && target.id !== merchant.id) {
+            if (target) {
               await mergeMerchant(tx, { id: merchant.id, categoryId }, target);
-              target.categoryId ??= categoryId;
-              continue;
+            } else {
+              await tx
+                .update(m)
+                .set({ name, categoryId, autoCheckedAt: new Date() })
+                .where(eq(m.id, merchant.id));
             }
-
-            await tx
-              .update(m)
-              .set({ name, categoryId, autoCheckedAt: new Date() })
-              .where(eq(m.id, merchant.id));
-            byName.set(name.toLowerCase(), { ...merchant, name, categoryId });
           }
 
           // Merchants the answer left out aren't asked again

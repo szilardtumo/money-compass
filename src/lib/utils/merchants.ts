@@ -2,9 +2,6 @@
 // They have no merchant, and don't count in analytics unless they get a category of their own.
 export const TYPES_WITHOUT_MERCHANT = ['exchange', 'topup', 'correction'];
 
-// Card processors that prefix the merchant's name, like "Payu*emag.ro" or "Helopay Iron Bar"
-const PROCESSOR_PREFIX = /^(payu|paypal|sumup|sq|zettle|otpmobl)\s*[*_]\s*|^helopay\s+/;
-
 // Legal forms and their dotted spellings split into letters ("S.r.l." -> "s r l"), and the
 // Hungarian store number suffix ("Aldi 67.sz.")
 const IGNORED_WORDS = new Set(
@@ -52,17 +49,18 @@ export function getMerchantName({ type, counterpartyName, description }: Transac
  */
 export function getMerchantKey(transaction: TransactionFields) {
   const name = getMerchantName(transaction);
-  if (!name) {
-    return null;
-  }
+  return name && normalizeMerchantName(name);
+}
 
+export function normalizeMerchantName(name: string) {
   const normalized = name
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .toLowerCase()
     // Revolut writes Hungarian accents after the letter: "Gyo'gyszerta'r", "O:nkiszolg"
     .replace(/(?<=\p{L})['’:](?=\p{L})/gu, '')
-    .replace(PROCESSOR_PREFIX, '')
+    // Card processors that prefix the merchant's name, like "Payu*emag.ro" or "Helopay Iron Bar"
+    .replace(/^(payu|paypal|sumup|sq|zettle|otpmobl)\s*[*_]\s*|^helopay\s+/, '')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
   // Words with digits are store numbers, dates and references
