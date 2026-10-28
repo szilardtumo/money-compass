@@ -1,6 +1,19 @@
 import { Account, Subaccount } from './accounts.types';
 import { CurrencyValue } from './currencies.types';
 
+export const TRANSACTION_TYPE_OPTIONS = [
+  { label: 'Card payment', value: 'card_payment' },
+  { label: 'Refund', value: 'refund' },
+  { label: 'Transfer', value: 'transfer' },
+  { label: 'Exchange', value: 'exchange' },
+  { label: 'Top-up', value: 'topup' },
+  { label: 'ATM', value: 'atm' },
+  { label: 'Fee', value: 'fee' },
+  { label: 'Reward', value: 'reward' },
+  { label: 'Correction', value: 'correction' },
+  { label: 'Other', value: 'other' },
+];
+
 export interface Transaction {
   id: string;
   accountId: string;

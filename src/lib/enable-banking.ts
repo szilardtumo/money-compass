@@ -41,9 +41,17 @@ interface Transaction {
 // Revolut's codes. Other banks send their own codes, which fall back to 'other'.
 const TRANSACTION_TYPES: Record<string, string> = {
   CARD_PAYMENT: 'card_payment',
+  REV_PAYMENT: 'card_payment',
+  CARD_REFUND: 'refund',
+  REV_PAYMENT_REFUND: 'refund',
   TRANSFER: 'transfer',
   EXCHANGE: 'exchange',
   TOPUP: 'topup',
+  ATM: 'atm',
+  FEE: 'fee',
+  CHARGE: 'fee',
+  REWARD: 'reward',
+  CASHBACK: 'reward',
 };
 
 export class EnableBankingError extends Error {
