@@ -1,0 +1,26 @@
+export type CategoryKind = 'expense' | 'income' | 'excluded';
+
+export interface Category {
+  id: string;
+  name: string;
+  kind: CategoryKind;
+  icon: string;
+  color: string;
+}
+
+export interface CategoryWithCounts extends Category {
+  merchantCount: number;
+  transactionCount: number;
+}
+
+export interface Merchant {
+  id: string;
+  name: string;
+  category: Category | null;
+  /** The normalized raw names that belong to the merchant, with their transaction counts */
+  aliases: { key: string; transactionCount: number }[];
+  transactionCount: number;
+  /** The sum of the last 12 months in the main currency, negative for spending */
+  yearTotal: number;
+  lastSeen: Date | null;
+}

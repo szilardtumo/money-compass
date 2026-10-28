@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
@@ -12,13 +12,13 @@ import { groupBy } from '@/lib/utils/group-by';
 import { generateTimeBuckets, TimeInterval } from '@/lib/utils/time-buckets';
 import { schema } from '@/server/db';
 
+import { categoryColumns, isExcluded, joinCategory } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
   balance: number;
   subaccount: typeof schema.subaccounts.$inferSelect;
-  linkedTransaction: Transaction['linkedTransaction'];
-};
+} & Pick<Transaction, 'linkedTransaction' | 'merchant' | 'category' | 'excluded'>;
 
 /**
  * Maps a database transaction to the Transaction domain model with currency conversion
@@ -61,6 +61,10 @@ const mapTransactionData = (
     dataSource: data.dataSource,
     createdAt: data.createdAt,
     linkedTransaction: data.linkedTransaction,
+    merchant: data.merchant,
+    category: data.category,
+    categorySource: data.categoryId ? 'transaction' : data.category ? 'merchant' : null,
+    excluded: data.excluded,
   };
 };
 
@@ -82,6 +86,12 @@ export const getTransactions = createApiQuery<
     fromDate?: string;
     /** The end date of the date range to filter by */
     toDate?: string;
+    /** The ID of the category to filter by, or null for uncategorized transactions */
+    categoryId?: string | null;
+    /** The ID of the merchant to filter by */
+    merchantId?: string;
+    /** Only transactions that count in analytics (false) or that don't (true) */
+    excluded?: boolean;
     /** The page number to fetch */
     page?: number;
     /** The number of transactions per page */
@@ -90,7 +100,17 @@ export const getTransactions = createApiQuery<
   Paginated<Transaction>
 >(
   async ({
-    input: { accountId, subaccountId, fromDate, toDate, page = 0, pageSize = 20 } = {},
+    input: {
+      accountId,
+      subaccountId,
+      fromDate,
+      toDate,
+      categoryId,
+      merchantId,
+      excluded,
+      page = 0,
+      pageSize = 20,
+    } = {},
   }) => {
     'use cache: private';
     const { db } = await createApiContext();
@@ -98,29 +118,69 @@ export const getTransactions = createApiQuery<
     const linkedSubaccount = alias(schema.subaccounts, 'linked_subaccount');
 
     // Set up the database query
-    const query = db.rls((tx) =>
-      tx
-        .select()
+    const query = db.rls((tx) => {
+      const merchantCounts = tx
+        .select({
+          merchantId: schema.merchantAliases.merchantId,
+          transactionCount: count().as('transaction_count'),
+        })
         .from(schema.transactions)
         .innerJoin(
-          schema.transactionBalances,
-          eq(schema.transactions.id, schema.transactionBalances.transactionId),
+          schema.merchantAliases,
+          and(
+            eq(schema.merchantAliases.userId, schema.transactions.userId),
+            eq(schema.merchantAliases.key, schema.transactions.merchantKey),
+          ),
         )
-        .innerJoin(schema.subaccounts, eq(schema.transactions.subaccountId, schema.subaccounts.id))
-        .leftJoin(linked, eq(schema.transactions.linkedTransactionId, linked.id))
-        .leftJoin(linkedSubaccount, eq(linked.subaccountId, linkedSubaccount.id))
+        .groupBy(schema.merchantAliases.merchantId)
+        .as('merchant_counts');
+
+      return joinCategory(
+        tx
+          .select({
+            transaction: schema.transactions,
+            balance: schema.transactionBalances.balance,
+            subaccount: schema.subaccounts,
+            linkedAmount: linked.amount,
+            linkedCurrency: linkedSubaccount.currency,
+            merchant: {
+              id: schema.merchants.id,
+              name: schema.merchants.name,
+              transactionCount: merchantCounts.transactionCount,
+            },
+            category: categoryColumns,
+            excluded: isExcluded,
+          })
+          .from(schema.transactions)
+          .innerJoin(
+            schema.transactionBalances,
+            eq(schema.transactions.id, schema.transactionBalances.transactionId),
+          )
+          .innerJoin(
+            schema.subaccounts,
+            eq(schema.transactions.subaccountId, schema.subaccounts.id),
+          )
+          .leftJoin(linked, eq(schema.transactions.linkedTransactionId, linked.id))
+          .leftJoin(linkedSubaccount, eq(linked.subaccountId, linkedSubaccount.id))
+          .$dynamic(),
+      )
+        .leftJoin(merchantCounts, eq(merchantCounts.merchantId, schema.merchants.id))
         .where(
           and(
             accountId ? eq(schema.subaccounts.accountId, accountId) : undefined,
             subaccountId ? eq(schema.transactions.subaccountId, subaccountId) : undefined,
             fromDate ? gte(schema.transactions.startedDate, new Date(fromDate)) : undefined,
             toDate ? lte(schema.transactions.startedDate, new Date(toDate)) : undefined,
+            categoryId === null ? isNull(schema.categories.id) : undefined,
+            categoryId ? eq(schema.categories.id, categoryId) : undefined,
+            merchantId ? eq(schema.merchants.id, merchantId) : undefined,
+            excluded === undefined ? undefined : sql`${isExcluded} = ${excluded}`,
           ),
         )
         .orderBy(desc(schema.transactions.startedDate), desc(schema.transactions.sequence))
         .offset(page * pageSize)
-        .limit(pageSize),
-    );
+        .limit(pageSize);
+    });
 
     // Run the database query and get the main currency in parallel
     const [data, { mainCurrency, mapper: mainCurrencyMapper }] = await Promise.all([
@@ -133,13 +193,16 @@ export const getTransactions = createApiQuery<
       data: data.map((item) =>
         mapTransactionData(
           {
-            ...item.transactions,
-            balance: item.transaction_balances.balance,
-            subaccount: item.subaccounts,
+            ...item.transaction,
+            balance: item.balance,
+            subaccount: item.subaccount,
             linkedTransaction:
-              item.linked && item.linked_subaccount
-                ? { amount: item.linked.amount, currency: item.linked_subaccount.currency }
+              item.linkedAmount !== null && item.linkedCurrency !== null
+                ? { amount: item.linkedAmount, currency: item.linkedCurrency }
                 : null,
+            merchant: item.merchant,
+            category: item.category,
+            excluded: item.excluded,
           },
           mainCurrency,
           mainCurrencyMapper,

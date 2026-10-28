@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { authenticatedActionClient } from '@/lib/api';
 import { formatDate } from '@/lib/utils/formatters';
 import { getMerchantKey } from '@/lib/utils/merchants';
+import { setTransactionCategorySchema } from '@/lib/validation/categories';
 import {
   createTransactionSchema,
   deleteTransactionsSchema,
@@ -139,4 +140,20 @@ export const deleteTransaction = authenticatedActionClient
   .inputSchema(z.uuid())
   .action(async ({ parsedInput: transactionId }) => {
     await deleteTransactions({ transactionIds: [transactionId] });
+  });
+
+/**
+ * Sets the transactions' own category, which overrides their merchant's. Null removes it.
+ */
+export const setTransactionCategory = authenticatedActionClient
+  .inputSchema(setTransactionCategorySchema)
+  .action(async ({ parsedInput: { transactionIds, categoryId }, ctx }) => {
+    await ctx.db.rls((tx) =>
+      tx
+        .update(schema.transactions)
+        .set({ categoryId })
+        .where(inArray(schema.transactions.id, transactionIds)),
+    );
+
+    revalidatePath('/dashboard', 'layout');
   });

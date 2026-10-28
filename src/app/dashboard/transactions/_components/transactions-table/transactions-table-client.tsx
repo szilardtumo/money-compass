@@ -1,10 +1,12 @@
 'use client';
 
 import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
-import { EllipsisIcon, Trash2Icon } from 'lucide-react';
+import { EllipsisIcon, TagIcon, Trash2Icon } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
 
+import { CategoryPicker } from '@/components/categories/category-picker';
+import { TransactionCategoryPicker } from '@/components/categories/transaction-category-picker';
 import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +31,7 @@ import {
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Account } from '@/lib/types/accounts.types';
+import { Category } from '@/lib/types/categories.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
 import { formatCurrency, formatDateTime, formatExchange } from '@/lib/utils/formatters';
@@ -48,9 +51,16 @@ const staticColumns = [
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="min-w-[150px]">
-            {!!row.original.counterpartyName && (
-              <p className="font-medium">{row.original.counterpartyName}</p>
+            {!!(row.original.merchant || row.original.counterpartyName) && (
+              <p className="font-medium">
+                {row.original.merchant?.name ?? row.original.counterpartyName}
+              </p>
             )}
+            {!!row.original.merchant &&
+              !!row.original.counterpartyName &&
+              row.original.merchant.name !== row.original.counterpartyName && (
+                <p className="text-muted-foreground">{row.original.counterpartyName}</p>
+              )}
             <p className="text-ellipsis line-clamp-3">{getValue()}</p>
             {row.original.linkedTransaction && (
               <p>{formatExchange(row.original, row.original.linkedTransaction)}</p>
@@ -73,6 +83,15 @@ const staticColumns = [
     ),
     filterFn: 'arrHas',
   }),
+  columnHelper.accessor(
+    (row) => row.category?.name ?? (row.excluded ? 'Excluded' : 'Uncategorized'),
+    {
+      id: 'category',
+      header: 'Category',
+      filterFn: 'arrHas',
+      enableSorting: false,
+    },
+  ),
   columnHelper.accessor((row) => row.subaccount.name, {
     id: 'subaccount',
     header: 'Subaccount',
@@ -111,9 +130,14 @@ const staticColumns = [
 interface TransactionsTableClientProps {
   accounts: Account[];
   transactions: Paginated<Transaction>;
+  categories: Category[];
 }
 
-export function TransactionsTableClient({ accounts, transactions }: TransactionsTableClientProps) {
+export function TransactionsTableClient({
+  accounts,
+  transactions,
+  categories,
+}: TransactionsTableClientProps) {
   const transactionsWithAccount = useMemo<TransactionWithAccount[]>(
     () =>
       transactions.data
@@ -141,6 +165,15 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     [accounts],
   );
 
+  const categoryOptions = useMemo(
+    () =>
+      ['Uncategorized', 'Excluded', ...categories.map((category) => category.name)].map((name) => ({
+        label: name,
+        value: name,
+      })),
+    [categories],
+  );
+
   const { openDialog: openUpdateTransactionDialog } = useUpdateTransactionDialog();
 
   const { execute: deleteTransaction, isExecuting: isDeleting } = useActionWithToast(
@@ -149,6 +182,15 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
       loadingToast: 'Deleting transaction...',
       successToast: 'Transaction deleted!',
       errorToast: 'Failed to delete transaction. Please try again later.',
+    },
+  );
+
+  const { executeAsync: setTransactionCategory } = useActionWithToast(
+    apiActions.transactions.setTransactionCategory,
+    {
+      loadingToast: 'Updating categories...',
+      successToast: 'Categories updated!',
+      errorToast: 'Failed to update the categories. Please try again later.',
     },
   );
 
@@ -198,13 +240,22 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
     };
 
     return columnHelper.columns([
-      ...staticColumns,
+      ...staticColumns.map((column) =>
+        column.id === 'category'
+          ? {
+              ...column,
+              cell: ({ row }: CellContext<DataTableFeatures, TransactionWithAccount, unknown>) => (
+                <TransactionCategoryPicker transaction={row.original} categories={categories} />
+              ),
+            }
+          : column,
+      ),
       columnHelper.display({
         id: 'actions',
         cell: actionsCell,
       }),
     ]);
-  }, [deleteTransaction, openUpdateTransactionDialog]);
+  }, [categories, deleteTransaction, openUpdateTransactionDialog]);
 
   const table = useDataTable({
     columns,
@@ -215,6 +266,15 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
   });
 
   const selectedRowCount = table.getSelectedRowModel().rows.length;
+
+  const categorizeSelected = useCallback(
+    async (categoryId: string | null) => {
+      const transactionIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
+      await setTransactionCategory({ transactionIds, categoryId });
+      table.resetRowSelection();
+    },
+    [setTransactionCategory, table],
+  );
 
   const deleteSelected = useCallback(async () => {
     const transactionIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
@@ -232,11 +292,32 @@ export function TransactionsTableClient({ accounts, transactions }: Transactions
           title="Account"
           options={accountOptions}
         />
+        <DataTableFilter
+          table={table}
+          columnId="category"
+          title="Category"
+          options={categoryOptions}
+        />
         <DataTableResetFilters table={table} />
+        <CategoryPicker
+          categories={categories}
+          value={null}
+          onSelect={categorizeSelected}
+          clearLabel="Remove their own category"
+        >
+          <Button
+            variant="outline"
+            icon={TagIcon}
+            className="h-8 px-2.5 sm:ml-auto"
+            disabled={selectedRowCount === 0}
+          >
+            Categorize ({selectedRowCount})
+          </Button>
+        </CategoryPicker>
         <Button
           variant="destructive"
           icon={Trash2Icon}
-          className="h-8 px-2.5 sm:ml-auto"
+          className="h-8 px-2.5"
           onClick={deleteSelected}
           disabled={selectedRowCount === 0 || isDeleting || isDeletingSelected}
           isLoading={isDeleting || isDeletingSelected}
