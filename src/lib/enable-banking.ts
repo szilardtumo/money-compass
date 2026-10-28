@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { format } from 'date-fns';
+import { format, max } from 'date-fns';
 import { createSign } from 'node:crypto';
 
 import { env } from '@/lib/env';
@@ -35,7 +35,16 @@ interface Transaction {
   creditor?: { name?: string };
   debtor?: { name?: string };
   remittance_information?: string[];
+  bank_transaction_code?: { code?: string };
 }
+
+// Revolut's codes. Other banks send their own codes, which fall back to 'other'.
+const TRANSACTION_TYPES: Record<string, string> = {
+  CARD_PAYMENT: 'card_payment',
+  TRANSFER: 'transfer',
+  EXCHANGE: 'exchange',
+  TOPUP: 'topup',
+};
 
 export class EnableBankingError extends Error {
   constructor(
@@ -198,9 +207,22 @@ export async function getTransactions(accountId: string, dateFrom: Date) {
     const amount = Math.abs(Number(transaction.transaction_amount.amount));
     const date =
       transaction.booking_date ?? transaction.value_date ?? transaction.transaction_date!;
-    const description = transaction.remittance_information?.join(' ') ?? '';
     const counterpartyName =
       (isDebit ? transaction.creditor?.name : transaction.debtor?.name) ?? '';
+    // Revolut repeats the counterparty in the remittance information, like "To Zsófia P" for
+    // "Zsófia Papp", so only the payment's own text is kept
+    const normalize = (text: string) =>
+      text
+        .normalize('NFD')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    const description = (transaction.remittance_information ?? [])
+      .filter((line) => {
+        const text = normalize(line.replace(/^(to|from|payment from) /i, ''));
+        return !text || !normalize(counterpartyName).startsWith(text);
+      })
+      .join(' ')
+      .trim();
 
     // Without a bank reference, the transaction's content identifies it. Identical transactions
     // share a date, so their order in the response is the same on every sync.
@@ -215,8 +237,14 @@ export async function getTransactions(accountId: string, dateFrom: Date) {
         `derived:${content}|${occurrence}`,
       amount: isDebit ? -amount : amount,
       date: new Date(date),
+      // Revolut books a card payment on the day of the purchase and settles it days later. Other
+      // banks can send a value date before the booking date.
+      completedDate: max([new Date(date), new Date(transaction.value_date ?? date)]),
+      type: TRANSACTION_TYPES[transaction.bank_transaction_code?.code ?? ''] ?? 'other',
       description,
       counterpartyName,
+      // Most fields are null, so they're dropped to halve the size
+      bankData: JSON.parse(JSON.stringify(transaction, (_, value) => value ?? undefined)),
     };
   });
 }
