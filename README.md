@@ -39,7 +39,7 @@ Check out the live demo [here](https://money-compass-seven.vercel.app/)!
    yarn dev
    ```
 
-   The application will be available at http://localhost:3000.
+   The application will be available at http://localhost:3100.
 
 ## Scripts Overview
 

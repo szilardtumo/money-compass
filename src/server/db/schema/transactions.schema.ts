@@ -1,5 +1,14 @@
 import { and, eq, relations, sql } from 'drizzle-orm';
-import { index, integer, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  integer,
+  pgPolicy,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 
 import { accounts } from './accounts.schema';
@@ -29,6 +38,8 @@ export const transactions = pgTable(
   },
   (table) => [
     index().on(table.userId, table.subaccountId, table.startedDate.desc(), table.sequence.desc()),
+    // The sync skips known transactions with "on conflict do nothing". NULL references never conflict.
+    uniqueIndex().on(table.subaccountId, table.externalRef),
     pgPolicy('transactions_allow_all_for_owner_policy', {
       as: 'permissive',
       for: 'all',

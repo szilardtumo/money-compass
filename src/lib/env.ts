@@ -18,6 +18,10 @@ const serverEnvSchema = z.object({
   SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT_ID: z.string().optional(),
   SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET: z.string().optional(),
 
+  // Enable Banking
+  ENABLE_BANKING_APP_ID: z.string().min(1),
+  ENABLE_BANKING_PRIVATE_KEY: z.string().min(1),
+
   // Cron Jobs
   CRON_SECRET: z.string(),
 

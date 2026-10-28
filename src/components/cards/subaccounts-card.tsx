@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -17,11 +19,22 @@ interface SubaccountsCardProps {
 }
 
 export async function SubaccountsCard({ accountId }: SubaccountsCardProps) {
-  const account = await apiQueries.accounts.getAccount(accountId);
+  const [account, integrations] = await Promise.all([
+    apiQueries.accounts.getAccount(accountId),
+    apiQueries.integrations.getIntegrations(),
+  ]);
 
   if (!account) return null;
 
   const { subaccounts, totalBalance } = account;
+  const bankAccounts = new Map(
+    integrations.flatMap((integration) =>
+      integration.accounts.map((bankAccount) => [
+        bankAccount.subaccountId,
+        `${integration.institutionName} (${bankAccount.name || bankAccount.iban})`,
+      ]),
+    ),
+  );
 
   return (
     <Card>
@@ -48,7 +61,17 @@ export async function SubaccountsCard({ accountId }: SubaccountsCardProps) {
             )}
             {subaccounts.map((item) => (
               <TableRow key={item.id}>
-                <TableCell>{item.name}</TableCell>
+                <TableCell>
+                  <p>{item.name}</p>
+                  {bankAccounts.has(item.id) && (
+                    <Link
+                      href="/dashboard/integrations"
+                      className="text-sm text-muted-foreground underline underline-offset-4"
+                    >
+                      Synced with {bankAccounts.get(item.id)}
+                    </Link>
+                  )}
+                </TableCell>
                 <TableCell>
                   <Badge>{formatPercent(item.balance.mainCurrencyValue / totalBalance)}</Badge>
                 </TableCell>

@@ -12,6 +12,8 @@ export interface Transaction {
   mainCurrency: string;
   startedDate: Date;
   description: string;
+  counterpartyName: string;
+  dataSource: 'integration' | 'manual';
   createdAt: Date;
 }
 

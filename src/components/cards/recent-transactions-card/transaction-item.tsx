@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
 import { Avatar } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -40,8 +41,16 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
       <Avatar className="hidden sm:flex h-9 w-9 border" />
       <div className="space-y-1">
         <p className="text-sm font-medium line-clamp-2">
-          {transaction.description || 'No description'}
+          {transaction.counterpartyName || transaction.description || 'No description'}
+          {transaction.dataSource === 'integration' && (
+            <Badge variant="outline" className="ml-2">
+              Bank sync
+            </Badge>
+          )}
         </p>
+        {!!transaction.counterpartyName && !!transaction.description && (
+          <p className="text-sm line-clamp-2">{transaction.description}</p>
+        )}
         <p className="mt-0 text-sm text-muted-foreground">
           {formatTime(transaction.startedDate)} •{' '}
           <Link href={`/dashboard/accounts/${transaction.account.id}`} className="hover:underline">

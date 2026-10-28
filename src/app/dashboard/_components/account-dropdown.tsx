@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronDownIcon, LogOutIcon, MoonIcon, SunIcon } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback } from 'react';
@@ -91,6 +92,9 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
       <DropdownMenuContent className="w-(--radix-popper-anchor-width) min-w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard/integrations">Integrations</Link>
+        </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>App Theme</DropdownMenuSubTrigger>
           <DropdownMenuPortal>

@@ -15,6 +15,14 @@ export class MissingExchangeRateError extends Error {
   }
 }
 
+/** An error with a message meant for the user. Actions show its message instead of a generic one. */
+export class UserError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UserError';
+  }
+}
+
 export class AuthenticationError extends Error {
   constructor(message: string) {
     super(message);

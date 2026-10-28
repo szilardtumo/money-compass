@@ -93,11 +93,9 @@ function Button({
   const Icon = isLoading ? Loader2 : icon;
   const iconElement = Icon && (
     <Icon
-      className={iconVariants({
-        size,
-        iconPlacement,
-        iconAnimation: isLoading ? 'spin' : iconAnimation,
-      })}
+      className={cn(
+        iconVariants({ size, iconPlacement, iconAnimation: isLoading ? 'spin' : iconAnimation }),
+      )}
     />
   );
 
