@@ -99,6 +99,13 @@
       "when": 1793180032803,
       "tag": "20261028093352_transaction_types_from_bank",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793180109047,
+      "tag": "20261028093509_categories_and_merchants",
+      "breakpoints": true
     }
   ]
 }
