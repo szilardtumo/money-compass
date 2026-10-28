@@ -9,9 +9,8 @@ const categoryFields = {
   kind: z.enum(['expense', 'income', 'excluded'], 'A type must be selected.'),
 };
 
-export const createCategorySchema = z.object(categoryFields);
-
-export const updateCategorySchema = z.object({ id: z.uuid(), ...categoryFields });
+/** Creates a category, or updates the one with the ID */
+export const saveCategorySchema = z.object({ id: z.uuid().optional(), ...categoryFields });
 
 export const deleteCategorySchema = z.object({
   id: z.uuid(),

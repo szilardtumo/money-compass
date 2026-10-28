@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,11 +10,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Selectbox } from '@/components/ui/selectbox';
-import { useActionWithToast } from '@/hooks/useActionWithToast';
-import { Category, CATEGORY_KINDS, CategoryKind } from '@/lib/types/categories.types';
+import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
+import { Category, CATEGORY_KINDS } from '@/lib/types/categories.types';
+import { saveCategorySchema } from '@/lib/validation/categories';
 import { apiActions } from '@/server/api/actions';
 
 interface CategoryDialogProps {
@@ -35,54 +43,73 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
 }
 
 function CategoryForm({ category, onClose }: Omit<CategoryDialogProps, 'open'>) {
-  const [name, setName] = useState(category?.name ?? '');
-  const [kind, setKind] = useState<CategoryKind>(category?.kind ?? 'expense');
-
-  const toasts = {
-    loadingToast: 'Saving category...',
-    successToast: 'Category saved!',
-    errorToast: ({ errorMessage }: { errorMessage: string }) => ({
-      title: 'Failed to save the category',
-      description: errorMessage,
-    }),
-    onSuccess: onClose,
-  };
-  const create = useActionWithToast(apiActions.categories.createCategory, toasts);
-  const update = useActionWithToast(apiActions.categories.updateCategory, toasts);
-  const isExecuting = create.isExecuting || update.isExecuting;
+  const { form, handleSubmitWithAction } = useHookFormActionWithToast(
+    apiActions.categories.saveCategory,
+    zodResolver(saveCategorySchema),
+    {
+      actionProps: {
+        loadingToast: 'Saving category...',
+        successToast: 'Category saved!',
+        errorToast: ({ errorMessage }) => ({
+          title: 'Failed to save the category',
+          description: errorMessage,
+        }),
+        onSuccess: onClose,
+      },
+      formProps: {
+        defaultValues: category
+          ? { id: category.id, name: category.name, kind: category.kind }
+          : { name: '', kind: 'expense' },
+      },
+    },
+  );
 
   return (
-    <form
-      className="flex flex-col gap-4"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (category) {
-          update.execute({ id: category.id, name, kind });
-        } else {
-          create.execute({ name, kind });
-        }
-      }}
-    >
-      <DialogHeader>
-        <DialogTitle>{category ? 'Edit category' : 'New category'}</DialogTitle>
-      </DialogHeader>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="category-name">Name</Label>
-        <Input id="category-name" value={name} onChange={(event) => setName(event.target.value)} />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label>Type</Label>
-        <Selectbox
-          options={CATEGORY_KINDS.map(({ kind, label }) => ({ label, value: kind }))}
-          value={kind}
-          onValueChange={(value) => value && setKind(value as CategoryKind)}
+    <Form {...form}>
+      <form onSubmit={handleSubmitWithAction} className="flex flex-col gap-4">
+        <DialogHeader>
+          <DialogTitle>{category ? 'Edit category' : 'New category'}</DialogTitle>
+        </DialogHeader>
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <DialogFooter>
-        <Button type="submit" disabled={!name.trim() || isExecuting} isLoading={isExecuting}>
-          Save
-        </Button>
-      </DialogFooter>
-    </form>
+        <FormField
+          control={form.control}
+          name="kind"
+          render={({ field: { onChange, ...field } }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <FormControl>
+                <Selectbox
+                  options={CATEGORY_KINDS.map(({ kind, label }) => ({ label, value: kind }))}
+                  onValueChange={onChange}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <DialogFooter>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            isLoading={form.formState.isSubmitting}
+          >
+            Save
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }

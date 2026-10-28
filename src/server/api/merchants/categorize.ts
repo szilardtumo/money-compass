@@ -2,7 +2,7 @@ import 'server-only';
 
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
-import { and, asc, desc, eq, exists, inArray, isNotNull, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, exists, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { env } from '@/lib/env';
@@ -50,6 +50,26 @@ export async function mergeMerchant(
 }
 
 /**
+ * Returns the user's merchant with this name, compared like the unique index compares names.
+ */
+export async function findMerchantByName(tx: DbTx, userId: string, name: string) {
+  const [merchant] = await tx
+    .select({
+      id: schema.merchants.id,
+      name: schema.merchants.name,
+      categoryId: schema.merchants.categoryId,
+    })
+    .from(schema.merchants)
+    .where(
+      and(
+        eq(schema.merchants.userId, userId),
+        sql`lower(${schema.merchants.name}) = lower(${name})`,
+      ),
+    );
+  return merchant;
+}
+
+/**
  * Creates a merchant for every merchant key of the user's transactions that has none yet, named
  * after the first transaction with that key, and without a category. Card merchants then wait for
  * enrichMerchants. Sets the user explicitly, because the cron job has no user session.
@@ -64,7 +84,6 @@ export async function assignMerchants(tx: DbTx, userId: string) {
       type: t.type,
       counterpartyName: t.counterpartyName,
       description: t.description,
-      isCard: sql<boolean>`${isCardTransaction}`,
     })
     .from(t)
     .leftJoin(schema.merchantAliases, isAliasOfTransaction)
@@ -75,16 +94,14 @@ export async function assignMerchants(tx: DbTx, userId: string) {
     return;
   }
 
-  const now = new Date();
   const values = newKeys.map((item) => ({
     key: item.key!,
     name: getMerchantName(item) ?? item.key!,
-    autoCheckedAt: item.isCard ? null : now,
   }));
   // A merchant with the same name, in any case, exists when the LLM renamed another one to it
   await tx
     .insert(schema.merchants)
-    .values(values.map(({ name, autoCheckedAt }) => ({ userId, name, autoCheckedAt })))
+    .values(values.map(({ name }) => ({ userId, name })))
     .onConflictDoNothing();
   // Matched in SQL, so the names compare like the unique index does
   await tx.execute(sql`
@@ -109,45 +126,43 @@ For each merchant, return:
 - category: one of the given categories, or null if you can't tell what the business sells. Use what you know about local chains in the countries of the account currencies. Don't guess.`;
 
 /**
- * Asks the LLM for a clean name and a category for the user's new card merchants. A merchant whose
- * new name matches another merchant is merged into it, which groups the branches of a chain.
- * Does nothing without ANTHROPIC_API_KEY, and never throws: failed batches are retried on the
- * next run.
+ * Asks the LLM for a clean name and a category for the user's unchecked merchants that have bank
+ * card transactions. A merchant whose new name matches another merchant is merged into it, which
+ * groups the branches of a chain. Does nothing without ANTHROPIC_API_KEY, and never throws: failed
+ * batches are retried on the next run.
  *
  * @param transaction Runs the database writes, with RLS for a user or without it for the cron job.
+ * @returns The number of merchants it checked, 0 when none are left or every batch failed.
  */
 export async function enrichMerchants(transaction: DbClient['rls'], userId: string) {
   if (!env.ANTHROPIC_API_KEY) {
-    return;
+    return 0;
   }
 
+  let checked = 0;
   try {
     const m = schema.merchants;
-    const { pending, existingNames, categories, currencies } = await transaction(async (tx) => {
-      const [pending, existing, categories, currencies] = await Promise.all([
+    const [pending, existing, categories, currencies] = await transaction((tx) => {
+      const hasCardTransaction = exists(
+        tx
+          .select({ key: schema.merchantAliases.key })
+          .from(schema.merchantAliases)
+          .innerJoin(schema.transactions, isAliasOfTransaction)
+          .where(and(eq(schema.merchantAliases.merchantId, m.id), isCardTransaction)),
+      );
+
+      return Promise.all([
         tx
           .select({ id: m.id, name: m.name })
           .from(m)
-          .where(and(eq(m.userId, userId), isNull(m.autoCheckedAt)))
+          .where(and(eq(m.userId, userId), isNull(m.autoCheckedAt), hasCardTransaction))
           .orderBy(m.name)
           // Keeps a run within the function time limit. The rest waits for the next sync.
           .limit(300),
         tx
           .select({ name: m.name })
           .from(m)
-          .where(
-            and(
-              eq(m.userId, userId),
-              isNotNull(m.autoCheckedAt),
-              exists(
-                tx
-                  .select({ key: schema.merchantAliases.key })
-                  .from(schema.merchantAliases)
-                  .innerJoin(schema.transactions, isAliasOfTransaction)
-                  .where(and(eq(schema.merchantAliases.merchantId, m.id), isCardTransaction)),
-              ),
-            ),
-          ),
+          .where(and(eq(m.userId, userId), isNotNull(m.autoCheckedAt), hasCardTransaction)),
         tx
           .select({ id: schema.categories.id, name: schema.categories.name })
           .from(schema.categories)
@@ -158,23 +173,17 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
           .innerJoin(schema.accounts, eq(schema.accounts.id, schema.subaccounts.accountId))
           .where(eq(schema.accounts.userId, userId)),
       ]);
-      return {
-        pending,
-        existingNames: existing.map((item) => item.name),
-        categories,
-        currencies: currencies.map((item) => item.currency.toUpperCase()),
-      };
     });
     if (!pending.length || !categories.length) {
-      return;
+      return 0;
     }
+    const existingNames = existing.map((item) => item.name);
 
     const categoryNames = categories.map((category) => category.name) as [string, ...string[]];
     const outputFormat = zodOutputFormat(
       z.object({
         merchants: z.array(
           z.object({
-            index: z.number(),
             input: z.string(),
             name: z.string(),
             category: z.enum(categoryNames).nullable(),
@@ -197,9 +206,9 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
               role: 'user',
               content: JSON.stringify({
                 categories: categoryNames,
-                accountCurrencies: currencies,
+                accountCurrencies: currencies.map((item) => item.currency.toUpperCase()),
                 existingMerchants: existingNames,
-                merchants: batch.map((merchant, index) => ({ index, name: merchant.name })),
+                merchants: batch.map((merchant) => merchant.name),
               }),
             },
           ],
@@ -210,30 +219,26 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
         }
 
         const results = response.parsed_output.merchants;
+        // Answers are matched by the name they echo, which is unique in a batch like the keys
+        const requested = new Map(
+          batch.map((merchant) => [normalizeMerchantName(merchant.name), merchant]),
+        );
+
         await transaction(async (tx) => {
           await lockMerchants(tx, userId);
-          const handled = new Set<string>();
 
           for (const result of results) {
-            const pending = batch[result.index];
+            const merchantId = requested.get(normalizeMerchantName(result.input))?.id;
             const name = result.name.trim();
-            // The echoed name guards against answers that point at the wrong merchant, and a
-            // repeated index is skipped
-            if (
-              !pending ||
-              handled.has(pending.id) ||
-              normalizeMerchantName(result.input) !== normalizeMerchantName(pending.name) ||
-              !name
-            ) {
+            if (!merchantId || !name) {
               continue;
             }
-            handled.add(pending.id);
 
-            // Read under the lock: the user or another run may have handled it meanwhile
+            // Read under the lock: the user, another run or an earlier answer may have handled it
             const [merchant] = await tx
               .select({ id: m.id, categoryId: m.categoryId })
               .from(m)
-              .where(and(eq(m.id, pending.id), isNull(m.autoCheckedAt)));
+              .where(and(eq(m.id, merchantId), isNull(m.autoCheckedAt)));
             if (!merchant) {
               continue;
             }
@@ -242,19 +247,9 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
               merchant.categoryId ??
               categories.find((category) => category.name === result.category)?.id ??
               null;
-            // Compared like the unique index compares names
-            const [target] = await tx
-              .select({ id: m.id, categoryId: m.categoryId })
-              .from(m)
-              .where(
-                and(
-                  eq(m.userId, userId),
-                  ne(m.id, merchant.id),
-                  sql`lower(${m.name}) = lower(${name})`,
-                ),
-              );
+            const target = await findMerchantByName(tx, userId, name);
 
-            if (target) {
+            if (target && target.id !== merchant.id) {
               await mergeMerchant(tx, { id: merchant.id, categoryId }, target);
             } else {
               await tx
@@ -279,6 +274,7 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
             );
         });
         existingNames.push(...results.map((result) => result.name));
+        checked += batch.length;
       } catch (error) {
         console.error('Merchant categorization batch failed:', error);
       }
@@ -286,4 +282,5 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
   } catch (error) {
     console.error('Merchant categorization failed:', error);
   }
+  return checked;
 }

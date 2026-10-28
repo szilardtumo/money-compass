@@ -5,11 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { returnValidationErrors } from 'next-safe-action';
 
 import { authenticatedActionClient } from '@/lib/api';
-import {
-  createCategorySchema,
-  deleteCategorySchema,
-  updateCategorySchema,
-} from '@/lib/validation/categories';
+import { deleteCategorySchema, saveCategorySchema } from '@/lib/validation/categories';
 import { schema } from '@/server/db';
 import { isUniqueConstraintError } from '@/server/db/errors';
 
@@ -27,46 +23,33 @@ const COLORS = [
 
 const c = schema.categories;
 
-export const createCategory = authenticatedActionClient
-  .inputSchema(createCategorySchema)
-  .action(async ({ parsedInput: { name, kind }, ctx }) => {
-    await ctx.db.rls(async (tx) => {
-      const used = new Set((await tx.select({ color: c.color }).from(c)).map((item) => item.color));
-      const color = COLORS.find((item) => !used.has(item)) ?? COLORS[used.size % COLORS.length];
-
-      await tx
-        .insert(c)
-        .values({ name, kind, color })
-        .catch((error) => {
-          if (isUniqueConstraintError(error)) {
-            returnValidationErrors(createCategorySchema, {
-              name: { _errors: ['A category with this name already exists.'] },
-            });
-          }
-          throw error;
-        });
-    });
-
-    revalidatePath('/dashboard', 'layout');
-  });
-
-export const updateCategory = authenticatedActionClient
-  .inputSchema(updateCategorySchema)
+/**
+ * Creates a category, or updates the one with the given ID.
+ */
+export const saveCategory = authenticatedActionClient
+  .inputSchema(saveCategorySchema)
   .action(async ({ parsedInput: { id, name, kind }, ctx }) => {
-    await ctx.db.rls((tx) =>
-      tx
-        .update(c)
-        .set({ name, kind })
-        .where(eq(c.id, id))
-        .catch((error) => {
-          if (isUniqueConstraintError(error)) {
-            returnValidationErrors(updateCategorySchema, {
-              name: { _errors: ['A category with this name already exists.'] },
-            });
-          }
-          throw error;
-        }),
-    );
+    await ctx.db
+      .rls(async (tx) => {
+        if (id) {
+          await tx.update(c).set({ name, kind }).where(eq(c.id, id));
+          return;
+        }
+
+        const used = new Set(
+          (await tx.select({ color: c.color }).from(c)).map((item) => item.color),
+        );
+        const color = COLORS.find((item) => !used.has(item)) ?? COLORS[used.size % COLORS.length];
+        await tx.insert(c).values({ name, kind, color });
+      })
+      .catch((error) => {
+        if (isUniqueConstraintError(error)) {
+          returnValidationErrors(saveCategorySchema, {
+            name: { _errors: ['A category with this name already exists.'] },
+          });
+        }
+        throw error;
+      });
 
     revalidatePath('/dashboard', 'layout');
   });

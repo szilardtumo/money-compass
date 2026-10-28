@@ -1,11 +1,12 @@
 'use client';
 
 import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
-import { EllipsisIcon, TagIcon, Trash2Icon } from 'lucide-react';
+import { EllipsisIcon, Trash2Icon } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
 
-import { CategoryPicker } from '@/components/categories/category-picker';
+import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
+import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
 import { TransactionCategoryPicker } from '@/components/categories/transaction-category-picker';
 import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
 import { AccountIcon } from '@/components/ui/account-avatar';
@@ -178,11 +179,7 @@ export function TransactionsTableClient({
 
   const { executeAsync: setTransactionCategory } = useActionWithToast(
     apiActions.transactions.setTransactionCategory,
-    {
-      loadingToast: 'Updating categories...',
-      successToast: 'Categories updated!',
-      errorToast: 'Failed to update the categories. Please try again later.',
-    },
+    CATEGORY_TOASTS,
   );
 
   const { executeAsync: deleteTransactions, isExecuting: isDeletingSelected } = useActionWithToast(
@@ -294,21 +291,12 @@ export function TransactionsTableClient({
           options={categoryOptions}
         />
         <DataTableResetFilters table={table} />
-        <CategoryPicker
+        <BulkCategoryPicker
           categories={categories}
-          value={null}
-          onSelect={categorizeSelected}
+          selectedCount={selectedRowCount}
           clearLabel="Remove their own category"
-        >
-          <Button
-            variant="outline"
-            icon={TagIcon}
-            className="h-8 px-2.5 sm:ml-auto"
-            disabled={selectedRowCount === 0}
-          >
-            Categorize ({selectedRowCount})
-          </Button>
-        </CategoryPicker>
+          onSelect={categorizeSelected}
+        />
         <Button
           variant="destructive"
           icon={Trash2Icon}

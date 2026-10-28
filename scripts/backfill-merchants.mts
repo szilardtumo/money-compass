@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 // One-off: writes the merchant keys of the transactions saved before merchants existed, creates
-// their merchants, and runs the LLM pass until every card merchant was checked.
+// their merchants, and runs the LLM pass until every card merchant was checked. Without
+// ANTHROPIC_API_KEY it only creates the merchants.
 // Run: NODE_OPTIONS=--conditions=react-server yarn dlx tsx scripts/backfill-merchants.mts <local|prod>
 const target = process.argv[2];
 if (target !== 'local' && target !== 'prod') {
@@ -9,7 +10,7 @@ if (target !== 'local' && target !== 'prod') {
 
 process.loadEnvFile(target === 'prod' ? '.env.prod.local' : '.env.local');
 
-const { and, count, eq, inArray, isNull } = await import('drizzle-orm');
+const { inArray, isNull } = await import('drizzle-orm');
 const { getMerchantKey } = await import('@/lib/utils/merchants');
 const { getAdminDb, schema } = await import('@/server/db');
 const { assignMerchants, enrichMerchants } = await import('@/server/api/merchants/categorize');
@@ -50,27 +51,13 @@ console.log(
 );
 
 const transaction = db.transaction.bind(db);
-const countPending = async (userId: string) => {
-  const [{ value }] = await db
-    .select({ value: count() })
-    .from(schema.merchants)
-    .where(and(eq(schema.merchants.userId, userId), isNull(schema.merchants.autoCheckedAt)));
-  return value;
-};
 
 for (const userId of userIds) {
-  let pending = await countPending(userId);
-  console.log(`User ${userId}: ${pending} merchants to check`);
-
-  while (pending > 0 && process.env.ANTHROPIC_API_KEY) {
-    await enrichMerchants(transaction, userId);
-    const left = await countPending(userId);
-    console.log(`  ${left} left`);
-    // Every batch failed, the log above has the errors
-    if (left === pending) {
-      break;
-    }
-    pending = left;
+  let total = 0;
+  // Stops when none are left, or when every batch failed (the log above has the errors)
+  for (let checked; (checked = await enrichMerchants(transaction, userId));) {
+    total += checked;
+    console.log(`User ${userId}: ${total} merchants checked`);
   }
 }
 

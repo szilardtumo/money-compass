@@ -1,6 +1,6 @@
 'use server';
 
-import { and, count, eq, inArray, ne, sql } from 'drizzle-orm';
+import { and, count, eq, inArray, ne } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 import { authenticatedActionClient } from '@/lib/api';
@@ -13,7 +13,7 @@ import {
 } from '@/lib/validation/categories';
 import { DbTx, schema } from '@/server/db';
 
-import { lockMerchants, mergeMerchant } from './categorize';
+import { findMerchantByName, lockMerchants, mergeMerchant } from './categorize';
 
 const m = schema.merchants;
 
@@ -25,15 +25,6 @@ async function getMerchant(tx: DbTx, merchantId: string) {
   if (!merchant) {
     throw new NotFoundError('merchant', merchantId);
   }
-  return merchant;
-}
-
-// Names are unique per user. Two names that differ only in case belong to the same merchant.
-async function findMerchantByName(tx: DbTx, name: string) {
-  const [merchant] = await tx
-    .select({ id: m.id, name: m.name, categoryId: m.categoryId })
-    .from(m)
-    .where(sql`lower(${m.name}) = lower(${name})`);
   return merchant;
 }
 
@@ -72,7 +63,7 @@ export const renameMerchant = authenticatedActionClient
     const mergedInto = await ctx.db.rls(async (tx) => {
       await lockMerchants(tx, ctx.userId);
       const merchant = await getMerchant(tx, merchantId);
-      const other = await findMerchantByName(tx, name);
+      const other = await findMerchantByName(tx, ctx.userId, name);
 
       if (other && other.id !== merchant.id) {
         await mergeMerchant(tx, merchant, other);
@@ -135,7 +126,7 @@ export const moveMerchantAlias = authenticatedActionClient
       const destination =
         'merchantId' in target
           ? await getMerchant(tx, target.merchantId)
-          : ((await findMerchantByName(tx, target.name)) ??
+          : ((await findMerchantByName(tx, ctx.userId, target.name)) ??
             (
               await tx
                 .insert(m)

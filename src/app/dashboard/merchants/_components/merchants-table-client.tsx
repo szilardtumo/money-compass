@@ -1,10 +1,11 @@
 'use client';
 
 import { createColumnHelper } from '@tanstack/react-table';
-import { MergeIcon, TagIcon } from 'lucide-react';
+import { MergeIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { CATEGORY_TOASTS, CategoryPicker } from '@/components/categories/category-picker';
+import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
+import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
 import { MerchantCategoryPicker } from '@/components/categories/merchant-category-picker';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -135,9 +136,10 @@ export function MerchantsTableClient({
           options={categoryOptions}
         />
         <DataTableResetFilters table={table} />
-        <CategoryPicker
+        <BulkCategoryPicker
           categories={categories}
-          value={null}
+          selectedCount={selected.length}
+          clearLabel="No category"
           onSelect={async (categoryId) => {
             await setMerchantsCategory({
               merchantIds: selected.map((merchant) => merchant.id),
@@ -145,17 +147,7 @@ export function MerchantsTableClient({
             });
             table.resetRowSelection();
           }}
-          clearLabel="No category"
-        >
-          <Button
-            variant="outline"
-            icon={TagIcon}
-            className="h-8 px-2.5 sm:ml-auto"
-            disabled={!selected.length}
-          >
-            Categorize ({selected.length})
-          </Button>
-        </CategoryPicker>
+        />
         <Button
           variant="outline"
           icon={MergeIcon}

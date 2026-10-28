@@ -23,12 +23,21 @@ interface MergeMerchantsDialogProps {
   onMerged: () => void;
 }
 
-export function MergeMerchantsDialog({
-  open,
+export function MergeMerchantsDialog({ open, onOpenChange, ...props }: MergeMerchantsDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        {open && <MergeMerchantsForm onOpenChange={onOpenChange} {...props} />}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MergeMerchantsForm({
   onOpenChange,
   merchants,
   onMerged,
-}: MergeMerchantsDialogProps) {
+}: Omit<MergeMerchantsDialogProps, 'open'>) {
   const [targetId, setTargetId] = useState<string>();
   const { execute, isExecuting } = useActionWithToast(apiActions.merchants.mergeMerchants, {
     loadingToast: 'Merging merchants...',
@@ -41,35 +50,31 @@ export function MergeMerchantsDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Merge {merchants.length} merchants</DialogTitle>
-          <DialogDescription>
-            Their transactions become one merchant&apos;s. It keeps its name and category, or takes
-            the category of another one if it has none.
-          </DialogDescription>
-        </DialogHeader>
-        <Selectbox
-          key={merchants.map((merchant) => merchant.id).join()}
-          options={merchants.map((merchant) => ({ label: merchant.name, value: merchant.id }))}
-          value={targetId}
-          onValueChange={setTargetId}
-          placeholder="Merchant to keep"
-        />
-        <DialogFooter>
-          <Button
-            disabled={!merchants.some((merchant) => merchant.id === targetId) || isExecuting}
-            isLoading={isExecuting}
-            onClick={() =>
-              targetId &&
-              execute({ merchantIds: merchants.map((merchant) => merchant.id), targetId })
-            }
-          >
-            Merge
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <>
+      <DialogHeader>
+        <DialogTitle>Merge {merchants.length} merchants</DialogTitle>
+        <DialogDescription>
+          Their transactions become one merchant&apos;s. It keeps its name and category, or takes
+          the category of another one if it has none.
+        </DialogDescription>
+      </DialogHeader>
+      <Selectbox
+        options={merchants.map((merchant) => ({ label: merchant.name, value: merchant.id }))}
+        value={targetId}
+        onValueChange={setTargetId}
+        placeholder="Merchant to keep"
+      />
+      <DialogFooter>
+        <Button
+          disabled={!targetId || isExecuting}
+          isLoading={isExecuting}
+          onClick={() =>
+            targetId && execute({ merchantIds: merchants.map((merchant) => merchant.id), targetId })
+          }
+        >
+          Merge
+        </Button>
+      </DialogFooter>
+    </>
   );
 }

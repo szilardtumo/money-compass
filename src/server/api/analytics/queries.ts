@@ -96,12 +96,12 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
   ]);
 
   // Spending is positive, so a category's refunds lower it
-  const toMain = (row: { side: AnalyticsSide; currency: string; amount: number }) => {
+  const toMain = (row: { currency: string; amount: number }, side: AnalyticsSide) => {
     const rate = mapper[row.currency];
     if (!rate) {
       throw new MissingExchangeRateError(row.currency);
     }
-    return row.amount * rate * (row.side === 'spending' ? -1 : 1);
+    return row.amount * rate * (side === 'spending' ? -1 : 1);
   };
   const add = (total: AnalyticsTotal, isCurrent: boolean, amount: number, count: number) => {
     if (isCurrent) {
@@ -134,7 +134,7 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
       continue;
     }
 
-    const amount = toMain({ ...row, side: row.side });
+    const amount = toMain(row, row.side);
     const chartItem = chart.find((item) => item.period === row.period);
     if (chartItem) {
       chartItem[row.side] += amount;
@@ -164,7 +164,7 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
       ...emptyTotal(),
     };
     merchants[row.side].set(row.merchant.id, total);
-    add(total, row.isCurrent, toMain({ ...row, side: row.side }), row.transactionCount);
+    add(total, row.isCurrent, toMain(row, row.side), row.transactionCount);
   }
 
   const byAmount = <T extends AnalyticsTotal>(items: Iterable<T>) =>
