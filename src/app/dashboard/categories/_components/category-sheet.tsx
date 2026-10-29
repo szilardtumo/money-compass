@@ -22,7 +22,7 @@ export async function CategorySheet({
   // The 12 months end today
   await connection();
 
-  const [categories, merchants, transactions, profile] = await Promise.all([
+  const [categories, merchants, transactions, accounts, profile] = await Promise.all([
     apiQueries.categories.getCategoriesWithStats(),
     apiQueries.categories.getCategoryMerchants({ categoryId }),
     apiQueries.transactions.getTransactions({
@@ -30,6 +30,7 @@ export async function CategorySheet({
       fromDate: getPeriodRange(shiftPeriod(parsePeriod(undefined), -11)).start.toISOString(),
       pageSize: 1000,
     }),
+    apiQueries.accounts.getAccounts(),
     apiQueries.profiles.getProfile(),
   ]);
   // A deleted category closes the sheet
@@ -44,6 +45,7 @@ export async function CategorySheet({
       categories={categories}
       merchants={merchants}
       transactions={transactions.data}
+      accounts={accounts}
       mainCurrency={profile.mainCurrency}
     />
   );

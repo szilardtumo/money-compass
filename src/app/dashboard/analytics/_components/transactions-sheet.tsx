@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 
-import { TransactionList } from '@/components/transactions/transaction-list';
+import { TransactionDayList } from '@/components/transactions/transaction-day-list';
 import {
   Sheet,
   SheetContent,
@@ -10,6 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Account } from '@/lib/types/accounts.types';
 import { Category } from '@/lib/types/categories.types';
 import { Transaction } from '@/lib/types/transactions.types';
 import { formatPeriodLabel, parsePeriod } from '@/lib/utils/periods';
@@ -19,6 +20,7 @@ import { AnalyticsParams, getAnalyticsHref } from './analytics-params';
 interface TransactionsSheetProps {
   params: AnalyticsParams;
   transactions: Transaction[];
+  accounts: Account[];
   /** Whether there are more transactions than the latest ones shown */
   isCut: boolean;
   categories: Category[];
@@ -30,6 +32,7 @@ interface TransactionsSheetProps {
 export function TransactionsSheet({
   params,
   transactions,
+  accounts,
   isCut,
   categories,
 }: TransactionsSheetProps) {
@@ -62,7 +65,11 @@ export function TransactionsSheet({
           </SheetDescription>
         </SheetHeader>
         <div className="px-4">
-          <TransactionList transactions={transactions} categories={categories} />
+          <TransactionDayList
+            transactions={transactions}
+            accounts={accounts}
+            categories={categories}
+          />
         </div>
       </SheetContent>
     </Sheet>

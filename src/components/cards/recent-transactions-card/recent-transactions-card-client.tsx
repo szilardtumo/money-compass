@@ -2,9 +2,10 @@
 
 import { PlusIcon, SlidersVerticalIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { useCreateTransactionDialog } from '@/components/dialogs/create-transaction-dialog';
+import { TransactionDayList } from '@/components/transactions/transaction-day-list';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -14,20 +15,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Account } from '@/lib/types/accounts.types';
-import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
-import { formatCurrency, formatDate } from '@/lib/utils/formatters';
-import { groupBy } from '@/lib/utils/group-by';
-
-import { TransactionItem } from './transaction-item';
+import { Category } from '@/lib/types/categories.types';
+import { Transaction } from '@/lib/types/transactions.types';
 
 interface RecentTransactionsCardClientProps {
   transactions: Transaction[];
   accounts: Account[];
+  categories: Category[];
 }
 
 export function RecentTransactionsCardClient({
   transactions,
   accounts,
+  categories,
 }: RecentTransactionsCardClientProps) {
   const { openDialog: openCreateTransactionDialog } = useCreateTransactionDialog();
 
@@ -41,38 +41,9 @@ export function RecentTransactionsCardClient({
     );
   };
 
-  const groupedTransactions = useMemo(() => {
-    const accountMap = new Map(accounts.map((account) => [account.id, account]));
-    const subaccountMap = new Map(
-      accounts.flatMap((account) =>
-        account.subaccounts.map((subaccount) => [subaccount.id, subaccount]),
-      ),
-    );
-
-    const transactionsWithAccount = transactions
-      .filter((transaction) => selectedAccountIds.includes(transaction.accountId))
-      .map((transaction) => {
-        const account = accountMap.get(transaction.accountId);
-        const subaccount = subaccountMap.get(transaction.subaccountId);
-
-        return { ...transaction, account, subaccount };
-      })
-      .filter(
-        (transaction): transaction is TransactionWithAccount =>
-          !!transaction.account && !!transaction.subaccount,
-      );
-
-    const groups = groupBy(transactionsWithAccount, (transaction) =>
-      new Date(transaction.startedDate).toDateString(),
-    );
-
-    return Object.entries(groups).map(([date, items]) => ({
-      date,
-      transactions: items,
-      totalAmount: items.reduce((acc, item) => acc + item.amount.mainCurrencyValue, 0),
-      currency: items[0]?.mainCurrency ?? 'eur',
-    }));
-  }, [transactions, accounts, selectedAccountIds]);
+  const visibleTransactions = transactions.filter((transaction) =>
+    selectedAccountIds.includes(transaction.accountId),
+  );
 
   return (
     <Card>
@@ -108,25 +79,14 @@ export function RecentTransactionsCardClient({
           </DropdownMenu>
         )}
       </CardHeader>
-      <CardContent className="space-y-10">
-        {groupedTransactions.map((group) => (
-          <div key={group.date}>
-            <div className="flex justify-between text-sm text-muted-foreground font-bold uppercase">
-              <span>{formatDate(group.date)}</span>
-              <span>{formatCurrency(group.totalAmount, group.currency)}</span>
-            </div>
-            <div className="mt-3 space-y-3">
-              {group.transactions.map((item) => (
-                <TransactionItem key={item.id} transaction={item} />
-              ))}
-            </div>
-          </div>
-        ))}
-        {groupedTransactions.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center">No transactions.</p>
-        )}
+      <CardContent>
+        <TransactionDayList
+          transactions={visibleTransactions}
+          accounts={accounts}
+          categories={categories}
+        />
       </CardContent>
-      {groupedTransactions.length > 0 && (
+      {visibleTransactions.length > 0 && (
         <CardFooter className="justify-center">
           <Link href="/dashboard/transactions" className={buttonVariants({ variant: 'ghost' })}>
             See All

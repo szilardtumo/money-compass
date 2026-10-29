@@ -63,7 +63,7 @@ async function AnalyticsData({
 
 async function TransactionsSheetContent({ params }: { params: AnalyticsParams }) {
   const { start, end } = getPeriodRange(parsePeriod(params.period));
-  const [transactions, categories] = await Promise.all([
+  const [transactions, categories, accounts] = await Promise.all([
     apiQueries.transactions.getTransactions({
       fromDate: start.toISOString(),
       toDate: new Date(end.getTime() - 1).toISOString(),
@@ -74,6 +74,7 @@ async function TransactionsSheetContent({ params }: { params: AnalyticsParams })
       pageSize: 501,
     }),
     apiQueries.categories.getCategories(),
+    apiQueries.accounts.getAccounts(),
   ]);
 
   return (
@@ -81,6 +82,7 @@ async function TransactionsSheetContent({ params }: { params: AnalyticsParams })
       params={params}
       transactions={transactions.data.slice(0, 500)}
       isCut={transactions.data.length > 500}
+      accounts={accounts}
       categories={categories}
     />
   );

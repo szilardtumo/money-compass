@@ -1,13 +1,18 @@
 'use client';
 
-import { PencilIcon, Trash2Icon } from 'lucide-react';
+import { EllipsisIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { CategoryIcon } from '@/components/categories/category-badge';
-import { TransactionList } from '@/components/transactions/transaction-list';
-import { Badge } from '@/components/ui/badge';
+import { TransactionDayList } from '@/components/transactions/transaction-day-list';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Sheet,
   SheetContent,
@@ -17,6 +22,7 @@ import {
 } from '@/components/ui/sheet';
 import { Sparkline } from '@/components/ui/sparkline';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Account } from '@/lib/types/accounts.types';
 import { CATEGORY_KINDS, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
 import { Transaction } from '@/lib/types/transactions.types';
 import { formatCurrency } from '@/lib/utils/formatters';
@@ -29,6 +35,7 @@ interface CategorySheetClientProps {
   categories: CategoryWithStats[];
   merchants: CategoryMerchant[];
   transactions: Transaction[];
+  accounts: Account[];
   mainCurrency: string;
 }
 
@@ -37,6 +44,7 @@ export function CategorySheetClient({
   categories,
   merchants,
   transactions,
+  accounts,
   mainCurrency,
 }: CategorySheetClientProps) {
   const router = useRouter();
@@ -61,28 +69,24 @@ export function CategorySheetClient({
             <div className="mr-auto">
               <SheetTitle>{category.name}</SheetTitle>
               <SheetDescription>
-                {category.merchantCount} merchants, {category.transactionCount} transactions
+                {CATEGORY_KINDS.find((item) => item.kind === category.kind)?.label}
               </SheetDescription>
             </div>
-            <Badge variant="outline">
-              {CATEGORY_KINDS.find((item) => item.kind === category.kind)?.shortLabel}
-            </Badge>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Edit category"
-              onClick={() => setIsEditing(true)}
-            >
-              <PencilIcon className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Delete category"
-              onClick={() => setIsDeleting(true)}
-            >
-              <Trash2Icon className="size-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Category actions">
+                  <EllipsisIcon className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <PencilIcon className="size-4" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsDeleting(true)}>
+                  <Trash2Icon className="size-4" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           {isCounted && (
             <div className="mt-4 flex items-end gap-6">
@@ -145,7 +149,11 @@ export function CategorySheetClient({
             )}
           </TabsContent>
           <TabsContent value="transactions">
-            <TransactionList transactions={transactions} categories={categories} />
+            <TransactionDayList
+              transactions={transactions}
+              accounts={accounts}
+              categories={categories}
+            />
           </TabsContent>
         </Tabs>
 
