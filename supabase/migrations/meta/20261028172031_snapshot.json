@@ -1,5 +1,5 @@
 {
-  "id": "a2b667c1-9867-4888-bc56-ba0af9861340",
+  "id": "f43233d2-7057-4092-923a-5a615c5a6fbf",
   "prevId": "e2e45b27-c4a5-4c68-aae0-3940c2a5ef16",
   "version": "7",
   "dialect": "postgresql",
@@ -55,25 +55,25 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "accounts_user_id_users_id_fk": {
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
+          "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "users",
-          "schemaTo": "auth",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -122,10 +122,10 @@
       "uniqueConstraints": {
         "currencies_name_unique": {
           "name": "currencies_name_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "name"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -175,28 +175,28 @@
         "exchange_rates_from_currencies_id_fk": {
           "name": "exchange_rates_from_currencies_id_fk",
           "tableFrom": "exchange_rates",
+          "tableTo": "currencies",
           "columnsFrom": [
             "from"
           ],
-          "tableTo": "currencies",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "cascade",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "exchange_rates_to_currencies_id_fk": {
           "name": "exchange_rates_to_currencies_id_fk",
           "tableFrom": "exchange_rates",
+          "tableTo": "currencies",
           "columnsFrom": [
             "to"
           ],
-          "tableTo": "currencies",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "cascade",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {
@@ -247,29 +247,29 @@
         "profiles_id_users_id_fk": {
           "name": "profiles_id_users_id_fk",
           "tableFrom": "profiles",
+          "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "id"
           ],
-          "tableTo": "users",
-          "schemaTo": "auth",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "cascade",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "profiles_main_currency_currencies_id_fk": {
           "name": "profiles_main_currency_currencies_id_fk",
           "tableFrom": "profiles",
+          "tableTo": "currencies",
           "columnsFrom": [
             "main_currency"
           ],
-          "tableTo": "currencies",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "cascade",
-          "onDelete": "set default"
+          "onDelete": "set default",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -338,37 +338,37 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "subaccounts_account_id_accounts_id_fk": {
           "name": "subaccounts_account_id_accounts_id_fk",
           "tableFrom": "subaccounts",
+          "tableTo": "accounts",
           "columnsFrom": [
             "account_id"
           ],
-          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "cascade",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "subaccounts_currency_currencies_id_fk": {
           "name": "subaccounts_currency_currencies_id_fk",
           "tableFrom": "subaccounts",
+          "tableTo": "currencies",
           "columnsFrom": [
             "currency"
           ],
-          "tableTo": "currencies",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "cascade",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -462,6 +462,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "merchant_key": {
+          "name": "merchant_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "merchant_id": {
+          "name": "merchant_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "subaccount_id": {
           "name": "subaccount_id",
           "type": "uuid",
@@ -488,15 +506,15 @@
           "primaryKey": false,
           "notNull": true,
           "identity": {
+            "type": "always",
             "name": "transactions_sequence_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "2147483647",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "always"
+            "cycle": false
           }
         }
       },
@@ -530,9 +548,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "transactions_linked_transaction_id_index": {
           "name": "transactions_linked_transaction_id_index",
@@ -545,9 +563,60 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
+        },
+        "transactions_user_id_merchant_key_index": {
+          "name": "transactions_user_id_merchant_key_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "merchant_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transactions_merchant_id_index": {
+          "name": "transactions_merchant_id_index",
+          "columns": [
+            {
+              "expression": "merchant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transactions_category_id_index": {
+          "name": "transactions_category_id_index",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "transactions_subaccount_id_external_ref_index": {
           "name": "transactions_subaccount_id_external_ref_index",
@@ -566,47 +635,73 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "transactions_linked_transaction_id_transactions_id_fk": {
           "name": "transactions_linked_transaction_id_transactions_id_fk",
           "tableFrom": "transactions",
+          "tableTo": "transactions",
           "columnsFrom": [
             "linked_transaction_id"
           ],
-          "tableTo": "transactions",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "transactions_merchant_id_merchants_id_fk": {
+          "name": "transactions_merchant_id_merchants_id_fk",
+          "tableFrom": "transactions",
+          "tableTo": "merchants",
+          "columnsFrom": [
+            "merchant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "transactions_category_id_categories_id_fk": {
+          "name": "transactions_category_id_categories_id_fk",
+          "tableFrom": "transactions",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "transactions_subaccount_id_subaccounts_id_fk": {
           "name": "transactions_subaccount_id_subaccounts_id_fk",
           "tableFrom": "transactions",
+          "tableTo": "subaccounts",
           "columnsFrom": [
             "subaccount_id"
           ],
-          "tableTo": "subaccounts",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "cascade",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "transactions_sequence_unique": {
           "name": "transactions_sequence_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "sequence"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -618,7 +713,7 @@
             "authenticated"
           ],
           "using": "\"transactions\".\"user_id\" = (select auth.uid())",
-          "withCheck": "\"transactions\".\"user_id\" = (select auth.uid()) AND EXISTS (SELECT 1 FROM \"subaccounts\" JOIN \"accounts\" ON \"accounts\".\"id\" = \"subaccounts\".\"account_id\" WHERE (\"subaccounts\".\"id\" = \"transactions\".\"subaccount_id\" and \"accounts\".\"user_id\" = (select auth.uid())))"
+          "withCheck": "\"transactions\".\"user_id\" = (select auth.uid()) AND EXISTS (SELECT 1 FROM \"subaccounts\" JOIN \"accounts\" ON \"accounts\".\"id\" = \"subaccounts\".\"account_id\" WHERE (\"subaccounts\".\"id\" = \"transactions\".\"subaccount_id\" and \"accounts\".\"user_id\" = (select auth.uid()))) AND (\"transactions\".\"category_id\" IS NULL OR EXISTS (SELECT 1 FROM \"categories\" WHERE \"categories\".\"id\" = \"transactions\".\"category_id\" AND \"categories\".\"user_id\" = (select auth.uid()))) AND (\"transactions\".\"merchant_id\" IS NULL OR EXISTS (SELECT 1 FROM \"merchants\" WHERE \"merchants\".\"id\" = \"transactions\".\"merchant_id\" AND \"merchants\".\"user_id\" = (select auth.uid())))"
         }
       },
       "checkConstraints": {},
@@ -704,35 +799,35 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "integrations_user_id_users_id_fk": {
           "name": "integrations_user_id_users_id_fk",
           "tableFrom": "integrations",
+          "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "users",
-          "schemaTo": "auth",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "integrations_externalId_unique": {
           "name": "integrations_externalId_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "external_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -849,55 +944,55 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "integration_accounts_integration_id_integrations_id_fk": {
           "name": "integration_accounts_integration_id_integrations_id_fk",
           "tableFrom": "integration_accounts",
+          "tableTo": "integrations",
           "columnsFrom": [
             "integration_id"
           ],
-          "tableTo": "integrations",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "integration_accounts_subaccount_id_subaccounts_id_fk": {
           "name": "integration_accounts_subaccount_id_subaccounts_id_fk",
           "tableFrom": "integration_accounts",
+          "tableTo": "subaccounts",
           "columnsFrom": [
             "subaccount_id"
           ],
-          "tableTo": "subaccounts",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "integration_accounts_subaccountId_unique": {
           "name": "integration_accounts_subaccountId_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "subaccount_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "integration_accounts_integrationId_identificationHash_unique": {
           "name": "integration_accounts_integrationId_identificationHash_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "integration_id",
             "identification_hash"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {
@@ -990,24 +1085,24 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "integration_sync_logs_account_id_integration_accounts_id_fk": {
           "name": "integration_sync_logs_account_id_integration_accounts_id_fk",
           "tableFrom": "integration_sync_logs",
+          "tableTo": "integration_accounts",
           "columnsFrom": [
             "account_id"
           ],
-          "tableTo": "integration_accounts",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1026,6 +1121,200 @@
       },
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.categories": {
+      "name": "categories",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "auth.uid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "category_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "icon": {
+          "name": "icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'tag'"
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "categories_userId_name_unique": {
+          "name": "categories_userId_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id",
+            "name"
+          ]
+        }
+      },
+      "policies": {
+        "categories_allow_all_for_owner_policy": {
+          "name": "categories_allow_all_for_owner_policy",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "authenticated"
+          ],
+          "using": "\"categories\".\"user_id\" = (select auth.uid())",
+          "withCheck": "\"categories\".\"user_id\" = (select auth.uid())"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.merchants": {
+      "name": "merchants",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "auth.uid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "auto_checked_at": {
+          "name": "auto_checked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "merchants_user_id_lower_name_index": {
+          "name": "merchants_user_id_lower_name_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lower(\"name\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "merchants_category_id_index": {
+          "name": "merchants_category_id_index",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "merchants_category_id_categories_id_fk": {
+          "name": "merchants_category_id_categories_id_fk",
+          "tableFrom": "merchants",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "merchants_allow_all_for_owner_policy": {
+          "name": "merchants_allow_all_for_owner_policy",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "authenticated"
+          ],
+          "using": "\"merchants\".\"user_id\" = (select auth.uid())",
+          "withCheck": "\"merchants\".\"user_id\" = (select auth.uid()) AND (\"merchants\".\"category_id\" IS NULL OR EXISTS (SELECT 1 FROM \"categories\" WHERE \"categories\".\"id\" = \"merchants\".\"category_id\" AND \"categories\".\"user_id\" = (select auth.uid())))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -1036,13 +1325,23 @@
         "checking",
         "investment"
       ]
+    },
+    "public.category_kind": {
+      "name": "category_kind",
+      "schema": "public",
+      "values": [
+        "expense",
+        "income",
+        "excluded"
+      ]
     }
   },
   "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
   "views": {
     "public.balances": {
-      "name": "balances",
-      "schema": "public",
       "columns": {
         "subaccountId": {
           "name": "subaccountId",
@@ -1064,15 +1363,15 @@
         }
       },
       "definition": "select subaccount_id, sum(amount) as balance, max(started_date) as last_transaction_date from transactions group by subaccount_id",
-      "materialized": false,
+      "name": "balances",
+      "schema": "public",
+      "isExisting": false,
       "with": {
         "securityInvoker": true
       },
-      "isExisting": false
+      "materialized": false
     },
     "public.transaction_balances": {
-      "name": "transaction_balances",
-      "schema": "public",
       "columns": {
         "transactionId": {
           "name": "transactionId",
@@ -1088,16 +1387,15 @@
         }
       },
       "definition": "select id as transaction_id, sum(amount) over (partition by subaccount_id order by started_date, sequence) as balance from transactions",
-      "materialized": false,
+      "name": "transaction_balances",
+      "schema": "public",
+      "isExisting": false,
       "with": {
         "securityInvoker": true
       },
-      "isExisting": false
+      "materialized": false
     }
   },
-  "sequences": {},
-  "roles": {},
-  "policies": {},
   "_meta": {
     "columns": {},
     "schemas": {},

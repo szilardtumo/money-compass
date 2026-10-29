@@ -11,38 +11,42 @@ CREATE TABLE "categories" (
 );
 --> statement-breakpoint
 ALTER TABLE "categories" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-CREATE TABLE "merchant_aliases" (
-	"user_id" uuid DEFAULT auth.uid() NOT NULL,
-	"key" text NOT NULL,
-	"merchant_id" uuid NOT NULL,
-	CONSTRAINT "merchant_aliases_user_id_key_pk" PRIMARY KEY("user_id","key")
-);
---> statement-breakpoint
-ALTER TABLE "merchant_aliases" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "merchants" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid DEFAULT auth.uid() NOT NULL,
 	"name" text NOT NULL,
 	"category_id" uuid,
 	"auto_checked_at" timestamp with time zone,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "merchants_userId_name_unique" UNIQUE("user_id","name")
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "merchants" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "transactions" ADD COLUMN "merchant_key" text;--> statement-breakpoint
+ALTER TABLE "transactions" ADD COLUMN "merchant_id" uuid;--> statement-breakpoint
 ALTER TABLE "transactions" ADD COLUMN "category_id" uuid;--> statement-breakpoint
-ALTER TABLE "merchant_aliases" ADD CONSTRAINT "merchant_aliases_merchant_id_merchants_id_fk" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "merchants" ADD CONSTRAINT "merchants_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "merchant_aliases_merchant_id_index" ON "merchant_aliases" USING btree ("merchant_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "merchants_user_id_lower_name_index" ON "merchants" USING btree ("user_id",lower("name"));--> statement-breakpoint
 CREATE INDEX "merchants_category_id_index" ON "merchants" USING btree ("category_id");--> statement-breakpoint
+ALTER TABLE "transactions" ADD CONSTRAINT "transactions_merchant_id_merchants_id_fk" FOREIGN KEY ("merchant_id") REFERENCES "public"."merchants"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "transactions_user_id_merchant_key_index" ON "transactions" USING btree ("user_id","merchant_key");--> statement-breakpoint
+CREATE INDEX "transactions_merchant_id_index" ON "transactions" USING btree ("merchant_id");--> statement-breakpoint
 CREATE INDEX "transactions_category_id_index" ON "transactions" USING btree ("category_id");--> statement-breakpoint
 CREATE POLICY "categories_allow_all_for_owner_policy" ON "categories" AS PERMISSIVE FOR ALL TO "authenticated" USING ("categories"."user_id" = (select auth.uid())) WITH CHECK ("categories"."user_id" = (select auth.uid()));--> statement-breakpoint
-CREATE POLICY "merchant_aliases_allow_all_for_owner_policy" ON "merchant_aliases" AS PERMISSIVE FOR ALL TO "authenticated" USING ("merchant_aliases"."user_id" = (select auth.uid())) WITH CHECK ("merchant_aliases"."user_id" = (select auth.uid()) AND EXISTS (SELECT 1 FROM "merchants" WHERE "merchants"."id" = "merchant_aliases"."merchant_id" AND "merchants"."user_id" = (select auth.uid())));--> statement-breakpoint
 CREATE POLICY "merchants_allow_all_for_owner_policy" ON "merchants" AS PERMISSIVE FOR ALL TO "authenticated" USING ("merchants"."user_id" = (select auth.uid())) WITH CHECK ("merchants"."user_id" = (select auth.uid()) AND ("merchants"."category_id" IS NULL OR EXISTS (SELECT 1 FROM "categories" WHERE "categories"."id" = "merchants"."category_id" AND "categories"."user_id" = (select auth.uid()))));--> statement-breakpoint
-ALTER POLICY "transactions_allow_all_for_owner_policy" ON "transactions" TO authenticated USING ("transactions"."user_id" = (select auth.uid())) WITH CHECK ("transactions"."user_id" = (select auth.uid()) AND EXISTS (SELECT 1 FROM "subaccounts" JOIN "accounts" ON "accounts"."id" = "subaccounts"."account_id" WHERE ("subaccounts"."id" = "transactions"."subaccount_id" and "accounts"."user_id" = (select auth.uid()))) AND ("transactions"."category_id" IS NULL OR EXISTS (SELECT 1 FROM "categories" WHERE "categories"."id" = "transactions"."category_id" AND "categories"."user_id" = (select auth.uid()))));--> statement-breakpoint
+ALTER POLICY "transactions_allow_all_for_owner_policy" ON "transactions" TO authenticated USING ("transactions"."user_id" = (select auth.uid())) WITH CHECK ("transactions"."user_id" = (select auth.uid()) AND EXISTS (SELECT 1 FROM "subaccounts" JOIN "accounts" ON "accounts"."id" = "subaccounts"."account_id" WHERE ("subaccounts"."id" = "transactions"."subaccount_id" and "accounts"."user_id" = (select auth.uid()))) AND ("transactions"."category_id" IS NULL OR EXISTS (SELECT 1 FROM "categories" WHERE "categories"."id" = "transactions"."category_id" AND "categories"."user_id" = (select auth.uid()))) AND ("transactions"."merchant_id" IS NULL OR EXISTS (SELECT 1 FROM "merchants" WHERE "merchants"."id" = "transactions"."merchant_id" AND "merchants"."user_id" = (select auth.uid()))));--> statement-breakpoint
+-- Same mapping as TRANSACTION_TYPES in src/lib/enable-banking.ts
+UPDATE "transactions" SET "type" = CASE "bank_data"->'bank_transaction_code'->>'code'
+  WHEN 'REV_PAYMENT' THEN 'card_payment'
+  WHEN 'CARD_REFUND' THEN 'refund'
+  WHEN 'REV_PAYMENT_REFUND' THEN 'refund'
+  WHEN 'ATM' THEN 'atm'
+  WHEN 'FEE' THEN 'fee'
+  WHEN 'CHARGE' THEN 'fee'
+  WHEN 'REWARD' THEN 'reward'
+  WHEN 'CASHBACK' THEN 'reward'
+END
+WHERE "type" = 'other' AND "bank_data"->'bank_transaction_code'->>'code' IN ('REV_PAYMENT', 'CARD_REFUND', 'REV_PAYMENT_REFUND', 'ATM', 'FEE', 'CHARGE', 'REWARD', 'CASHBACK');--> statement-breakpoint
 -- Default categories for every user. Supabase Auth inserts users as supabase_auth_admin, so the
 -- functions run as their owner, and they live outside the public schema the API exposes.
 CREATE SCHEMA IF NOT EXISTS "private";--> statement-breakpoint
