@@ -13,12 +13,12 @@ import {
 } from '@/components/ui/dialog';
 import { Selectbox } from '@/components/ui/selectbox';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
-import { CategoryWithCounts } from '@/lib/types/categories.types';
+import { CategoryWithStats } from '@/lib/types/categories.types';
 import { apiActions } from '@/server/api/actions';
 
 interface DeleteCategoryDialogProps {
-  category: CategoryWithCounts | undefined;
-  categories: CategoryWithCounts[];
+  category: CategoryWithStats | undefined;
+  categories: CategoryWithStats[];
   onClose: () => void;
 }
 
@@ -43,7 +43,7 @@ function DeleteCategoryForm({
   category,
   categories,
   onClose,
-}: DeleteCategoryDialogProps & { category: CategoryWithCounts }) {
+}: DeleteCategoryDialogProps & { category: CategoryWithStats }) {
   const [replacementId, setReplacementId] = useState<string>();
   const { execute, isExecuting } = useActionWithToast(apiActions.categories.deleteCategory, {
     loadingToast: 'Deleting category...',

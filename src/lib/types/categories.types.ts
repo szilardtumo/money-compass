@@ -1,9 +1,9 @@
 export type CategoryKind = 'expense' | 'income' | 'excluded';
 
-export const CATEGORY_KINDS: { kind: CategoryKind; label: string }[] = [
-  { kind: 'expense', label: 'Spending' },
-  { kind: 'income', label: 'Income' },
-  { kind: 'excluded', label: 'Excluded from analytics' },
+export const CATEGORY_KINDS: { kind: CategoryKind; label: string; shortLabel: string }[] = [
+  { kind: 'expense', label: 'Spending', shortLabel: 'Spending' },
+  { kind: 'income', label: 'Income', shortLabel: 'Income' },
+  { kind: 'excluded', label: 'Excluded from analytics', shortLabel: 'Excluded' },
 ];
 
 export interface Category {
@@ -14,9 +14,22 @@ export interface Category {
   color: string;
 }
 
-export interface CategoryWithCounts extends Category {
+export interface CategoryWithStats extends Category {
   merchantCount: number;
   transactionCount: number;
+  /** The sum of the last 12 months in the main currency, spending as a positive number */
+  yearTotal: number;
+  /** The same per month, oldest first */
+  monthlyTotals: number[];
+}
+
+/** A merchant of a category, with its last 12 months */
+export interface CategoryMerchant {
+  id: string;
+  name: string;
+  transactionCount: number;
+  /** In the main currency, spending as a positive number */
+  total: number;
 }
 
 export interface Merchant {
