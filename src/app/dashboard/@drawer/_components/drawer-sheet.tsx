@@ -23,6 +23,9 @@ import {
   shiftPeriod,
 } from '@/lib/utils/periods';
 
+/** The tabs of a drawer scroll on their own, under its header */
+export const TAB_CONTENT = 'min-h-0 overflow-y-auto px-4 pb-4';
+
 interface DrawerSheetProps {
   icon: ReactNode;
   color: string;
@@ -68,7 +71,7 @@ export function DrawerSheet({
 
   return (
     <Sheet open onOpenChange={() => router.push(getDrawerHref(null), { scroll: false })}>
-      <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-xl">
+      <SheetContent className="w-full gap-0 sm:max-w-xl">
         <SheetHeader className="gap-4 pr-12">
           <div className="flex items-center gap-3">
             <span

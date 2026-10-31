@@ -12,7 +12,7 @@ import { CATEGORY_KINDS, CategoryMerchant, CategoryWithStats } from '@/lib/types
 import { Transaction } from '@/lib/types/transactions.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 
-import { DrawerSheet } from './drawer-sheet';
+import { DrawerSheet, TAB_CONTENT } from './drawer-sheet';
 
 interface CategoryDrawerClientProps {
   /** null for the uncategorized transactions */
@@ -91,12 +91,12 @@ export function CategoryDrawerClient({
       average={average}
       mainCurrency={mainCurrency}
     >
-      <Tabs defaultValue="merchants" className="px-4 pb-4">
-        <TabsList>
+      <Tabs defaultValue="merchants" className="min-h-0 flex-1">
+        <TabsList className="mx-4">
           <TabsTrigger value="merchants">Merchants {activeMerchants.length}</TabsTrigger>
           <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
         </TabsList>
-        <TabsContent value="merchants">
+        <TabsContent value="merchants" className={TAB_CONTENT}>
           {activeMerchants.length ? (
             renderMerchants(activeMerchants)
           ) : (
@@ -114,7 +114,7 @@ export function CategoryDrawerClient({
             </details>
           )}
         </TabsContent>
-        <TabsContent value="transactions">
+        <TabsContent value="transactions" className={TAB_CONTENT}>
           <TransactionDayList
             transactions={transactions}
             accounts={accounts}

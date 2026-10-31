@@ -39,7 +39,7 @@ import { Category, Merchant } from '@/lib/types/categories.types';
 import { Transaction } from '@/lib/types/transactions.types';
 import { apiActions } from '@/server/api/actions';
 
-import { DrawerSheet } from './drawer-sheet';
+import { DrawerSheet, TAB_CONTENT } from './drawer-sheet';
 
 interface MerchantDrawerClientProps {
   merchant: Merchant;
@@ -100,19 +100,19 @@ export function MerchantDrawerClient({
       average={average}
       mainCurrency={mainCurrency}
     >
-      <Tabs defaultValue="transactions" className="px-4 pb-4">
-        <TabsList>
+      <Tabs defaultValue="transactions" className="min-h-0 flex-1">
+        <TabsList className="mx-4">
           <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
           <TabsTrigger value="names">Names {merchant.keys.length}</TabsTrigger>
         </TabsList>
-        <TabsContent value="transactions">
+        <TabsContent value="transactions" className={TAB_CONTENT}>
           <TransactionDayList
             transactions={transactions}
             accounts={accounts}
             categories={categories}
           />
         </TabsContent>
-        <TabsContent value="names">
+        <TabsContent value="names" className={TAB_CONTENT}>
           <p className="py-2 text-xs text-muted-foreground">
             The names from the bank, with all their transactions
           </p>
