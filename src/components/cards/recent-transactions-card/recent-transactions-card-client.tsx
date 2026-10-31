@@ -1,6 +1,6 @@
 'use client';
 
-import { PlusIcon, SlidersVerticalIcon } from 'lucide-react';
+import { PlusIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -8,12 +8,7 @@ import { useCreateTransactionDialog } from '@/components/dialogs/create-transact
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { MultiSelectFilter } from '@/components/ui/multi-select-filter';
 import { Account } from '@/lib/types/accounts.types';
 import { Category } from '@/lib/types/categories.types';
 import { Transaction } from '@/lib/types/transactions.types';
@@ -31,19 +26,17 @@ export function RecentTransactionsCardClient({
 }: RecentTransactionsCardClientProps) {
   const { openDialog: openCreateTransactionDialog } = useCreateTransactionDialog();
 
-  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>(() =>
-    accounts.map((account) => account.id),
+  const [subaccountIds, setSubaccountIds] = useState<string[]>([]);
+  const subaccountOptions = accounts.flatMap((account) =>
+    account.subaccounts.map((subaccount) => ({
+      label: subaccount.name,
+      value: subaccount.id,
+      group: account.name,
+    })),
   );
-
-  const toggleAccountSelection = (accountId: string, selected: boolean) => {
-    setSelectedAccountIds((ids) =>
-      selected ? [...ids, accountId] : ids.filter((id) => id !== accountId),
-    );
-  };
-
-  const visibleTransactions = transactions.filter((transaction) =>
-    selectedAccountIds.includes(transaction.accountId),
-  );
+  const visibleTransactions = subaccountIds.length
+    ? transactions.filter((transaction) => subaccountIds.includes(transaction.subaccountId))
+    : transactions;
 
   return (
     <Card>
@@ -58,25 +51,13 @@ export function RecentTransactionsCardClient({
             Add <span className="sr-only sm:not-sr-only">&nbsp;transaction</span>
           </Button>
         )}
-        {accounts.length > 1 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" icon={SlidersVerticalIcon}>
-                Accounts
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {accounts.map((account) => (
-                <DropdownMenuCheckboxItem
-                  key={account.id}
-                  checked={selectedAccountIds.includes(account.id)}
-                  onCheckedChange={(checked) => toggleAccountSelection(account.id, checked)}
-                >
-                  {account.name}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {subaccountOptions.length > 1 && (
+          <MultiSelectFilter
+            title="Account"
+            options={subaccountOptions}
+            selected={subaccountIds}
+            onSelectedChange={setSubaccountIds}
+          />
         )}
       </CardHeader>
       <CardContent>

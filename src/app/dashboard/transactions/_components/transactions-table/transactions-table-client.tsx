@@ -71,10 +71,11 @@ const staticColumns = [
       cell: ({ row }) => <TransactionCategoryBadge transaction={row.original} />,
     },
   ),
-  columnHelper.accessor((row) => row.account.name, {
+  columnHelper.accessor('subaccountId', {
     id: 'account',
     header: 'Account',
     filterFn: 'arrHas',
+    enableSorting: false,
     enableGlobalFilter: false,
     cell: ({ row }) => (
       <Link
@@ -139,10 +140,13 @@ export function TransactionsTableClient({
 
   const accountOptions = useMemo(
     () =>
-      accounts.map((account) => ({
-        label: account.name,
-        value: account.name,
-      })),
+      accounts.flatMap((account) =>
+        account.subaccounts.map((subaccount) => ({
+          label: subaccount.name,
+          value: subaccount.id,
+          group: account.name,
+        })),
+      ),
     [accounts],
   );
 
