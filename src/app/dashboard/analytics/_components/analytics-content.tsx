@@ -30,7 +30,7 @@ export async function AnalyticsContent({
   return (
     <>
       <Suspense fallback={<Skeleton className="h-[720px]" />}>
-        <AnalyticsData params={params} currentMonth={formatPeriodParam(parsePeriod(undefined))} />
+        <AnalyticsData params={params} />
       </Suspense>
       {params.excluded && (
         <Suspense fallback={null}>
@@ -41,16 +41,10 @@ export async function AnalyticsContent({
   );
 }
 
-async function AnalyticsData({
-  params,
-  currentMonth,
-}: {
-  params: AnalyticsParams;
-  currentMonth: string;
-}) {
+async function AnalyticsData({ params }: { params: AnalyticsParams }) {
   const analytics = await apiQueries.analytics.getAnalytics({ period: params.period });
 
-  return <AnalyticsView analytics={analytics} params={params} currentMonth={currentMonth} />;
+  return <AnalyticsView analytics={analytics} params={params} />;
 }
 
 async function TransactionsSheetContent({ params }: { params: AnalyticsParams }) {

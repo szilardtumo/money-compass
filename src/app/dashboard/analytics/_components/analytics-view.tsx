@@ -1,12 +1,11 @@
 'use client';
 
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { CategoryIcon, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
+import { CategoryAvatar, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
-import { buttonVariants } from '@/components/ui/button';
+import { PeriodPicker } from '@/components/period-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, DonutChart } from '@/components/ui/chart';
 import { Metric } from '@/components/ui/metric';
@@ -15,12 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Analytics, AnalyticsTotal } from '@/lib/types/analytics.types';
 import { Category } from '@/lib/types/categories.types';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
-import {
-  formatPeriodLabel,
-  formatPeriodParam,
-  parsePeriod,
-  shiftPeriod,
-} from '@/lib/utils/periods';
+import { formatPeriodLabel, parsePeriod } from '@/lib/utils/periods';
 
 import { AnalyticsParams, getAnalyticsHref } from './analytics-params';
 
@@ -30,11 +24,9 @@ const getChange = ({ amount, previousAmount }: { amount: number; previousAmount:
 interface AnalyticsViewProps {
   analytics: Analytics;
   params: AnalyticsParams;
-  /** Like "2026-10" */
-  currentMonth: string;
 }
 
-export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsViewProps) {
+export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
   const router = useRouter();
   const getDrawerHref = useDrawerHref();
   const period = parsePeriod(params.period);
@@ -53,40 +45,7 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href={href({ period: formatPeriodParam(shiftPeriod(period, -1)) })}
-          className={buttonVariants({ variant: 'outline', size: 'icon' })}
-          aria-label="Previous period"
-        >
-          <ChevronLeftIcon className="size-4" />
-        </Link>
-        <span className="min-w-36 text-center font-semibold">{formatPeriodLabel(period)}</span>
-        <Link
-          href={href({ period: formatPeriodParam(shiftPeriod(period, 1)) })}
-          className={buttonVariants({ variant: 'outline', size: 'icon' })}
-          aria-label="Next period"
-        >
-          <ChevronRightIcon className="size-4" />
-        </Link>
-        <LinkTabs
-          tabs={[
-            {
-              label: 'Month',
-              // The current month of this year, or the last month of a past year
-              href: href({
-                period: currentMonth.startsWith(String(period.year))
-                  ? currentMonth
-                  : formatPeriodParam({ unit: 'month', year: period.year, month: 11 }),
-              }),
-              active: period.unit === 'month',
-            },
-            {
-              label: 'Year',
-              href: href({ period: String(period.year) }),
-              active: period.unit === 'year',
-            },
-          ]}
-        />
+        <PeriodPicker period={params.period} />
         <LinkTabs
           className="sm:ml-auto"
           tabs={(['spending', 'income'] as const).map((view) => ({
@@ -128,8 +87,12 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
         <p className="text-sm text-muted-foreground">
           {formatPercent(categorizedShare, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}{' '}
           of this {params.view} is categorized.{' '}
-          <Link href="/dashboard/analytics/merchants" className="font-medium underline">
-            Review merchants
+          <Link
+            href={getDrawerHref({ category: 'uncategorized', period: params.period })}
+            scroll={false}
+            className="font-medium underline"
+          >
+            Review uncategorized
           </Link>
         </p>
       )}
@@ -207,6 +170,7 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
                   ...item,
                   key: item.merchant.id,
                   name: item.merchant.name,
+                  detail: item.category?.name ?? 'Uncategorized',
                   href: getDrawerHref({ merchant: item.merchant.id, period: params.period }),
                 }))}
                 total={totals[params.view].amount}
@@ -260,6 +224,8 @@ function TotalsList({
   items: (AnalyticsTotal & {
     key: string;
     name: string;
+    /** Shown before the transaction count, like the merchant's category */
+    detail?: string;
     href: string;
     category: Category | null;
   })[];
@@ -272,34 +238,38 @@ function TotalsList({
   }
 
   return (
-    <ul className="flex flex-1 flex-col divide-y">
+    <ul className="flex flex-1 flex-col">
       {items.map((item) => (
         <li key={item.key}>
           <Link
             href={item.href}
             scroll={false}
             prefetch={false}
-            className="flex items-center gap-3 py-2 hover:bg-muted/50"
+            className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted/50"
           >
-            {item.category ? (
-              <CategoryIcon category={item.category} />
-            ) : (
-              <span className="size-4 shrink-0 rounded-full border border-dashed" />
-            )}
-            <span className="mr-auto truncate font-medium">{item.name}</span>
-            <span className="text-sm text-muted-foreground">
-              {total > 0 &&
-                formatPercent(item.amount / total, {
-                  maximumFractionDigits: 0,
-                  minimumFractionDigits: 0,
-                })}
-            </span>
-            {item.previousAmount !== 0 && (
-              <PriceChangeBadge variant="secondary" percent={getChange(item)} invert={invert} />
-            )}
-            <span className="w-28 text-right font-medium whitespace-nowrap">
-              {format(item.amount)}
-            </span>
+            <CategoryAvatar category={item.category} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{item.name}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {[
+                  item.detail,
+                  `${item.transactionCount} transaction${item.transactionCount === 1 ? '' : 's'}`,
+                  total > 0 &&
+                    formatPercent(item.amount / total, {
+                      maximumFractionDigits: 0,
+                      minimumFractionDigits: 0,
+                    }),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <span className="text-sm font-medium whitespace-nowrap">{format(item.amount)}</span>
+              {item.previousAmount !== 0 && (
+                <PriceChangeBadge variant="secondary" percent={getChange(item)} invert={invert} />
+              )}
+            </div>
           </Link>
         </li>
       ))}

@@ -1,11 +1,10 @@
 'use client';
 
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
 
 import { useDrawerHref } from '@/components/drawers/drawer-link';
-import { Button } from '@/components/ui/button';
+import { PeriodPicker } from '@/components/period-picker';
 import {
   Sheet,
   SheetContent,
@@ -14,14 +13,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Sparkline } from '@/components/ui/sparkline';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency } from '@/lib/utils/formatters';
-import {
-  formatPeriodLabel,
-  formatPeriodParam,
-  parsePeriod,
-  shiftPeriod,
-} from '@/lib/utils/periods';
+import { formatPeriodLabel, parsePeriod } from '@/lib/utils/periods';
 
 /** The tabs of a drawer scroll on their own, under its header */
 export const TAB_CONTENT = 'min-h-0 overflow-y-auto px-4 pb-4';
@@ -88,7 +81,7 @@ export function DrawerSheet({
             </div>
             {actions}
           </div>
-          <DrawerPeriod period={period} />
+          <PeriodPicker period={period} withLastMonths className="justify-between" />
           <div className="flex items-end gap-6">
             <div>
               <p className="text-xs text-muted-foreground">
@@ -118,77 +111,5 @@ export function DrawerSheet({
         {children}
       </SheetContent>
     </Sheet>
-  );
-}
-
-/**
- * Tabs for the last 12 months, a month or a year, with buttons for the previous and next one. The
- * period is a URL param, which the analytics page shares.
- */
-function DrawerPeriod({ period }: { period: string | undefined }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const selected = parsePeriod(period);
-  const now = parsePeriod(undefined);
-  const latest = formatPeriodParam(
-    selected.unit === 'year' ? { unit: 'year', year: now.year, month: 0 } : now,
-  );
-
-  const setPeriod = (value: string | undefined) => {
-    const params = new URLSearchParams(searchParams);
-    if (value) {
-      params.set('period', value);
-    } else {
-      params.delete('period');
-    }
-    router.push(`${pathname}?${params}`, { scroll: false });
-  };
-  const selectUnit = (unit: string) => {
-    const year = period ? selected.year : now.year;
-    setPeriod(
-      unit === 'year'
-        ? String(year)
-        : unit === 'month'
-          ? // A past year's months start from its December
-            formatPeriodParam(year < now.year ? { unit: 'month', year, month: 11 } : now)
-          : undefined,
-    );
-  };
-
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <Tabs value={period ? selected.unit : 'last'} onValueChange={selectUnit}>
-        <TabsList>
-          <TabsTrigger value="last">12 months</TabsTrigger>
-          <TabsTrigger value="month">Month</TabsTrigger>
-          <TabsTrigger value="year">Year</TabsTrigger>
-        </TabsList>
-      </Tabs>
-      {period && (
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            icon={ChevronLeftIcon}
-            aria-label="Previous"
-            className="size-8"
-            onClick={() => setPeriod(formatPeriodParam(shiftPeriod(selected, -1)))}
-          />
-          <span className="w-28 text-center text-sm font-medium">
-            {formatPeriodLabel(selected)}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            icon={ChevronRightIcon}
-            aria-label="Next"
-            className="size-8"
-            disabled={period >= latest}
-            onClick={() => setPeriod(formatPeriodParam(shiftPeriod(selected, 1)))}
-          />
-        </div>
-      )}
-    </div>
   );
 }

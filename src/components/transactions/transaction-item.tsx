@@ -4,7 +4,7 @@ import { cn } from 'cn';
 import Link from 'next/link';
 import { Fragment, ReactNode } from 'react';
 
-import { CategoryIcon, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
+import { CategoryAvatar, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { TransactionCategoryBadge } from '@/components/categories/transaction-category-badge';
 import { DrawerLink } from '@/components/drawers/drawer-link';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -30,10 +30,7 @@ export function TransactionSummary({
     transaction.counterpartyName ||
     transaction.description ||
     'No description';
-  const icon = transaction.category ?? {
-    icon: transaction.type === 'exchange' ? 'arrow-left-right' : 'tag',
-    color: UNCATEGORIZED_COLOR,
-  };
+
   const details = [
     transaction.description !== name && transaction.description,
     transaction.linkedTransaction && formatExchange(transaction, transaction.linkedTransaction),
@@ -42,12 +39,14 @@ export function TransactionSummary({
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
-      <span
-        className="flex size-9 shrink-0 items-center justify-center rounded-full"
-        style={{ backgroundColor: `color-mix(in srgb, ${icon.color} 18%, transparent)` }}
-      >
-        <CategoryIcon category={icon} />
-      </span>
+      <CategoryAvatar
+        category={
+          transaction.category ??
+          (transaction.type === 'exchange'
+            ? { icon: 'arrow-left-right', color: UNCATEGORIZED_COLOR }
+            : null)
+        }
+      />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">
           {transaction.merchant ? (

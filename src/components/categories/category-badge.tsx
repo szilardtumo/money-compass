@@ -66,6 +66,27 @@ export function CategoryIcon({
 /** The color of transactions without a category, in charts and drawers */
 export const UNCATEGORIZED_COLOR = '#a1a1aa';
 
+/**
+ * The category's icon on a tint of its color, or a grey tag without a category.
+ */
+export function CategoryAvatar({
+  category,
+  className,
+}: {
+  category: Pick<Category, 'icon' | 'color'> | null;
+  className?: string;
+}) {
+  const { icon, color } = category ?? { icon: 'tag', color: UNCATEGORIZED_COLOR };
+  return (
+    <span
+      className={cn('flex size-9 shrink-0 items-center justify-center rounded-full', className)}
+      style={{ backgroundColor: `color-mix(in srgb, ${color} 18%, transparent)` }}
+    >
+      <CategoryIcon category={{ icon, color }} />
+    </span>
+  );
+}
+
 interface CategoryBadgeProps extends ComponentProps<'span'> {
   category: Category | null;
   /** Not counted in analytics, which adds an icon, and shows "Excluded" without a category */
