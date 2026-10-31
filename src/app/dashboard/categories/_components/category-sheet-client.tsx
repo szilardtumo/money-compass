@@ -52,8 +52,7 @@ export function CategorySheetClient({
   const [isDeleting, setIsDeleting] = useState(false);
   const format = (value: number) =>
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0 });
-  const largest = Math.max(...merchants.map((merchant) => merchant.total), 0);
-  const isCounted = category.kind !== 'excluded';
+  const largest = Math.max(...merchants.map((merchant) => Math.abs(merchant.total)));
   const activeMerchants = merchants.filter((merchant) => merchant.transactionCount);
   const inactiveMerchants = merchants.filter((merchant) => !merchant.transactionCount);
   const renderMerchants = (items: CategoryMerchant[]) => (
@@ -65,7 +64,7 @@ export function CategorySheetClient({
             <div
               className="h-full rounded-full"
               style={{
-                width: `${largest > 0 ? (Math.max(merchant.total, 0) / largest) * 100 : 0}%`,
+                width: `${largest > 0 ? (Math.abs(merchant.total) / largest) * 100 : 0}%`,
                 backgroundColor: category.color,
               }}
             />
@@ -73,9 +72,7 @@ export function CategorySheetClient({
           <span className="w-10 text-right text-muted-foreground">
             {merchant.transactionCount}×
           </span>
-          <span className="w-20 text-right font-medium">
-            {isCounted ? format(merchant.total) : ''}
-          </span>
+          <span className="w-20 text-right font-medium">{format(merchant.total)}</span>
         </li>
       ))}
     </ul>
@@ -114,26 +111,24 @@ export function CategorySheetClient({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          {isCounted && (
-            <div className="mt-4 flex items-end gap-6">
-              <div>
-                <p className="text-xs text-muted-foreground">Last 12 months</p>
-                <p className="text-xl font-semibold">{format(category.yearTotal)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Monthly average</p>
-                <p className="text-xl font-semibold">{format(category.yearTotal / 12)}</p>
-              </div>
-              <div className="ml-auto">
-                <Sparkline
-                  values={category.monthlyTotals}
-                  color={category.color}
-                  width={168}
-                  height={40}
-                />
-              </div>
+          <div className="mt-4 flex items-end gap-6">
+            <div>
+              <p className="text-xs text-muted-foreground">Last 12 months</p>
+              <p className="text-xl font-semibold">{format(category.yearTotal)}</p>
             </div>
-          )}
+            <div>
+              <p className="text-xs text-muted-foreground">Monthly average</p>
+              <p className="text-xl font-semibold">{format(category.yearTotal / 12)}</p>
+            </div>
+            <div className="ml-auto">
+              <Sparkline
+                values={category.monthlyTotals}
+                color={category.color}
+                width={168}
+                height={40}
+              />
+            </div>
+          </div>
         </SheetHeader>
 
         <Tabs defaultValue="merchants" className="px-4 pb-4">

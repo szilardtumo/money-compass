@@ -128,23 +128,17 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
                 <TableCell className="text-right">{category.merchantCount}</TableCell>
                 <TableCell className="text-right">{category.transactionCount}</TableCell>
                 <TableCell className="text-right font-medium">
-                  {category.kind === 'excluded' ? (
-                    <span className="font-normal text-muted-foreground">Not counted</span>
-                  ) : (
-                    formatCurrency(category.yearTotal, mainCurrency, { maximumFractionDigits: 0 })
-                  )}
+                  {formatCurrency(category.yearTotal, mainCurrency, { maximumFractionDigits: 0 })}
                 </TableCell>
                 <TableCell>
-                  {category.kind !== 'excluded' && (
-                    <div className="flex justify-end">
-                      <Sparkline
-                        values={category.monthlyTotals}
-                        color={category.color}
-                        width={60}
-                        height={18}
-                      />
-                    </div>
-                  )}
+                  <div className="flex justify-end">
+                    <Sparkline
+                      values={category.monthlyTotals}
+                      color={category.color}
+                      width={60}
+                      height={18}
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="w-10" onClick={(event) => event.stopPropagation()}>
                   <DropdownMenu>
