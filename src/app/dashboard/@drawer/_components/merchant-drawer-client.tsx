@@ -47,6 +47,8 @@ interface MerchantDrawerClientProps {
   merchants: Merchant[];
   categories: Category[];
   transactions: Transaction[];
+  period: string | undefined;
+  total: number;
   monthlyTotals: number[];
   accounts: Account[];
   mainCurrency: string;
@@ -57,12 +59,13 @@ export function MerchantDrawerClient({
   merchants,
   categories,
   transactions,
+  period,
+  total,
   monthlyTotals,
   accounts,
   mainCurrency,
 }: MerchantDrawerClientProps) {
   const [isRenaming, setIsRenaming] = useState(false);
-  const [tab, setTab] = useState('transactions');
   const color = merchant.category?.color ?? UNCATEGORIZED_COLOR;
 
   return (
@@ -89,19 +92,16 @@ export function MerchantDrawerClient({
           </DropdownMenuContent>
         </DropdownMenu>
       }
+      period={period}
+      total={total}
       monthlyTotals={monthlyTotals}
       mainCurrency={mainCurrency}
     >
-      <Tabs value={tab} onValueChange={setTab} className="px-4 pb-4">
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
-            <TabsTrigger value="names">Names {merchant.keys.length}</TabsTrigger>
-          </TabsList>
-          {tab === 'transactions' && (
-            <span className="text-xs text-muted-foreground">Last 12 months</span>
-          )}
-        </div>
+      <Tabs defaultValue="transactions" className="px-4 pb-4">
+        <TabsList>
+          <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
+          <TabsTrigger value="names">Names {merchant.keys.length}</TabsTrigger>
+        </TabsList>
         <TabsContent value="transactions">
           <TransactionDayList
             transactions={transactions}

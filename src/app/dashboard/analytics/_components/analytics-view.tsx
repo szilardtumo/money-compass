@@ -191,7 +191,10 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
                   ...item,
                   key: item.category?.id ?? 'uncategorized',
                   name: item.category?.name ?? 'Uncategorized',
-                  href: getDrawerHref({ category: item.category?.id ?? 'uncategorized' }),
+                  href: getDrawerHref({
+                    category: item.category?.id ?? 'uncategorized',
+                    period: params.period,
+                  }),
                 }))}
                 total={totals[params.view].amount}
                 format={format}
@@ -204,7 +207,7 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
                   ...item,
                   key: item.merchant.id,
                   name: item.merchant.name,
-                  href: getDrawerHref({ merchant: item.merchant.id }),
+                  href: getDrawerHref({ merchant: item.merchant.id, period: params.period }),
                 }))}
                 total={totals[params.view].amount}
                 format={format}

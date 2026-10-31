@@ -20,6 +20,8 @@ interface CategoryDrawerClientProps {
   categories: CategoryWithStats[];
   merchants: CategoryMerchant[];
   transactions: Transaction[];
+  period: string | undefined;
+  total: number;
   monthlyTotals: number[];
   accounts: Account[];
   mainCurrency: string;
@@ -30,6 +32,8 @@ export function CategoryDrawerClient({
   categories,
   merchants,
   transactions,
+  period,
+  total,
   monthlyTotals,
   accounts,
   mainCurrency,
@@ -79,30 +83,29 @@ export function CategoryDrawerClient({
           : 'Merchants and transactions without a category'
       }
       actions={category && <CategoryActions category={category} categories={categories} />}
+      period={period}
+      total={total}
       monthlyTotals={monthlyTotals}
       mainCurrency={mainCurrency}
     >
       <Tabs defaultValue="merchants" className="px-4 pb-4">
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="merchants">Merchants {activeMerchants.length}</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
-          </TabsList>
-          <span className="text-xs text-muted-foreground">Last 12 months</span>
-        </div>
+        <TabsList>
+          <TabsTrigger value="merchants">Merchants {activeMerchants.length}</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
+        </TabsList>
         <TabsContent value="merchants">
           {activeMerchants.length ? (
             renderMerchants(activeMerchants)
           ) : (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No merchants with transactions in the last 12 months.
+              No merchants with transactions in this period.
             </p>
           )}
           {inactiveMerchants.length > 0 && (
             <details className="group mt-2">
               <summary className="flex cursor-pointer list-none items-center gap-1 py-2 text-sm text-muted-foreground hover:text-foreground">
                 <ChevronRightIcon className="size-4 transition-transform group-open:rotate-90" />
-                {inactiveMerchants.length} without transactions in the last 12 months
+                {inactiveMerchants.length} without transactions in this period
               </summary>
               {renderMerchants(inactiveMerchants)}
             </details>

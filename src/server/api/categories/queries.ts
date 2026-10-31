@@ -1,12 +1,12 @@
 import 'server-only';
 
-import { asc, count, countDistinct, eq, gte, isNull, sql, sum } from 'drizzle-orm';
+import { and, asc, count, countDistinct, eq, gte, isNull, lt, sql, sum } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Category, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
-import { getLastMonths, getLastMonthsStart } from '@/lib/utils/periods';
+import { getLastMonths, getLastMonthsStart, getPeriodOrLastMonthsRange } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
 import { categoryColumns, joinCategory, transactionMonth } from './joins';
@@ -107,16 +107,19 @@ export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(
 
 /**
  * Returns the merchants of a category, or without a category for null, that have transactions, with
- * their totals of the last 12 months in the main currency, the biggest first.
+ * their totals of the period in the main currency, the biggest first.
+ *
+ * @param input.period Like "2026-10" or "2026", else the last 12 months
  */
 export const getCategoryMerchants = createApiQuery<
-  { categoryId: string | null },
+  { categoryId: string | null; period?: string },
   CategoryMerchant[]
->(async ({ input: { categoryId } }) => {
+>(async ({ input: { categoryId, period } }) => {
   'use cache: private';
   const { db } = await createApiContext();
   const m = schema.merchants;
-  const inLastYear = gte(t.startedDate, getLastMonthsStart());
+  const { start, end } = getPeriodOrLastMonthsRange(period);
+  const inPeriod = and(gte(t.startedDate, start), lt(t.startedDate, end));
 
   const [rows, { mapper }] = await Promise.all([
     db.rls((tx) =>
@@ -125,8 +128,8 @@ export const getCategoryMerchants = createApiQuery<
           id: m.id,
           name: m.name,
           currency: schema.subaccounts.currency,
-          transactionCount: sql<number>`count(*) filter (where ${inLastYear})`.mapWith(Number),
-          amount: sql<number>`coalesce(sum(${t.amount}) filter (where ${inLastYear}), 0)`.mapWith(
+          transactionCount: sql<number>`count(*) filter (where ${inPeriod})`.mapWith(Number),
+          amount: sql<number>`coalesce(sum(${t.amount}) filter (where ${inPeriod}), 0)`.mapWith(
             Number,
           ),
         })

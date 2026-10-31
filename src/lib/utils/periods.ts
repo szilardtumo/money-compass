@@ -9,8 +9,15 @@ export interface Period {
   month: number;
 }
 
+const PERIOD_PARAM = /^(\d{4})(?:-(0[1-9]|1[0-2]))?$/;
+
+/** Whether the value is a period like "2026-10" or "2026" */
+export function isPeriodParam(value: unknown): value is string {
+  return typeof value === 'string' && PERIOD_PARAM.test(value);
+}
+
 export function parsePeriod(value: string | undefined, now = new Date()): Period {
-  const match = value?.match(/^(\d{4})(?:-(0[1-9]|1[0-2]))?$/);
+  const match = value?.match(PERIOD_PARAM);
   if (!match) {
     return { unit: 'month', year: now.getUTCFullYear(), month: now.getUTCMonth() };
   }
@@ -53,15 +60,21 @@ export function formatPeriodLabel(period: Period, format: 'long' | 'short' = 'lo
   }).format(new Date(Date.UTC(period.year, period.month, 1)));
 }
 
-/** The last 12 months, this one included, as "YYYY-MM" */
-export function getLastMonths() {
-  const current = parsePeriod(undefined);
-  return Array.from({ length: 12 }, (_, index) =>
-    formatPeriodParam(shiftPeriod(current, index - 11)),
-  );
+/** The 12 months up to the end of the period, or up to this month, as "YYYY-MM" */
+export function getLastMonths(period?: string) {
+  const parsed = parsePeriod(period);
+  const last: Period = parsed.unit === 'year' ? { ...parsed, unit: 'month', month: 11 } : parsed;
+  return Array.from({ length: 12 }, (_, index) => formatPeriodParam(shiftPeriod(last, index - 11)));
 }
 
 /** The first moment of the last 12 months */
 export function getLastMonthsStart() {
   return getPeriodRange(shiftPeriod(parsePeriod(undefined), -11)).start;
+}
+
+/** The range of the period, or of the last 12 months without one */
+export function getPeriodOrLastMonthsRange(period?: string) {
+  return period
+    ? getPeriodRange(parsePeriod(period))
+    : { start: getLastMonthsStart(), end: getPeriodRange(parsePeriod(undefined)).end };
 }

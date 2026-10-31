@@ -4,13 +4,19 @@ import { getDrawerData } from './drawer-data';
 import { MerchantDrawerClient } from './merchant-drawer-client';
 
 /**
- * The drawer of a merchant, with its names from the bank and its transactions of the last 12 months.
+ * The drawer of a merchant, with its names from the bank and its transactions of the period.
  */
-export async function MerchantDrawer({ merchantId }: { merchantId: string }) {
+export async function MerchantDrawer({
+  merchantId,
+  period,
+}: {
+  merchantId: string;
+  period: string | undefined;
+}) {
   const [merchants, categories, data] = await Promise.all([
     apiQueries.merchants.getMerchants(),
     apiQueries.categories.getCategories(),
-    getDrawerData({ merchantId }),
+    getDrawerData({ merchantId }, period),
   ]);
   const merchant = merchants.find((item) => item.id === merchantId);
   // A merged merchant, or one without transactions, closes the drawer
@@ -24,6 +30,7 @@ export async function MerchantDrawer({ merchantId }: { merchantId: string }) {
       merchants={merchants}
       categories={categories}
       {...data}
+      period={period}
     />
   );
 }
