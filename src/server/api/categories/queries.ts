@@ -1,12 +1,12 @@
 import 'server-only';
 
-import { asc, count, countDistinct, eq, gte, sql, sum } from 'drizzle-orm';
+import { asc, count, countDistinct, eq, gte, isNull, sql, sum } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Category, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
-import { formatPeriodParam, getPeriodRange, parsePeriod, shiftPeriod } from '@/lib/utils/periods';
+import { getLastMonths, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
 import { categoryColumns, joinCategory } from './joins';
@@ -29,12 +29,6 @@ export const getCategories = createApiQuery<void, Category[]>(async () => {
   );
 });
 
-// The last 12 months, this one included, as "YYYY-MM"
-const lastMonths = () => {
-  const now = parsePeriod(undefined);
-  return Array.from({ length: 12 }, (_, index) => formatPeriodParam(shiftPeriod(now, index - 11)));
-};
-
 const toMain = (
   { amount, currency }: { amount: number; currency: string },
   mapper: CurrencyMapper,
@@ -53,7 +47,7 @@ const toMain = (
 export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(async () => {
   'use cache: private';
   const { db } = await createApiContext();
-  const months = lastMonths();
+  const months = getLastMonths();
   const month = sql<string>`to_char(date_trunc('month', ${t.startedDate} at time zone 'UTC'), 'YYYY-MM')`;
 
   const [categories, [merchantCounts, transactionCounts, monthTotals], { mapper }] =
@@ -113,53 +107,54 @@ export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(
 });
 
 /**
- * Returns the merchants of a category that have transactions, with their totals of the last 12
- * months in the main currency, the biggest first.
+ * Returns the merchants of a category, or without a category for null, that have transactions, with
+ * their totals of the last 12 months in the main currency, the biggest first.
  */
-export const getCategoryMerchants = createApiQuery<{ categoryId: string }, CategoryMerchant[]>(
-  async ({ input: { categoryId } }) => {
-    'use cache: private';
-    const { db } = await createApiContext();
-    const m = schema.merchants;
-    const inLastYear = gte(t.startedDate, getPeriodRange(parsePeriod(lastMonths()[0])).start);
+export const getCategoryMerchants = createApiQuery<
+  { categoryId: string | null },
+  CategoryMerchant[]
+>(async ({ input: { categoryId } }) => {
+  'use cache: private';
+  const { db } = await createApiContext();
+  const m = schema.merchants;
+  const inLastYear = gte(t.startedDate, getPeriodRange(parsePeriod(getLastMonths()[0])).start);
 
-    const [rows, { mapper }] = await Promise.all([
-      db.rls((tx) =>
-        tx
-          .select({
-            id: m.id,
-            name: m.name,
-            currency: schema.subaccounts.currency,
-            transactionCount: sql<number>`count(*) filter (where ${inLastYear})`.mapWith(Number),
-            amount: sql<number>`coalesce(sum(${t.amount}) filter (where ${inLastYear}), 0)`.mapWith(
-              Number,
-            ),
-          })
-          .from(m)
-          .innerJoin(t, eq(t.merchantId, m.id))
-          .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
-          .where(eq(m.categoryId, categoryId))
-          .groupBy(m.id, schema.subaccounts.currency),
-      ),
-      getMainCurrencyWithMapper(),
-    ]);
+  const [rows, { mapper }] = await Promise.all([
+    db.rls((tx) =>
+      tx
+        .select({
+          id: m.id,
+          name: m.name,
+          currency: schema.subaccounts.currency,
+          transactionCount: sql<number>`count(*) filter (where ${inLastYear})`.mapWith(Number),
+          amount: sql<number>`coalesce(sum(${t.amount}) filter (where ${inLastYear}), 0)`.mapWith(
+            Number,
+          ),
+        })
+        .from(m)
+        .innerJoin(t, eq(t.merchantId, m.id))
+        .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+        .where(categoryId ? eq(m.categoryId, categoryId) : isNull(m.categoryId))
+        .groupBy(m.id, schema.subaccounts.currency),
+    ),
+    getMainCurrencyWithMapper(),
+  ]);
 
-    // A merchant has a row per currency of its transactions
-    const merchants = new Map<string, CategoryMerchant>();
-    for (const row of rows) {
-      const merchant = merchants.get(row.id) ?? {
-        id: row.id,
-        name: row.name,
-        transactionCount: 0,
-        total: 0,
-      };
-      merchants.set(row.id, merchant);
-      merchant.transactionCount += row.transactionCount;
-      merchant.total += toMain(row, mapper);
-    }
+  // A merchant has a row per currency of its transactions
+  const merchants = new Map<string, CategoryMerchant>();
+  for (const row of rows) {
+    const merchant = merchants.get(row.id) ?? {
+      id: row.id,
+      name: row.name,
+      transactionCount: 0,
+      total: 0,
+    };
+    merchants.set(row.id, merchant);
+    merchant.transactionCount += row.transactionCount;
+    merchant.total += toMain(row, mapper);
+  }
 
-    return [...merchants.values()].toSorted(
-      (a, b) => Math.abs(b.total) - Math.abs(a.total) || a.name.localeCompare(b.name),
-    );
-  },
-);
+  return [...merchants.values()].toSorted(
+    (a, b) => Math.abs(b.total) - Math.abs(a.total) || a.name.localeCompare(b.name),
+  );
+});

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { CategoryIcon } from '@/components/categories/category-badge';
+import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, DonutChart } from '@/components/ui/chart';
@@ -35,6 +36,7 @@ interface AnalyticsViewProps {
 
 export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsViewProps) {
   const router = useRouter();
+  const getDrawerHref = useDrawerHref();
   const period = parsePeriod(params.period);
   const { mainCurrency, totals } = analytics;
   const format = (value: number) => formatCurrency(value, mainCurrency);
@@ -189,7 +191,7 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
                   ...item,
                   key: item.category?.id ?? 'uncategorized',
                   name: item.category?.name ?? 'Uncategorized',
-                  href: href({ category: item.category?.id ?? 'uncategorized' }),
+                  href: getDrawerHref({ category: item.category?.id ?? 'uncategorized' }),
                 }))}
                 total={totals[params.view].amount}
                 format={format}
@@ -202,7 +204,7 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
                   ...item,
                   key: item.merchant.id,
                   name: item.merchant.name,
-                  href: href({ merchant: item.merchant.id }),
+                  href: getDrawerHref({ merchant: item.merchant.id }),
                 }))}
                 total={totals[params.view].amount}
                 format={format}
@@ -273,6 +275,7 @@ function TotalsList({
           <Link
             href={item.href}
             scroll={false}
+            prefetch={false}
             className="flex items-center gap-3 py-2 hover:bg-muted/50"
           >
             {item.category ? (

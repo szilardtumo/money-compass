@@ -55,7 +55,7 @@ export const setMerchantCategory = authenticatedActionClient
 /**
  * Renames a merchant. Renaming it to the name of another merchant merges it into that one.
  *
- * @returns The name of the merchant it was merged into, if any.
+ * @returns The merchant it was merged into, if any.
  */
 export const renameMerchant = authenticatedActionClient
   .inputSchema(renameMerchantSchema)
@@ -69,7 +69,7 @@ export const renameMerchant = authenticatedActionClient
         await mergeMerchant(tx, merchant, other);
         // The user chose it, so the LLM leaves it alone
         await tx.update(m).set({ autoCheckedAt: new Date() }).where(eq(m.id, other.id));
-        return other.name;
+        return { id: other.id, name: other.name };
       }
 
       await tx.update(m).set({ name, autoCheckedAt: new Date() }).where(eq(m.id, merchantId));

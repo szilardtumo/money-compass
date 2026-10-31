@@ -1,26 +1,34 @@
 'use client';
 
+import { ReactNode } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Category } from '@/lib/types/categories.types';
 import { Transaction } from '@/lib/types/transactions.types';
 import { apiActions } from '@/server/api/actions';
 
-import { CategoryBadge } from './category-badge';
 import { CATEGORY_TOASTS, CategoryPicker } from './category-picker';
 
 interface TransactionCategoryPickerProps {
   transaction: Pick<Transaction, 'id' | 'merchant' | 'category' | 'categorySource' | 'excluded'>;
   categories: Category[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** The anchor of the picker, like the transaction's menu */
+  children: ReactNode;
 }
 
 /**
- * The category of a transaction, which opens a picker. When the merchant has other transactions,
- * it asks whether the new category is for this transaction only or for the whole merchant.
+ * Changes the category of a transaction. When the merchant has other transactions, it asks whether
+ * the new category is for this transaction only or for the whole merchant.
  */
 export function TransactionCategoryPicker({
   transaction,
   categories,
+  open,
+  onOpenChange,
+  children,
 }: TransactionCategoryPickerProps) {
   const { merchant } = transaction;
   const { execute: setTransactionCategory } = useActionWithToast(
@@ -40,6 +48,8 @@ export function TransactionCategoryPicker({
   return (
     <CategoryPicker
       categories={categories}
+      open={open}
+      onOpenChange={onOpenChange}
       value={transaction.category?.id ?? null}
       onSelect={(categoryId) =>
         merchant && categoryId
@@ -84,16 +94,7 @@ export function TransactionCategoryPicker({
           : undefined
       }
     >
-      <button type="button" className="cursor-pointer" aria-label="Change category">
-        <CategoryBadge
-          category={transaction.category}
-          excluded={transaction.excluded}
-          {...(transaction.categorySource === 'transaction' && {
-            className: 'border-foreground/40',
-            title: 'Set for this transaction only',
-          })}
-        />
-      </button>
+      {children}
     </CategoryPicker>
   );
 }

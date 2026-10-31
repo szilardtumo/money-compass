@@ -27,7 +27,7 @@ interface TransactionsSheetProps {
 }
 
 /**
- * The transactions of a category, a merchant, or the excluded ones in the selected period.
+ * The transactions excluded from analytics in the selected period.
  */
 export function TransactionsSheet({
   params,
@@ -37,14 +37,6 @@ export function TransactionsSheet({
   categories,
 }: TransactionsSheetProps) {
   const router = useRouter();
-  const title = params.excluded
-    ? 'Excluded from analytics'
-    : params.merchant
-      ? (transactions[0]?.merchant?.name ?? 'Merchant')
-      : params.category === 'uncategorized'
-        ? 'Uncategorized'
-        : (categories.find((category) => category.id === params.category)?.name ?? 'Category');
-
   return (
     <Sheet
       open
@@ -56,7 +48,7 @@ export function TransactionsSheet({
     >
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>{title}</SheetTitle>
+          <SheetTitle>Excluded from analytics</SheetTitle>
           <SheetDescription>
             {formatPeriodLabel(parsePeriod(params.period))},{' '}
             {isCut

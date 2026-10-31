@@ -1,14 +1,15 @@
 'use client';
 
-import { CellContext, ColumnDefTemplate, createColumnHelper } from '@tanstack/react-table';
-import { EllipsisIcon, Trash2Icon } from 'lucide-react';
+import { createColumnHelper } from '@tanstack/react-table';
+import { Trash2Icon } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
 
 import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
 import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
-import { TransactionCategoryPicker } from '@/components/categories/transaction-category-picker';
-import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
+import { TransactionCategoryBadge } from '@/components/categories/transaction-category-badge';
+import { DrawerLink } from '@/components/drawers/drawer-link';
+import { TransactionActions } from '@/components/transactions/transaction-actions';
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,13 +23,6 @@ import {
   useDataTable,
   type DataTableFeatures,
 } from '@/components/ui/data-table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Account } from '@/lib/types/accounts.types';
@@ -54,7 +48,16 @@ const staticColumns = [
           <div className="min-w-[150px]">
             {!!(row.original.merchant || row.original.counterpartyName) && (
               <p className="font-medium">
-                {row.original.merchant?.name ?? row.original.counterpartyName}
+                {row.original.merchant ? (
+                  <DrawerLink
+                    to={{ merchant: row.original.merchant.id }}
+                    className="hover:underline"
+                  >
+                    {row.original.merchant.name}
+                  </DrawerLink>
+                ) : (
+                  row.original.counterpartyName
+                )}
               </p>
             )}
             {!!row.original.merchant &&
@@ -166,17 +169,6 @@ export function TransactionsTableClient({
     [categories],
   );
 
-  const { openDialog: openUpdateTransactionDialog } = useUpdateTransactionDialog();
-
-  const { execute: deleteTransaction, isExecuting: isDeleting } = useActionWithToast(
-    apiActions.transactions.deleteTransaction,
-    {
-      loadingToast: 'Deleting transaction...',
-      successToast: 'Transaction deleted!',
-      errorToast: 'Failed to delete transaction. Please try again later.',
-    },
-  );
-
   const { executeAsync: setTransactionCategory } = useActionWithToast(
     apiActions.transactions.setTransactionCategory,
     CATEGORY_TOASTS,
@@ -192,41 +184,6 @@ export function TransactionsTableClient({
   );
 
   const columns = useMemo(() => {
-    const actionsCell: ColumnDefTemplate<
-      CellContext<DataTableFeatures, TransactionWithAccount, unknown>
-    > = ({ row }) => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <span className="sr-only">Open menu</span>
-              <EllipsisIcon className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() =>
-                openUpdateTransactionDialog({
-                  ...row.original,
-                  amount: row.original.amount.originalValue,
-                  currency: row.original.originalCurrency,
-                  date: row.original.startedDate,
-                })
-              }
-            >
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => deleteTransaction(row.original.id)}>
-              Delete
-              <DropdownMenuShortcut>
-                <Trash2Icon className="size-4" />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    };
-
     return columnHelper.columns([
       ...staticColumns,
       columnHelper.accessor(
@@ -236,17 +193,17 @@ export function TransactionsTableClient({
           header: 'Category',
           filterFn: 'arrHas',
           enableSorting: false,
-          cell: ({ row }) => (
-            <TransactionCategoryPicker transaction={row.original} categories={categories} />
-          ),
+          cell: ({ row }) => <TransactionCategoryBadge transaction={row.original} />,
         },
       ),
       columnHelper.display({
         id: 'actions',
-        cell: actionsCell,
+        cell: ({ row }) => (
+          <TransactionActions transaction={row.original} categories={categories} />
+        ),
       }),
     ]);
-  }, [categories, deleteTransaction, openUpdateTransactionDialog]);
+  }, [categories]);
 
   const table = useDataTable({
     columns,
@@ -302,8 +259,8 @@ export function TransactionsTableClient({
           icon={Trash2Icon}
           className="h-8 px-2.5"
           onClick={deleteSelected}
-          disabled={selectedRowCount === 0 || isDeleting || isDeletingSelected}
-          isLoading={isDeleting || isDeletingSelected}
+          disabled={selectedRowCount === 0 || isDeletingSelected}
+          isLoading={isDeletingSelected}
         >
           Delete ({selectedRowCount})
         </Button>

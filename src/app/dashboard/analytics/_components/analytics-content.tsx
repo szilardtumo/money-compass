@@ -1,6 +1,5 @@
 import { connection } from 'next/server';
 import { Suspense } from 'react';
-import { z } from 'zod';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatPeriodParam, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
@@ -13,8 +12,6 @@ import { TransactionsSheet } from './transactions-sheet';
 const getParam = (value: string | string[] | undefined) =>
   typeof value === 'string' ? value : undefined;
 
-const getId = (value: string | string[] | undefined) => z.uuid().safeParse(value).data;
-
 export async function AnalyticsContent({
   searchParams,
 }: {
@@ -26,13 +23,8 @@ export async function AnalyticsContent({
   const params: AnalyticsParams = {
     period: formatPeriodParam(parsePeriod(getParam(query.period))),
     view: getParam(query.view) === 'income' ? 'income' : 'spending',
-    category:
-      getParam(query.category) === 'uncategorized' ? 'uncategorized' : getId(query.category),
-    merchant: getId(query.merchant),
     excluded: getParam(query.excluded) === '1',
   };
-
-  const hasSheet = !!(params.category || params.merchant || params.excluded);
 
   // Siblings, so the analytics and the sheet's transactions load in parallel
   return (
@@ -40,7 +32,7 @@ export async function AnalyticsContent({
       <Suspense fallback={<Skeleton className="h-[720px]" />}>
         <AnalyticsData params={params} currentMonth={formatPeriodParam(parsePeriod(undefined))} />
       </Suspense>
-      {hasSheet && (
+      {params.excluded && (
         <Suspense fallback={null}>
           <TransactionsSheetContent params={params} />
         </Suspense>
@@ -67,9 +59,7 @@ async function TransactionsSheetContent({ params }: { params: AnalyticsParams })
     apiQueries.transactions.getTransactions({
       fromDate: start.toISOString(),
       toDate: new Date(end.getTime() - 1).toISOString(),
-      categoryId: params.category === 'uncategorized' ? null : params.category,
-      merchantId: params.merchant,
-      side: params.excluded ? 'excluded' : params.view,
+      side: 'excluded',
       // One more than shown, to tell whether the list is cut
       pageSize: 501,
     }),

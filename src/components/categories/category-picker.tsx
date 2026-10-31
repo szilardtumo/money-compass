@@ -12,7 +12,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Category, CATEGORY_KINDS } from '@/lib/types/categories.types';
 
 import { CategoryIcon } from './category-badge';
@@ -27,8 +27,11 @@ interface CategoryPickerProps {
   categories: Category[];
   value: string | null;
   onSelect: (categoryId: string | null) => void;
-  /** The trigger, usually a CategoryBadge */
+  /** The trigger, usually a CategoryBadge, or only the anchor when `open` is set */
   children: ReactNode;
+  /** Opens the picker from outside, like from a menu item */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   /** Adds an item on top that selects null, like "No category" */
   clearLabel?: string;
   /** Shown after picking a category, instead of selecting it right away */
@@ -42,8 +45,11 @@ export function CategoryPicker({
   children,
   clearLabel,
   renderConfirm,
+  ...props
 }: CategoryPickerProps) {
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = props.open ?? ownOpen;
+  const setOpen = props.onOpenChange ?? setOwnOpen;
   const [picked, setPicked] = useState<string>();
 
   const close = () => {
@@ -61,7 +67,11 @@ export function CategoryPicker({
 
   return (
     <Popover open={open} onOpenChange={(isOpen) => (isOpen ? setOpen(true) : close())}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      {props.open === undefined ? (
+        <PopoverTrigger asChild>{children}</PopoverTrigger>
+      ) : (
+        <PopoverAnchor>{children}</PopoverAnchor>
+      )}
       <PopoverContent className="w-64 p-0" align="start">
         {picked && renderConfirm ? (
           renderConfirm(picked, close)

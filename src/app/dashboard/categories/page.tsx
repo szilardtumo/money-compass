@@ -5,9 +5,8 @@ import { PageHeaderTitle } from '@/components/ui/page-layout';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { CategoriesList } from './_components/categories-list';
-import { CategorySheet } from './_components/category-sheet';
 
-export default function CategoriesPage({ searchParams }: PageProps<'/dashboard/categories'>) {
+export default function CategoriesPage() {
   return (
     <>
       <PageHeaderSlotContent>
@@ -16,9 +15,6 @@ export default function CategoriesPage({ searchParams }: PageProps<'/dashboard/c
 
       <Suspense fallback={<Skeleton className="h-[650px] w-full" />}>
         <CategoriesList />
-      </Suspense>
-      <Suspense fallback={null}>
-        <CategorySheet searchParams={searchParams} />
       </Suspense>
     </>
   );

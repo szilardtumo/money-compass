@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
 import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
 import { MerchantCategoryPicker } from '@/components/categories/merchant-category-picker';
+import { DrawerLink } from '@/components/drawers/drawer-link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +25,6 @@ import { Category, Merchant } from '@/lib/types/categories.types';
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
 import { apiActions } from '@/server/api/actions';
 
-import { MerchantDialog } from './merchant-dialog';
 import { MergeMerchantsDialog } from './merge-merchants-dialog';
 
 const columnHelper = createColumnHelper<DataTableFeatures, Merchant>();
@@ -40,7 +40,6 @@ export function MerchantsTableClient({
   categories,
   mainCurrency,
 }: MerchantsTableClientProps) {
-  const [openMerchantId, setOpenMerchantId] = useState<string>();
   const [mergeOpen, setMergeOpen] = useState(false);
 
   const { executeAsync: setMerchantsCategory } = useActionWithToast(
@@ -54,16 +53,15 @@ export function MerchantsTableClient({
         columnHelper.accessor('name', {
           header: 'Merchant',
           cell: ({ row }) => (
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-2 text-left font-medium hover:underline"
-              onClick={() => setOpenMerchantId(row.original.id)}
+            <DrawerLink
+              to={{ merchant: row.original.id }}
+              className="flex items-center gap-2 font-medium hover:underline"
             >
               {row.original.name}
               {row.original.keys.length > 1 && (
                 <Badge variant="outline">{row.original.keys.length} names</Badge>
               )}
-            </button>
+            </DrawerLink>
           ),
         }),
         columnHelper.accessor((row) => row.category?.id ?? 'uncategorized', {
@@ -166,12 +164,6 @@ export function MerchantsTableClient({
         <DataTablePagination table={table} />
       </div>
 
-      <MerchantDialog
-        merchant={merchants.find((merchant) => merchant.id === openMerchantId)}
-        merchants={merchants}
-        categories={categories}
-        onClose={() => setOpenMerchantId(undefined)}
-      />
       <MergeMerchantsDialog
         open={mergeOpen}
         onOpenChange={setMergeOpen}

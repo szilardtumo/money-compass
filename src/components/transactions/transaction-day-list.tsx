@@ -13,8 +13,8 @@ import { TransactionItem } from './transaction-item';
 interface TransactionDayListProps {
   transactions: Transaction[];
   accounts: Account[];
-  /** Shows each transaction's category, which opens a picker */
-  categories?: Category[];
+  /** For changing the categories */
+  categories: Category[];
 }
 
 /**

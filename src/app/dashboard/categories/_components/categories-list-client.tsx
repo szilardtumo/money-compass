@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { CategoryIcon } from '@/components/categories/category-badge';
+import { CategoryDialog } from '@/components/categories/category-dialog';
+import { DeleteCategoryDialog } from '@/components/categories/delete-category-dialog';
+import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,9 +31,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CATEGORY_KINDS, CategoryKind, CategoryWithStats } from '@/lib/types/categories.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 
-import { CategoryDialog } from './category-dialog';
-import { DeleteCategoryDialog } from './delete-category-dialog';
-
 interface CategoriesListClientProps {
   categories: CategoryWithStats[];
   mainCurrency: string;
@@ -38,6 +38,7 @@ interface CategoriesListClientProps {
 
 export function CategoriesListClient({ categories, mainCurrency }: CategoriesListClientProps) {
   const router = useRouter();
+  const getDrawerHref = useDrawerHref();
   const [kind, setKind] = useState<CategoryKind | 'all'>('all');
   const [search, setSearch] = useState('');
   // undefined: closed, null: a new category
@@ -111,7 +112,7 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
                   !category.transactionCount && 'text-muted-foreground',
                 )}
                 onClick={() =>
-                  router.push(`/dashboard/categories?category=${category.id}`, { scroll: false })
+                  router.push(getDrawerHref({ category: category.id }), { scroll: false })
                 }
               >
                 <TableCell>

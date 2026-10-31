@@ -65,7 +65,7 @@ export function CategoryIcon({
 
 interface CategoryBadgeProps extends ComponentProps<'span'> {
   category: Category | null;
-  /** Shown instead of the category for transactions excluded by their type */
+  /** Not counted in analytics: an icon after the category, or "Excluded" without a category */
   excluded?: boolean;
 }
 
@@ -74,7 +74,7 @@ export function CategoryBadge({ category, excluded, className, ...props }: Categ
     <span
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap',
-        (!category || excluded) && 'text-muted-foreground',
+        !category && 'text-muted-foreground',
         className,
       )}
       {...props}
@@ -83,6 +83,14 @@ export function CategoryBadge({ category, excluded, className, ...props }: Categ
         <>
           <CategoryIcon category={category} className="size-3" />
           {category.name}
+          {excluded && (
+            <EyeOffIcon
+              className="size-3 text-muted-foreground"
+              aria-label="Not counted in analytics"
+            >
+              <title>Not counted in analytics</title>
+            </EyeOffIcon>
+          )}
         </>
       ) : excluded ? (
         <>
