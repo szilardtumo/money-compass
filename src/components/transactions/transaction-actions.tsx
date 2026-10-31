@@ -1,6 +1,6 @@
 'use client';
 
-import { EllipsisIcon, Trash2Icon } from 'lucide-react';
+import { EllipsisVerticalIcon, Trash2Icon } from 'lucide-react';
 import { ReactNode, useRef, useState } from 'react';
 
 import { CATEGORY_TOASTS, CategoryPicker } from '@/components/categories/category-picker';
@@ -111,9 +111,13 @@ export function TransactionActions({ transaction, categories, children }: Transa
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" icon={EllipsisIcon}>
-            <span className="sr-only">Open menu</span>
-          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            icon={EllipsisVerticalIcon}
+            aria-label="Transaction actions"
+            className="h-8 w-5 text-muted-foreground hover:bg-transparent hover:text-foreground dark:hover:bg-transparent"
+          />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"

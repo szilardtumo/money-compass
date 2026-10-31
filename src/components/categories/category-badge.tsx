@@ -68,7 +68,7 @@ export const UNCATEGORIZED_COLOR = '#a1a1aa';
 
 interface CategoryBadgeProps extends ComponentProps<'span'> {
   category: Category | null;
-  /** Not counted in analytics: an icon after the category, or "Excluded" without a category */
+  /** Not counted in analytics, which adds an icon, and shows "Excluded" without a category */
   excluded?: boolean;
 }
 
@@ -77,31 +77,20 @@ export function CategoryBadge({ category, excluded, className, ...props }: Categ
     <span
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap',
-        !category && 'text-muted-foreground',
+        !category &&
+          (excluded
+            ? 'text-muted-foreground'
+            : 'border-amber-500/40 text-amber-600 dark:text-amber-500'),
         className,
       )}
       {...props}
     >
-      {category ? (
-        <>
-          <CategoryIcon category={category} className="size-3" />
-          {category.name}
-          {excluded && (
-            <EyeOffIcon
-              className="size-3 text-muted-foreground"
-              aria-label="Not counted in analytics"
-            >
-              <title>Not counted in analytics</title>
-            </EyeOffIcon>
-          )}
-        </>
-      ) : excluded ? (
-        <>
-          <EyeOffIcon className="size-3" />
-          Excluded
-        </>
-      ) : (
-        'Uncategorized'
+      {category && <CategoryIcon category={category} className="size-3" />}
+      {category?.name ?? (excluded ? 'Excluded' : 'Uncategorized')}
+      {excluded && (
+        <EyeOffIcon className="size-3 text-muted-foreground" aria-label="Not counted in analytics">
+          <title>Not counted in analytics</title>
+        </EyeOffIcon>
       )}
     </span>
   );
