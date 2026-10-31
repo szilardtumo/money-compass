@@ -34,8 +34,10 @@ interface DrawerSheetProps {
   period: string | undefined;
   /** The total of the period in the main currency */
   total: number;
-  /** The 12 months up to the period's end in the main currency, oldest first */
+  /** The months of the period's year, or the last 12 months, in the main currency */
   monthlyTotals: number[];
+  /** Of the months so far */
+  average: number;
   mainCurrency: string;
   children: ReactNode;
 }
@@ -53,6 +55,7 @@ export function DrawerSheet({
   period,
   total,
   monthlyTotals,
+  average,
   mainCurrency,
   children,
 }: DrawerSheetProps) {
@@ -60,7 +63,8 @@ export function DrawerSheet({
   const getDrawerHref = useDrawerHref();
   const format = (value: number) =>
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0 });
-  const isMonth = !!period && parsePeriod(period).unit === 'month';
+  const selected = parsePeriod(period);
+  const isMonth = !!period && selected.unit === 'month';
 
   return (
     <Sheet open onOpenChange={() => router.push(getDrawerHref(null), { scroll: false })}>
@@ -85,20 +89,25 @@ export function DrawerSheet({
           <div className="flex items-end gap-6">
             <div>
               <p className="text-xs text-muted-foreground">
-                {period ? formatPeriodLabel(parsePeriod(period)) : 'Last 12 months'}
+                {period ? formatPeriodLabel(selected) : 'Last 12 months'}
               </p>
               <p className="text-xl font-semibold">{format(total)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">
-                {isMonth ? '12-month average' : 'Monthly average'}
+                {period ? `Monthly average in ${selected.year}` : 'Monthly average'}
               </p>
-              <p className="text-xl font-semibold">
-                {format(monthlyTotals.reduce((sum, value) => sum + value, 0) / 12)}
-              </p>
+              <p className="text-xl font-semibold">{format(average)}</p>
             </div>
             <div className="ml-auto">
-              <Sparkline values={monthlyTotals} color={color} width={168} height={40} />
+              <Sparkline
+                values={monthlyTotals}
+                color={color}
+                width={168}
+                height={40}
+                // The month in its year, the whole year, or this month of the last 12
+                highlight={isMonth ? selected.month : period ? null : undefined}
+              />
             </div>
           </div>
         </SheetHeader>

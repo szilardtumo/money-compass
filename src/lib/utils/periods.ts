@@ -60,11 +60,23 @@ export function formatPeriodLabel(period: Period, format: 'long' | 'short' = 'lo
   }).format(new Date(Date.UTC(period.year, period.month, 1)));
 }
 
-/** The 12 months up to the end of the period, or up to this month, as "YYYY-MM" */
-export function getLastMonths(period?: string) {
-  const parsed = parsePeriod(period);
-  const last: Period = parsed.unit === 'year' ? { ...parsed, unit: 'month', month: 11 } : parsed;
-  return Array.from({ length: 12 }, (_, index) => formatPeriodParam(shiftPeriod(last, index - 11)));
+/** The last 12 months, this one included, as "YYYY-MM" */
+export function getLastMonths() {
+  const current = parsePeriod(undefined);
+  return Array.from({ length: 12 }, (_, index) =>
+    formatPeriodParam(shiftPeriod(current, index - 11)),
+  );
+}
+
+/** The months of the period's year, or the last 12 months without a period, as "YYYY-MM" */
+export function getChartMonths(period?: string) {
+  if (!period) {
+    return getLastMonths();
+  }
+  const { year } = parsePeriod(period);
+  return Array.from({ length: 12 }, (_, month) =>
+    formatPeriodParam({ unit: 'month', year, month }),
+  );
 }
 
 /** The first moment of the last 12 months */

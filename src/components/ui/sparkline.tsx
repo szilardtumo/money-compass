@@ -3,12 +3,20 @@ interface SparklineProps {
   color: string;
   width: number;
   height: number;
+  /** The bar shown stronger, the last one by default, or none for null */
+  highlight?: number | null;
 }
 
 /**
- * Tiny bars of the absolute values of a series, the last one highlighted.
+ * Tiny bars of the absolute values of a series, with one bar highlighted.
  */
-export function Sparkline({ values, color, width, height }: SparklineProps) {
+export function Sparkline({
+  values,
+  color,
+  width,
+  height,
+  highlight = values.length - 1,
+}: SparklineProps) {
   const max = Math.max(...values.map(Math.abs)) || 1;
   const step = width / values.length;
 
@@ -25,7 +33,7 @@ export function Sparkline({ values, color, width, height }: SparklineProps) {
             height={barHeight}
             rx={1}
             fill={color}
-            opacity={index === values.length - 1 ? 1 : 0.5}
+            opacity={highlight === null || index === highlight ? 1 : 0.5}
           />
         );
       })}

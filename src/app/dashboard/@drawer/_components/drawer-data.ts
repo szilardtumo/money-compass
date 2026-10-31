@@ -3,7 +3,8 @@ import 'server-only';
 import { connection } from 'next/server';
 
 import {
-  getLastMonths,
+  formatPeriodParam,
+  getChartMonths,
   getPeriodOrLastMonthsRange,
   getPeriodRange,
   parsePeriod,
@@ -11,9 +12,9 @@ import {
 import { apiQueries } from '@/server/api/queries';
 
 /**
- * Loads what every drawer shows: the transactions of the period that match the filter, their total
- * and the monthly totals of the 12 months up to the period's end in the main currency, and the
- * accounts of the list.
+ * Loads what every drawer shows: the transactions of the period that match the filter, their total,
+ * and the monthly totals and average of the period's year, or of the last 12 months, in the main
+ * currency, and the accounts of the list.
  *
  * @param period Like "2026-10" or "2026", else the last 12 months
  */
@@ -23,8 +24,9 @@ export async function getDrawerData(
 ) {
   // Without a period, the 12 months end today
   await connection();
-  const months = getLastMonths(period);
-  const { start } = getPeriodOrLastMonthsRange(period);
+  const months = getChartMonths(period);
+  const { start, end } = getPeriodOrLastMonthsRange(period);
+  const currentMonth = formatPeriodParam(parsePeriod(undefined));
 
   const [{ data }, accounts, profile] = await Promise.all([
     apiQueries.transactions.getTransactions({
@@ -36,17 +38,25 @@ export async function getDrawerData(
     apiQueries.accounts.getAccounts(),
     apiQueries.profiles.getProfile(),
   ]);
-  // The chart can start before the period, when it's a month
-  const transactions = data.filter((item) => new Date(item.startedDate) >= start);
+  // The chart shows the whole year of a month
+  const transactions = data.filter((item) => {
+    const date = new Date(item.startedDate);
+    return date >= start && date < end;
+  });
+  const monthlyTotals = months.map((month) =>
+    data
+      .filter((item) => new Date(item.startedDate).toISOString().startsWith(month))
+      .reduce((total, item) => total + item.amount.mainCurrencyValue, 0),
+  );
 
   return {
     transactions,
     total: transactions.reduce((total, item) => total + item.amount.mainCurrencyValue, 0),
-    monthlyTotals: months.map((month) =>
-      data
-        .filter((item) => new Date(item.startedDate).toISOString().startsWith(month))
-        .reduce((total, item) => total + item.amount.mainCurrencyValue, 0),
-    ),
+    monthlyTotals,
+    // This year's months to come don't count
+    average:
+      monthlyTotals.reduce((total, value) => total + value, 0) /
+      Math.max(months.filter((month) => month <= currentMonth).length, 1),
     accounts,
     mainCurrency: profile.mainCurrency,
   };

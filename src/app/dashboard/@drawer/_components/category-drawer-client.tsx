@@ -23,6 +23,7 @@ interface CategoryDrawerClientProps {
   period: string | undefined;
   total: number;
   monthlyTotals: number[];
+  average: number;
   accounts: Account[];
   mainCurrency: string;
 }
@@ -35,6 +36,7 @@ export function CategoryDrawerClient({
   period,
   total,
   monthlyTotals,
+  average,
   accounts,
   mainCurrency,
 }: CategoryDrawerClientProps) {
@@ -86,6 +88,7 @@ export function CategoryDrawerClient({
       period={period}
       total={total}
       monthlyTotals={monthlyTotals}
+      average={average}
       mainCurrency={mainCurrency}
     >
       <Tabs defaultValue="merchants" className="px-4 pb-4">

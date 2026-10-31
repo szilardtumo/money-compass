@@ -50,6 +50,7 @@ interface MerchantDrawerClientProps {
   period: string | undefined;
   total: number;
   monthlyTotals: number[];
+  average: number;
   accounts: Account[];
   mainCurrency: string;
 }
@@ -62,6 +63,7 @@ export function MerchantDrawerClient({
   period,
   total,
   monthlyTotals,
+  average,
   accounts,
   mainCurrency,
 }: MerchantDrawerClientProps) {
@@ -95,6 +97,7 @@ export function MerchantDrawerClient({
       period={period}
       total={total}
       monthlyTotals={monthlyTotals}
+      average={average}
       mainCurrency={mainCurrency}
     >
       <Tabs defaultValue="transactions" className="px-4 pb-4">
