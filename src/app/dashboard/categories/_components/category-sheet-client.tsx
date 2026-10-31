@@ -1,6 +1,6 @@
 'use client';
 
-import { EllipsisIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import { ChevronRightIcon, EllipsisIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -54,6 +54,32 @@ export function CategorySheetClient({
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0 });
   const largest = Math.max(...merchants.map((merchant) => merchant.total), 0);
   const isCounted = category.kind !== 'excluded';
+  const activeMerchants = merchants.filter((merchant) => merchant.transactionCount);
+  const inactiveMerchants = merchants.filter((merchant) => !merchant.transactionCount);
+  const renderMerchants = (items: CategoryMerchant[]) => (
+    <ul className="flex flex-col divide-y">
+      {items.map((merchant) => (
+        <li key={merchant.id} className="flex items-center gap-3 py-2 text-sm">
+          <span className="w-40 truncate">{merchant.name}</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${largest > 0 ? (Math.max(merchant.total, 0) / largest) * 100 : 0}%`,
+                backgroundColor: category.color,
+              }}
+            />
+          </div>
+          <span className="w-10 text-right text-muted-foreground">
+            {merchant.transactionCount}×
+          </span>
+          <span className="w-20 text-right font-medium">
+            {isCounted ? format(merchant.total) : ''}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <Sheet open onOpenChange={() => router.push('/dashboard/categories', { scroll: false })}>
@@ -113,39 +139,27 @@ export function CategorySheetClient({
         <Tabs defaultValue="merchants" className="px-4 pb-4">
           <div className="flex items-center justify-between">
             <TabsList>
-              <TabsTrigger value="merchants">Merchants {merchants.length}</TabsTrigger>
+              <TabsTrigger value="merchants">Merchants {activeMerchants.length}</TabsTrigger>
               <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
             </TabsList>
             <span className="text-xs text-muted-foreground">Last 12 months</span>
           </div>
           <TabsContent value="merchants">
-            {merchants.length ? (
-              <ul className="flex flex-col divide-y">
-                {merchants.map((merchant) => (
-                  <li key={merchant.id} className="flex items-center gap-3 py-2 text-sm">
-                    <span className="w-40 truncate">{merchant.name}</span>
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${largest > 0 ? (Math.max(merchant.total, 0) / largest) * 100 : 0}%`,
-                          backgroundColor: category.color,
-                        }}
-                      />
-                    </div>
-                    <span className="w-10 text-right text-muted-foreground">
-                      {merchant.transactionCount}×
-                    </span>
-                    <span className="w-20 text-right font-medium">
-                      {isCounted ? format(merchant.total) : ''}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+            {activeMerchants.length ? (
+              renderMerchants(activeMerchants)
             ) : (
               <p className="py-6 text-center text-sm text-muted-foreground">
-                No merchants in this category.
+                No merchants with transactions in the last 12 months.
               </p>
+            )}
+            {inactiveMerchants.length > 0 && (
+              <details className="group mt-2">
+                <summary className="flex cursor-pointer list-none items-center gap-1 py-2 text-sm text-muted-foreground hover:text-foreground">
+                  <ChevronRightIcon className="size-4 transition-transform group-open:rotate-90" />
+                  {inactiveMerchants.length} without transactions in the last 12 months
+                </summary>
+                {renderMerchants(inactiveMerchants)}
+              </details>
             )}
           </TabsContent>
           <TabsContent value="transactions">
