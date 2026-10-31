@@ -76,6 +76,7 @@ export function useDataTable<TData extends RowData>(options: UseDataTableOptions
       columnFilters,
       rowSelection,
     },
+    initialState: { pagination: { pageIndex: 0, pageSize: 50 } },
     manualPagination: !options.enablePagination,
     enableSortingRemoval: true,
     enableSorting: options.enableSorting,
