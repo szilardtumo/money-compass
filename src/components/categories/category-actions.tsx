@@ -1,6 +1,6 @@
 'use client';
 
-import { EllipsisIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import { EllipsisVerticalIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -35,8 +35,9 @@ export function CategoryActions({ category, categories }: CategoryActionsProps) 
           <Button
             variant="ghost"
             size="icon"
-            icon={EllipsisIcon}
+            icon={EllipsisVerticalIcon}
             aria-label={`Actions of ${category.name}`}
+            className="h-6 w-5 text-muted-foreground hover:bg-transparent hover:text-foreground dark:hover:bg-transparent"
           />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

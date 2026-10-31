@@ -116,7 +116,7 @@ export function TransactionActions({ transaction, categories, children }: Transa
             size="icon"
             icon={EllipsisVerticalIcon}
             aria-label="Transaction actions"
-            className="h-8 w-5 text-muted-foreground hover:bg-transparent hover:text-foreground dark:hover:bg-transparent"
+            className="h-6 w-5 text-muted-foreground hover:bg-transparent hover:text-foreground dark:hover:bg-transparent"
           />
         </DropdownMenuTrigger>
         <DropdownMenuContent

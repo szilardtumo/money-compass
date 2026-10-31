@@ -1,6 +1,6 @@
 'use client';
 
-import { EllipsisIcon, PencilIcon, StoreIcon } from 'lucide-react';
+import { EllipsisVerticalIcon, PencilIcon, StoreIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -74,7 +74,13 @@ export function MerchantDrawerClient({
       actions={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" icon={EllipsisIcon} aria-label="Merchant actions" />
+            <Button
+              variant="ghost"
+              size="icon"
+              icon={EllipsisVerticalIcon}
+              aria-label="Merchant actions"
+              className="h-6 w-5 text-muted-foreground hover:bg-transparent hover:text-foreground dark:hover:bg-transparent"
+            />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setIsRenaming(true)}>
