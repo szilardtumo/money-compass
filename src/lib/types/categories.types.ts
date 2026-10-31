@@ -17,7 +17,7 @@ export interface Category {
 export interface CategoryWithStats extends Category {
   merchantCount: number;
   transactionCount: number;
-  /** The sum of the last 12 months in the main currency, spending as a positive number */
+  /** The sum of the last 12 months in the main currency, negative for spending */
   yearTotal: number;
   /** The same per month, oldest first */
   monthlyTotals: number[];
@@ -28,7 +28,7 @@ export interface CategoryMerchant {
   id: string;
   name: string;
   transactionCount: number;
-  /** In the main currency, spending as a positive number */
+  /** In the main currency, negative for spending */
   total: number;
 }
 

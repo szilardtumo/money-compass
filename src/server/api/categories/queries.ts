@@ -4,12 +4,7 @@ import { asc, count, countDistinct, eq, gte, sql, sum } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
-import {
-  Category,
-  CategoryKind,
-  CategoryMerchant,
-  CategoryWithStats,
-} from '@/lib/types/categories.types';
+import { Category, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { formatPeriodParam, getPeriodRange, parsePeriod, shiftPeriod } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
@@ -40,17 +35,15 @@ const lastMonths = () => {
   return Array.from({ length: 12 }, (_, index) => formatPeriodParam(shiftPeriod(now, index - 11)));
 };
 
-// Spending is positive, so a category's refunds lower it
 const toMain = (
   { amount, currency }: { amount: number; currency: string },
-  kind: CategoryKind,
   mapper: CurrencyMapper,
 ) => {
   const rate = mapper[currency];
   if (!rate) {
     throw new MissingExchangeRateError(currency);
   }
-  return amount * rate * (kind === 'expense' ? -1 : 1);
+  return amount * rate;
 };
 
 /**
@@ -105,7 +98,7 @@ export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(
     const monthlyTotals = months.map(() => 0);
     for (const row of monthTotals) {
       if (row.categoryId === category.id) {
-        monthlyTotals[months.indexOf(row.month)] += toMain(row, category.kind, mapper);
+        monthlyTotals[months.indexOf(row.month)] += toMain(row, mapper);
       }
     }
 
@@ -136,7 +129,6 @@ export const getCategoryMerchants = createApiQuery<{ categoryId: string }, Categ
           .select({
             id: m.id,
             name: m.name,
-            kind: schema.categories.kind,
             currency: schema.subaccounts.currency,
             transactionCount: sql<number>`count(*) filter (where ${inLastYear})`.mapWith(Number),
             amount: sql<number>`coalesce(sum(${t.amount}) filter (where ${inLastYear}), 0)`.mapWith(
@@ -144,11 +136,10 @@ export const getCategoryMerchants = createApiQuery<{ categoryId: string }, Categ
             ),
           })
           .from(m)
-          .innerJoin(schema.categories, eq(schema.categories.id, m.categoryId))
           .innerJoin(t, eq(t.merchantId, m.id))
           .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
           .where(eq(m.categoryId, categoryId))
-          .groupBy(m.id, schema.categories.id, schema.subaccounts.currency),
+          .groupBy(m.id, schema.subaccounts.currency),
       ),
       getMainCurrencyWithMapper(),
     ]);
@@ -164,11 +155,11 @@ export const getCategoryMerchants = createApiQuery<{ categoryId: string }, Categ
       };
       merchants.set(row.id, merchant);
       merchant.transactionCount += row.transactionCount;
-      merchant.total += toMain(row, row.kind, mapper);
+      merchant.total += toMain(row, mapper);
     }
 
     return [...merchants.values()].toSorted(
-      (a, b) => b.total - a.total || a.name.localeCompare(b.name),
+      (a, b) => Math.abs(b.total) - Math.abs(a.total) || a.name.localeCompare(b.name),
     );
   },
 );
