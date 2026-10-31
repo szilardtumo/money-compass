@@ -72,12 +72,20 @@ function NavbarContent() {
         <NavItem href="/dashboard/analytics" icon={<ChartColumnIcon className="size-4 mr-2" />}>
           Analytics
         </NavItem>
-        <NavItem href="/dashboard/merchants" icon={<StoreIcon className="size-4 mr-2" />}>
-          Merchants
-        </NavItem>
-        <NavItem href="/dashboard/categories" icon={<TagsIcon className="size-4 mr-2" />}>
-          Categories
-        </NavItem>
+        <div className="pl-4 flex flex-col gap-1">
+          <NavItem
+            href="/dashboard/analytics/merchants"
+            icon={<StoreIcon className="size-4 mr-2" />}
+          >
+            Merchants
+          </NavItem>
+          <NavItem
+            href="/dashboard/analytics/categories"
+            icon={<TagsIcon className="size-4 mr-2" />}
+          >
+            Categories
+          </NavItem>
+        </div>
 
         <Separator className="my-2" />
 

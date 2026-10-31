@@ -128,7 +128,7 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
         <p className="text-sm text-muted-foreground">
           {formatPercent(categorizedShare, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}{' '}
           of this {params.view} is categorized.{' '}
-          <Link href="/dashboard/merchants" className="font-medium underline">
+          <Link href="/dashboard/analytics/merchants" className="font-medium underline">
             Review merchants
           </Link>
         </p>

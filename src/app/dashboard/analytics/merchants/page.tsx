@@ -13,7 +13,10 @@ export default function MerchantsPage() {
     <>
       <PageHeaderSlotContent>
         <PageHeaderTitle>Merchants</PageHeaderTitle>
-        <Link href="/dashboard/categories" className={buttonVariants({ variant: 'outline' })}>
+        <Link
+          href="/dashboard/analytics/categories"
+          className={buttonVariants({ variant: 'outline' })}
+        >
           Categories
         </Link>
       </PageHeaderSlotContent>
