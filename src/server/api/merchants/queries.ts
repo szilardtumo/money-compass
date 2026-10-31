@@ -5,7 +5,7 @@ import { count, eq, gte, isNotNull, max, sql } from 'drizzle-orm';
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Merchant } from '@/lib/types/categories.types';
-import { getLastMonths, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
+import { getLastMonthsStart } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
 import { categoryColumns } from '../categories/joins';
@@ -19,7 +19,7 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
   'use cache: private';
   const { db } = await createApiContext();
   const t = schema.transactions;
-  const yearAgo = getPeriodRange(parsePeriod(getLastMonths()[0])).start;
+  const yearAgo = getLastMonthsStart();
 
   const [merchants, stats, { mapper }] = await Promise.all([
     db.rls((tx) =>

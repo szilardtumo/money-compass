@@ -1,21 +1,11 @@
 'use client';
 
-import { ChevronRightIcon, EllipsisIcon, PencilIcon, TagIcon, Trash2Icon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { ChevronRightIcon } from 'lucide-react';
 
+import { CategoryActions } from '@/components/categories/category-actions';
 import { CategoryIcon, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
-import { CategoryDialog } from '@/components/categories/category-dialog';
-import { DeleteCategoryDialog } from '@/components/categories/delete-category-dialog';
-import { DrawerLink, useDrawerHref } from '@/components/drawers/drawer-link';
+import { DrawerLink } from '@/components/drawers/drawer-link';
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Account } from '@/lib/types/accounts.types';
 import { CATEGORY_KINDS, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
@@ -44,10 +34,6 @@ export function CategoryDrawerClient({
   accounts,
   mainCurrency,
 }: CategoryDrawerClientProps) {
-  const router = useRouter();
-  const getDrawerHref = useDrawerHref();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const color = category?.color ?? UNCATEGORIZED_COLOR;
   const largest = Math.max(...merchants.map((merchant) => Math.abs(merchant.total)));
   const activeMerchants = merchants.filter((merchant) => merchant.transactionCount);
@@ -84,13 +70,7 @@ export function CategoryDrawerClient({
 
   return (
     <DrawerSheet
-      icon={
-        category ? (
-          <CategoryIcon category={category} className="size-5" />
-        ) : (
-          <TagIcon className="size-5" style={{ color }} />
-        )
-      }
+      icon={<CategoryIcon category={category ?? { icon: 'tag', color }} className="size-5" />}
       color={color}
       title={category?.name ?? 'Uncategorized'}
       description={
@@ -98,25 +78,7 @@ export function CategoryDrawerClient({
           ? CATEGORY_KINDS.find((item) => item.kind === category.kind)?.label
           : 'Merchants and transactions without a category'
       }
-      actions={
-        category && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Category actions">
-                <EllipsisIcon className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                <PencilIcon className="size-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsDeleting(true)}>
-                <Trash2Icon className="size-4" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
-      }
+      actions={category && <CategoryActions category={category} categories={categories} />}
       monthlyTotals={monthlyTotals}
       mainCurrency={mainCurrency}
     >
@@ -154,22 +116,6 @@ export function CategoryDrawerClient({
           />
         </TabsContent>
       </Tabs>
-
-      {category && (
-        <>
-          <CategoryDialog
-            open={isEditing}
-            category={category}
-            onClose={() => setIsEditing(false)}
-          />
-          <DeleteCategoryDialog
-            category={isDeleting ? category : undefined}
-            categories={categories}
-            onClose={() => setIsDeleting(false)}
-            onDeleted={() => router.push(getDrawerHref(null), { scroll: false })}
-          />
-        </>
-      )}
     </DrawerSheet>
   );
 }

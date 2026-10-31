@@ -54,9 +54,14 @@ export function formatPeriodLabel(period: Period, format: 'long' | 'short' = 'lo
 }
 
 /** The last 12 months, this one included, as "YYYY-MM" */
-export function getLastMonths(now = new Date()) {
-  const current = parsePeriod(undefined, now);
+export function getLastMonths() {
+  const current = parsePeriod(undefined);
   return Array.from({ length: 12 }, (_, index) =>
     formatPeriodParam(shiftPeriod(current, index - 11)),
   );
+}
+
+/** The first moment of the last 12 months */
+export function getLastMonthsStart() {
+  return getPeriodRange(shiftPeriod(parsePeriod(undefined), -11)).start;
 }

@@ -20,15 +20,9 @@ interface DeleteCategoryDialogProps {
   category: CategoryWithStats | undefined;
   categories: CategoryWithStats[];
   onClose: () => void;
-  onDeleted?: () => void;
 }
 
-export function DeleteCategoryDialog({
-  category,
-  categories,
-  onClose,
-  onDeleted,
-}: DeleteCategoryDialogProps) {
+export function DeleteCategoryDialog({ category, categories, onClose }: DeleteCategoryDialogProps) {
   return (
     <Dialog open={!!category} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
@@ -38,7 +32,6 @@ export function DeleteCategoryDialog({
             category={category}
             categories={categories}
             onClose={onClose}
-            onDeleted={onDeleted}
           />
         )}
       </DialogContent>
@@ -50,17 +43,13 @@ function DeleteCategoryForm({
   category,
   categories,
   onClose,
-  onDeleted,
 }: DeleteCategoryDialogProps & { category: CategoryWithStats }) {
   const [replacementId, setReplacementId] = useState<string>();
   const { execute, isExecuting } = useActionWithToast(apiActions.categories.deleteCategory, {
     loadingToast: 'Deleting category...',
     successToast: 'Category deleted!',
     errorToast: 'Failed to delete the category. Please try again later.',
-    onSuccess: () => {
-      onClose();
-      onDeleted?.();
-    },
+    onSuccess: onClose,
   });
 
   return (

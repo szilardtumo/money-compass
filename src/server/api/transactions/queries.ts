@@ -87,7 +87,7 @@ export const getTransactions = createApiQuery<
     fromDate?: string;
     /** The end date of the date range to filter by */
     toDate?: string;
-    /** The ID of the category to filter by, or null for uncategorized transactions */
+    /** The ID of the category to filter by, or null for uncategorized transactions that count in analytics */
     categoryId?: string | null;
     /** The ID of the merchant to filter by */
     merchantId?: string;
@@ -152,7 +152,7 @@ export const getTransactions = createApiQuery<
             fromDate ? gte(schema.transactions.startedDate, new Date(fromDate)) : undefined,
             toDate ? lte(schema.transactions.startedDate, new Date(toDate)) : undefined,
             categoryId === null
-              ? isNull(schema.categories.id)
+              ? and(isNull(schema.categories.id), sql`${analyticsSide} <> 'excluded'`)
               : categoryId
                 ? eq(schema.categories.id, categoryId)
                 : undefined,

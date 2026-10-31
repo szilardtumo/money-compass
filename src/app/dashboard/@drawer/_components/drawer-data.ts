@@ -2,7 +2,7 @@ import 'server-only';
 
 import { connection } from 'next/server';
 
-import { getLastMonths, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
+import { getLastMonths, getLastMonthsStart } from '@/lib/utils/periods';
 import { apiQueries } from '@/server/api/queries';
 
 /**
@@ -16,18 +16,15 @@ export async function getDrawerData(
   await connection();
   const months = getLastMonths();
 
-  const [{ data }, accounts, profile] = await Promise.all([
+  const [{ data: transactions }, accounts, profile] = await Promise.all([
     apiQueries.transactions.getTransactions({
       ...filter,
-      fromDate: getPeriodRange(parsePeriod(months[0])).start.toISOString(),
+      fromDate: getLastMonthsStart().toISOString(),
       pageSize: 1000,
     }),
     apiQueries.accounts.getAccounts(),
     apiQueries.profiles.getProfile(),
   ]);
-  // Exchanges, top-ups and corrections have no category, but they don't wait for one either
-  const transactions =
-    'categoryId' in filter && !filter.categoryId ? data.filter((item) => !item.excluded) : data;
 
   return {
     transactions,

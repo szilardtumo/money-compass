@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { ComponentProps } from 'react';
 
 /** A category ID or "uncategorized", or a merchant ID */
-export type DrawerTarget = { category: string } | { merchant: string };
+type DrawerTarget = { category: string } | { merchant: string };
 
 /**
  * Returns the URL of the current page with the drawer of a category or a merchant open, or with no

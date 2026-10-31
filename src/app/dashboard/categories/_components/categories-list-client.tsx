@@ -1,22 +1,16 @@
 'use client';
 
 import { cn } from 'cn';
-import { EllipsisIcon, PencilIcon, PlusIcon, SearchIcon, Trash2Icon } from 'lucide-react';
+import { PlusIcon, SearchIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { CategoryActions } from '@/components/categories/category-actions';
 import { CategoryIcon } from '@/components/categories/category-badge';
 import { CategoryDialog } from '@/components/categories/category-dialog';
-import { DeleteCategoryDialog } from '@/components/categories/delete-category-dialog';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sparkline } from '@/components/ui/sparkline';
 import {
@@ -41,9 +35,7 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
   const getDrawerHref = useDrawerHref();
   const [kind, setKind] = useState<CategoryKind | 'all'>('all');
   const [search, setSearch] = useState('');
-  // undefined: closed, null: a new category
-  const [editing, setEditing] = useState<CategoryWithStats | null>();
-  const [deleting, setDeleting] = useState<CategoryWithStats>();
+  const [isCreating, setIsCreating] = useState(false);
 
   // Used categories first, the biggest of the last 12 months on top
   const rows = categories
@@ -85,7 +77,7 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
-        <Button icon={PlusIcon} className="sm:ml-auto" onClick={() => setEditing(null)}>
+        <Button icon={PlusIcon} className="sm:ml-auto" onClick={() => setIsCreating(true)}>
           New category
         </Button>
       </div>
@@ -142,25 +134,7 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
                   </div>
                 </TableCell>
                 <TableCell className="w-10" onClick={(event) => event.stopPropagation()}>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Actions of ${category.name}`}
-                      >
-                        <EllipsisIcon className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditing(category)}>
-                        <PencilIcon className="size-4" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDeleting(category)}>
-                        <Trash2Icon className="size-4" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <CategoryActions category={category} categories={categories} />
                 </TableCell>
               </TableRow>
             ))}
@@ -175,16 +149,7 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
         </Table>
       </div>
 
-      <CategoryDialog
-        open={editing !== undefined}
-        category={editing ?? undefined}
-        onClose={() => setEditing(undefined)}
-      />
-      <DeleteCategoryDialog
-        category={deleting}
-        categories={categories}
-        onClose={() => setDeleting(undefined)}
-      />
+      <CategoryDialog open={isCreating} onClose={() => setIsCreating(false)} />
     </div>
   );
 }

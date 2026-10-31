@@ -61,8 +61,6 @@ export function MerchantDrawerClient({
   accounts,
   mainCurrency,
 }: MerchantDrawerClientProps) {
-  const router = useRouter();
-  const getDrawerHref = useDrawerHref();
   const [isRenaming, setIsRenaming] = useState(false);
   const [tab, setTab] = useState('transactions');
   const color = merchant.category?.color ?? UNCATEGORIZED_COLOR;
@@ -76,9 +74,7 @@ export function MerchantDrawerClient({
       actions={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Merchant actions">
-              <EllipsisIcon className="size-4" />
-            </Button>
+            <Button variant="ghost" size="icon" icon={EllipsisIcon} aria-label="Merchant actions" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setIsRenaming(true)}>
@@ -122,11 +118,6 @@ export function MerchantDrawerClient({
                     merchantKey={item.key}
                     merchants={merchants}
                     currentMerchantId={merchant.id}
-                    // Its last name leaves, so the merchant is deleted
-                    onMoved={() =>
-                      merchant.keys.length === 1 &&
-                      router.push(getDrawerHref(null), { scroll: false })
-                    }
                   />
                 </li>
               ))}
@@ -134,27 +125,12 @@ export function MerchantDrawerClient({
         </TabsContent>
       </Tabs>
 
-      <RenameMerchantDialog
-        merchant={isRenaming ? merchant : undefined}
-        onClose={() => setIsRenaming(false)}
-      />
+      <Dialog open={isRenaming} onOpenChange={setIsRenaming}>
+        <DialogContent>
+          <RenameMerchantForm merchant={merchant} onClose={() => setIsRenaming(false)} />
+        </DialogContent>
+      </Dialog>
     </DrawerSheet>
-  );
-}
-
-function RenameMerchantDialog({
-  merchant,
-  onClose,
-}: {
-  merchant: Merchant | undefined;
-  onClose: () => void;
-}) {
-  return (
-    <Dialog open={!!merchant} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        {merchant && <RenameMerchantForm key={merchant.id} merchant={merchant} onClose={onClose} />}
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -205,12 +181,10 @@ function MoveKeyButton({
   merchantKey,
   merchants,
   currentMerchantId,
-  onMoved,
 }: {
   merchantKey: string;
   merchants: Merchant[];
   currentMerchantId: string;
-  onMoved: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -218,7 +192,6 @@ function MoveKeyButton({
     loadingToast: 'Moving...',
     successToast: 'Moved!',
     errorToast: 'Failed to move. Please try again later.',
-    onSuccess: onMoved,
   });
 
   const move = (target: { merchantId: string } | { name: string }) => {

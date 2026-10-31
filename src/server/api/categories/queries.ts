@@ -6,7 +6,7 @@ import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Category, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
-import { getLastMonths, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
+import { getLastMonths, getLastMonthsStart } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
 import { categoryColumns, joinCategory } from './joins';
@@ -79,7 +79,7 @@ export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(
               .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
               .$dynamic(),
           )
-            .where(gte(t.startedDate, getPeriodRange(parsePeriod(months[0])).start))
+            .where(gte(t.startedDate, getLastMonthsStart()))
             .groupBy(schema.categories.id, sql`month`, schema.subaccounts.currency),
         ]),
       ),
@@ -117,7 +117,7 @@ export const getCategoryMerchants = createApiQuery<
   'use cache: private';
   const { db } = await createApiContext();
   const m = schema.merchants;
-  const inLastYear = gte(t.startedDate, getPeriodRange(parsePeriod(getLastMonths()[0])).start);
+  const inLastYear = gte(t.startedDate, getLastMonthsStart());
 
   const [rows, { mapper }] = await Promise.all([
     db.rls((tx) =>

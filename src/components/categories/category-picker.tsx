@@ -45,11 +45,12 @@ export function CategoryPicker({
   children,
   clearLabel,
   renderConfirm,
-  ...props
+  open: controlledOpen,
+  onOpenChange,
 }: CategoryPickerProps) {
   const [ownOpen, setOwnOpen] = useState(false);
-  const open = props.open ?? ownOpen;
-  const setOpen = props.onOpenChange ?? setOwnOpen;
+  const open = controlledOpen ?? ownOpen;
+  const setOpen = onOpenChange ?? setOwnOpen;
   const [picked, setPicked] = useState<string>();
 
   const close = () => {
@@ -67,7 +68,7 @@ export function CategoryPicker({
 
   return (
     <Popover open={open} onOpenChange={(isOpen) => (isOpen ? setOpen(true) : close())}>
-      {props.open === undefined ? (
+      {controlledOpen === undefined ? (
         <PopoverTrigger asChild>{children}</PopoverTrigger>
       ) : (
         <PopoverAnchor>{children}</PopoverAnchor>
