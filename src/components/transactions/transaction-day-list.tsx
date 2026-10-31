@@ -1,22 +1,14 @@
 'use client';
 
-import { isThisYear, isToday, isYesterday } from 'date-fns';
 import { useMemo } from 'react';
 
 import { Account } from '@/lib/types/accounts.types';
 import { Category } from '@/lib/types/categories.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
-import { formatCurrency, formatDate } from '@/lib/utils/formatters';
+import { formatCurrency, formatDay } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
 
 import { TransactionItem } from './transaction-item';
-
-const formatDay = (date: string) =>
-  isToday(date)
-    ? 'Today'
-    : isYesterday(date)
-      ? 'Yesterday'
-      : formatDate(date, isThisYear(date) ? 'EEE, d MMM' : 'EEE, d MMM yyyy');
 
 interface TransactionDayListProps {
   transactions: Transaction[];

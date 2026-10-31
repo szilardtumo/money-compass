@@ -8,10 +8,9 @@ import { useCallback, useMemo } from 'react';
 import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
 import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
 import { TransactionCategoryBadge } from '@/components/categories/transaction-category-badge';
-import { DrawerLink } from '@/components/drawers/drawer-link';
 import { TransactionActions } from '@/components/transactions/transaction-actions';
+import { TransactionAmount, TransactionSummary } from '@/components/transactions/transaction-item';
 import { AccountIcon } from '@/components/ui/account-avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DataTable,
@@ -23,102 +22,89 @@ import {
   useDataTable,
   type DataTableFeatures,
 } from '@/components/ui/data-table';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Account } from '@/lib/types/accounts.types';
 import { Category } from '@/lib/types/categories.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
-import { formatCurrency, formatDateTime, formatExchange } from '@/lib/utils/formatters';
+import { formatCurrency, formatDay, formatTime } from '@/lib/utils/formatters';
 import { apiActions } from '@/server/api/actions';
 
 const columnHelper = createColumnHelper<DataTableFeatures, TransactionWithAccount>();
 
 const staticColumns = [
-  columnHelper.accessor((row) => row.startedDate, {
+  columnHelper.accessor((row) => new Date(row.startedDate), {
     id: 'date',
     header: 'Date',
-    cell: ({ getValue }) => <span className="whitespace-nowrap">{formatDateTime(getValue())}</span>,
-  }),
-  columnHelper.accessor('description', {
-    header: 'Description',
-    cell: ({ getValue, row }) => (
-      <HoverCard>
-        <HoverCardTrigger asChild>
-          <div className="min-w-[150px]">
-            {!!(row.original.merchant || row.original.counterpartyName) && (
-              <p className="font-medium">
-                {row.original.merchant ? (
-                  <DrawerLink
-                    to={{ merchant: row.original.merchant.id }}
-                    className="hover:underline"
-                  >
-                    {row.original.merchant.name}
-                  </DrawerLink>
-                ) : (
-                  row.original.counterpartyName
-                )}
-              </p>
-            )}
-            {!!row.original.merchant &&
-              !!row.original.counterpartyName &&
-              row.original.merchant.name !== row.original.counterpartyName && (
-                <p className="text-muted-foreground">{row.original.counterpartyName}</p>
-              )}
-            <p className="text-ellipsis line-clamp-3">{getValue()}</p>
-            {row.original.linkedTransaction && (
-              <p>{formatExchange(row.original, row.original.linkedTransaction)}</p>
-            )}
-          </div>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-80">{getValue()}</HoverCardContent>
-      </HoverCard>
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap">
+        <p>{formatDay(row.original.startedDate)}</p>
+        {/* Bank dates have no time */}
+        {row.original.dataSource === 'manual' && (
+          <p className="text-xs text-muted-foreground">{formatTime(row.original.startedDate)}</p>
+        )}
+      </div>
     ),
-    enableSorting: false,
   }),
+  // Searched by everything the bank said about it
+  columnHelper.accessor(
+    (row) => [row.merchant?.name, row.counterpartyName, row.description].join(' '),
+    {
+      id: 'transaction',
+      header: 'Transaction',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex max-w-80 min-w-48">
+          <TransactionSummary transaction={row.original} />
+        </div>
+      ),
+    },
+  ),
+  columnHelper.accessor(
+    (row) => row.category?.id ?? (row.excluded ? 'excluded' : 'uncategorized'),
+    {
+      id: 'category',
+      header: 'Category',
+      filterFn: 'arrHas',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => <TransactionCategoryBadge transaction={row.original} />,
+    },
+  ),
   columnHelper.accessor((row) => row.account.name, {
     id: 'account',
     header: 'Account',
-    cell: ({ getValue, row }) => (
-      <div className="flex items-center">
-        <AccountIcon category={row.original.account.category} className="w-4 h-4 mr-1 shrink-0" />
-        <Link href={`/dashboard/accounts/${row.original.account.id}`}>{getValue()}</Link>
-      </div>
-    ),
     filterFn: 'arrHas',
-  }),
-  columnHelper.accessor((row) => row.subaccount.name, {
-    id: 'subaccount',
-    header: 'Subaccount',
-    cell: ({ getValue }) => getValue(),
-  }),
-  columnHelper.accessor('amount.originalValue', {
-    meta: { align: 'right' },
-    header: 'Amount',
-    cell: ({ row, getValue }) => (
-      <span className="whitespace-nowrap">
-        {formatCurrency(getValue(), row.original.originalCurrency)}
-      </span>
+    enableGlobalFilter: false,
+    cell: ({ row }) => (
+      <Link
+        href={`/dashboard/accounts/${row.original.account.id}`}
+        className="flex items-center gap-1.5 hover:underline"
+      >
+        <AccountIcon category={row.original.account.category} className="size-4 shrink-0" />
+        {row.original.account.name}
+        <span className="text-muted-foreground">{row.original.subaccount.name}</span>
+      </Link>
     ),
+  }),
+  // Sorted by the value in the main currency, so different currencies compare
+  columnHelper.accessor('amount.mainCurrencyValue', {
+    id: 'amount',
+    header: 'Amount',
+    enableGlobalFilter: false,
+    meta: { align: 'right' },
+    cell: ({ row }) => <TransactionAmount transaction={row.original} />,
   }),
   columnHelper.accessor('balance.originalValue', {
-    meta: { align: 'right' },
+    id: 'balance',
     header: 'Balance',
+    enableGlobalFilter: false,
+    meta: { align: 'right' },
     cell: ({ row, getValue }) => (
-      <span className="whitespace-nowrap">
+      <span className="whitespace-nowrap text-muted-foreground">
         {formatCurrency(getValue(), row.original.originalCurrency)}
       </span>
     ),
-  }),
-  columnHelper.accessor('type', {
-    header: 'Type',
-    cell: ({ getValue, row }) => (
-      <div className="flex items-center gap-2">
-        <span className="capitalize">{getValue()}</span>
-        {row.original.dataSource === 'integration' && <Badge variant="outline">Bank sync</Badge>}
-      </div>
-    ),
-    enableSorting: false,
   }),
 ];
 
@@ -186,16 +172,6 @@ export function TransactionsTableClient({
   const columns = useMemo(() => {
     return columnHelper.columns([
       ...staticColumns,
-      columnHelper.accessor(
-        (row) => row.category?.id ?? (row.excluded ? 'excluded' : 'uncategorized'),
-        {
-          id: 'category',
-          header: 'Category',
-          filterFn: 'arrHas',
-          enableSorting: false,
-          cell: ({ row }) => <TransactionCategoryBadge transaction={row.original} />,
-        },
-      ),
       columnHelper.display({
         id: 'actions',
         cell: ({ row }) => (
@@ -212,6 +188,7 @@ export function TransactionsTableClient({
     enablePagination: true,
     enableRowSelection: true,
     enableSorting: true,
+    initialSorting: [{ id: 'date', desc: true }],
   });
 
   const selectedRowCount = table.getSelectedRowModel().rows.length;
