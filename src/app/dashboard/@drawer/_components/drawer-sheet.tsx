@@ -14,8 +14,6 @@ import {
 import { Sparkline } from '@/components/ui/sparkline';
 import { formatCurrency } from '@/lib/utils/formatters';
 
-export const UNCATEGORIZED_COLOR = '#a1a1aa';
-
 interface DrawerSheetProps {
   icon: ReactNode;
   color: string;

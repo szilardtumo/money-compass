@@ -4,7 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { CategoryIcon } from '@/components/categories/category-badge';
+import { CategoryIcon, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -178,7 +178,7 @@ export function AnalyticsView({ analytics, params, currentMonth }: AnalyticsView
                   .map((item) => ({
                     name: item.category?.name ?? 'Uncategorized',
                     amount: item.amount,
-                    fill: item.category?.color ?? '#a1a1aa',
+                    fill: item.category?.color ?? UNCATEGORIZED_COLOR,
                   }))}
                 index="amount"
                 categories={['name']}

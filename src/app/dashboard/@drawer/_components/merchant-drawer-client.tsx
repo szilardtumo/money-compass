@@ -4,6 +4,7 @@ import { EllipsisIcon, PencilIcon, StoreIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { MerchantCategoryPicker } from '@/components/categories/merchant-category-picker';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
@@ -38,7 +39,7 @@ import { Category, Merchant } from '@/lib/types/categories.types';
 import { Transaction } from '@/lib/types/transactions.types';
 import { apiActions } from '@/server/api/actions';
 
-import { DrawerSheet, UNCATEGORIZED_COLOR } from './drawer-sheet';
+import { DrawerSheet } from './drawer-sheet';
 
 interface MerchantDrawerClientProps {
   merchant: Merchant;
@@ -63,6 +64,7 @@ export function MerchantDrawerClient({
   const router = useRouter();
   const getDrawerHref = useDrawerHref();
   const [isRenaming, setIsRenaming] = useState(false);
+  const [tab, setTab] = useState('transactions');
   const color = merchant.category?.color ?? UNCATEGORIZED_COLOR;
 
   return (
@@ -88,13 +90,15 @@ export function MerchantDrawerClient({
       monthlyTotals={monthlyTotals}
       mainCurrency={mainCurrency}
     >
-      <Tabs defaultValue="transactions" className="px-4 pb-4">
+      <Tabs value={tab} onValueChange={setTab} className="px-4 pb-4">
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
             <TabsTrigger value="names">Names {merchant.keys.length}</TabsTrigger>
           </TabsList>
-          <span className="text-xs text-muted-foreground">Last 12 months</span>
+          {tab === 'transactions' && (
+            <span className="text-xs text-muted-foreground">Last 12 months</span>
+          )}
         </div>
         <TabsContent value="transactions">
           <TransactionDayList

@@ -1,7 +1,7 @@
 'use client';
 
 import { EllipsisIcon, Trash2Icon } from 'lucide-react';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 
 import { TransactionCategoryPicker } from '@/components/categories/transaction-category-picker';
 import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
@@ -30,6 +30,7 @@ interface TransactionActionsProps {
  */
 export function TransactionActions({ transaction, categories, children }: TransactionActionsProps) {
   const [isPicking, setIsPicking] = useState(false);
+  const pickOnClose = useRef(false);
   const { openDialog: openUpdateTransactionDialog } = useUpdateTransactionDialog();
   const { execute: deleteTransaction } = useActionWithToast(
     apiActions.transactions.deleteTransaction,
@@ -58,8 +59,14 @@ export function TransactionActions({ transaction, categories, children }: Transa
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          // Focus moves to the category picker instead of back to the menu button
-          onCloseAutoFocus={(event) => isPicking && event.preventDefault()}
+          // The picker opens once the menu is gone, so the closing menu can't dismiss it
+          onCloseAutoFocus={(event) => {
+            if (pickOnClose.current) {
+              pickOnClose.current = false;
+              event.preventDefault();
+              setIsPicking(true);
+            }
+          }}
         >
           <DropdownMenuItem
             onClick={() =>
@@ -73,7 +80,9 @@ export function TransactionActions({ transaction, categories, children }: Transa
           >
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setIsPicking(true)}>Change category</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => (pickOnClose.current = true)}>
+            Change category
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => deleteTransaction(transaction.id)}>
             Delete
             <DropdownMenuShortcut>

@@ -1,12 +1,13 @@
 'use client';
 
 import { ChevronRightIcon, EllipsisIcon, PencilIcon, TagIcon, Trash2Icon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { CategoryIcon } from '@/components/categories/category-badge';
+import { CategoryIcon, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { CategoryDialog } from '@/components/categories/category-dialog';
 import { DeleteCategoryDialog } from '@/components/categories/delete-category-dialog';
-import { DrawerLink } from '@/components/drawers/drawer-link';
+import { DrawerLink, useDrawerHref } from '@/components/drawers/drawer-link';
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +22,7 @@ import { CATEGORY_KINDS, CategoryMerchant, CategoryWithStats } from '@/lib/types
 import { Transaction } from '@/lib/types/transactions.types';
 import { formatCurrency } from '@/lib/utils/formatters';
 
-import { DrawerSheet, UNCATEGORIZED_COLOR } from './drawer-sheet';
+import { DrawerSheet } from './drawer-sheet';
 
 interface CategoryDrawerClientProps {
   /** null for the uncategorized transactions */
@@ -43,6 +44,8 @@ export function CategoryDrawerClient({
   accounts,
   mainCurrency,
 }: CategoryDrawerClientProps) {
+  const router = useRouter();
+  const getDrawerHref = useDrawerHref();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const color = category?.color ?? UNCATEGORIZED_COLOR;
@@ -163,6 +166,7 @@ export function CategoryDrawerClient({
             category={isDeleting ? category : undefined}
             categories={categories}
             onClose={() => setIsDeleting(false)}
+            onDeleted={() => router.push(getDrawerHref(null), { scroll: false })}
           />
         </>
       )}

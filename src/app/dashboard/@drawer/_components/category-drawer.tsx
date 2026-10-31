@@ -25,6 +25,7 @@ export async function CategoryDrawer({ categoryId }: { categoryId: string | null
       categories={categories}
       merchants={merchants}
       {...data}
+      monthlyTotals={category?.monthlyTotals ?? data.monthlyTotals}
     />
   );
 }

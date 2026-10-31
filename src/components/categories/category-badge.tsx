@@ -63,6 +63,9 @@ export function CategoryIcon({
   return <Icon className={cn('size-4 shrink-0', className)} style={{ color: category.color }} />;
 }
 
+/** The color of transactions without a category, in charts and drawers */
+export const UNCATEGORIZED_COLOR = '#a1a1aa';
+
 interface CategoryBadgeProps extends ComponentProps<'span'> {
   category: Category | null;
   /** Not counted in analytics: an icon after the category, or "Excluded" without a category */
