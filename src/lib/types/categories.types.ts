@@ -41,5 +41,7 @@ export interface Merchant {
   transactionCount: number;
   /** The sum of the last 12 months in the main currency, negative for spending */
   yearTotal: number;
+  /** The same per month, oldest first */
+  monthlyTotals: number[];
   lastSeen: Date | null;
 }

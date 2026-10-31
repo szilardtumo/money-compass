@@ -22,6 +22,9 @@ export function joinCategory<T extends PgSelect>(query: T) {
     );
 }
 
+/** The UTC month of a transaction, like getLastMonths: "YYYY-MM" */
+export const transactionMonth = sql<string>`to_char(date_trunc('month', ${t.startedDate} at time zone 'UTC'), 'YYYY-MM')`;
+
 /**
  * Where a transaction of a joinCategory query counts in analytics. Uncategorized ones count by
  * their direction, except refunds, which lower the spending.

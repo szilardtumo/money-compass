@@ -9,7 +9,7 @@ import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { getLastMonths, getLastMonthsStart } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
-import { categoryColumns, joinCategory } from './joins';
+import { categoryColumns, joinCategory, transactionMonth } from './joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 const t = schema.transactions;
@@ -48,7 +48,6 @@ export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(
   'use cache: private';
   const { db } = await createApiContext();
   const months = getLastMonths();
-  const month = sql<string>`to_char(date_trunc('month', ${t.startedDate} at time zone 'UTC'), 'YYYY-MM')`;
 
   const [categories, [merchantCounts, transactionCounts, monthTotals], { mapper }] =
     await Promise.all([
@@ -71,7 +70,7 @@ export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(
             tx
               .select({
                 categoryId: schema.categories.id,
-                month: month.as('month'),
+                month: transactionMonth.as('month'),
                 currency: schema.subaccounts.currency,
                 amount: sum(t.amount).mapWith(Number),
               })

@@ -2,12 +2,14 @@
 
 import { createColumnHelper } from '@tanstack/react-table';
 import { MergeIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
+import { UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
 import { MerchantCategoryPicker } from '@/components/categories/merchant-category-picker';
-import { DrawerLink } from '@/components/drawers/drawer-link';
+import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +22,7 @@ import {
   useDataTable,
   type DataTableFeatures,
 } from '@/components/ui/data-table';
+import { Sparkline } from '@/components/ui/sparkline';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Category, Merchant } from '@/lib/types/categories.types';
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
@@ -40,6 +43,8 @@ export function MerchantsTableClient({
   categories,
   mainCurrency,
 }: MerchantsTableClientProps) {
+  const router = useRouter();
+  const getDrawerHref = useDrawerHref();
   const [mergeOpen, setMergeOpen] = useState(false);
 
   const { executeAsync: setMerchantsCategory } = useActionWithToast(
@@ -53,15 +58,12 @@ export function MerchantsTableClient({
         columnHelper.accessor('name', {
           header: 'Merchant',
           cell: ({ row }) => (
-            <DrawerLink
-              to={{ merchant: row.original.id }}
-              className="flex items-center gap-2 font-medium hover:underline"
-            >
+            <span className="flex items-center gap-2 font-medium">
               {row.original.name}
               {row.original.keys.length > 1 && (
                 <Badge variant="outline">{row.original.keys.length} names</Badge>
               )}
-            </DrawerLink>
+            </span>
           ),
         }),
         columnHelper.accessor((row) => row.category?.id ?? 'uncategorized', {
@@ -83,9 +85,22 @@ export function MerchantsTableClient({
           header: 'Last 12 months',
           meta: { align: 'right' },
           cell: ({ row }) => (
-            <span className="whitespace-nowrap">
-              {formatCurrency(row.original.yearTotal, mainCurrency)}
+            <span className="font-medium whitespace-nowrap">
+              {formatCurrency(row.original.yearTotal, mainCurrency, { maximumFractionDigits: 0 })}
             </span>
+          ),
+        }),
+        columnHelper.display({
+          id: 'trend',
+          header: 'Trend',
+          meta: { align: 'right' },
+          cell: ({ row }) => (
+            <Sparkline
+              values={row.original.monthlyTotals}
+              color={row.original.category?.color ?? UNCATEGORIZED_COLOR}
+              width={60}
+              height={18}
+            />
           ),
         }),
         columnHelper.accessor('lastSeen', {
@@ -157,7 +172,14 @@ export function MerchantsTableClient({
         </Button>
       </div>
 
-      <DataTable table={table} emptyMessage="No merchants." enableRowSelection />
+      <DataTable
+        table={table}
+        emptyMessage="No merchants."
+        enableRowSelection
+        onRowClick={(merchant) =>
+          router.push(getDrawerHref({ merchant: merchant.id }), { scroll: false })
+        }
+      />
 
       <div className="flex gap-x-4 gap-y-2 flex-col sm:flex-row sm:justify-between">
         <DataTableRowSelectionIndicator table={table} />
