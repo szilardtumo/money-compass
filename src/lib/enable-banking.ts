@@ -29,6 +29,7 @@ interface Transaction {
   transaction_id?: string;
   transaction_amount: Amount;
   credit_debit_indicator: 'CRDT' | 'DBIT';
+  status: string;
   booking_date?: string;
   value_date?: string;
   transaction_date?: string;
@@ -178,7 +179,8 @@ export async function getBalance(accountId: string) {
 }
 
 /**
- * Returns the booked transactions of the account since `dateFrom`, following all result pages.
+ * Returns the booked and pending transactions of the account since `dateFrom`, following all result
+ * pages.
  */
 export async function getTransactions(accountId: string, dateFrom: Date) {
   const transactions: Transaction[] = [];
@@ -187,7 +189,6 @@ export async function getTransactions(accountId: string, dateFrom: Date) {
   do {
     const params = new URLSearchParams({
       date_from: format(dateFrom, 'yyyy-MM-dd'),
-      transaction_status: 'BOOK',
       ...(continuationKey && { continuation_key: continuationKey }),
     });
     const page = await request<{ transactions: Transaction[]; continuation_key?: string }>(
@@ -195,7 +196,10 @@ export async function getTransactions(accountId: string, dateFrom: Date) {
       `/accounts/${accountId}/transactions?${params}`,
     );
 
-    transactions.push(...page.transactions);
+    // Other statuses, like cancelled or rejected, don't change the balance
+    transactions.push(
+      ...page.transactions.filter((transaction) => ['BOOK', 'PDNG'].includes(transaction.status)),
+    );
     continuationKey = page.continuation_key;
   } while (continuationKey);
 
