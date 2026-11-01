@@ -21,9 +21,8 @@ interface CategoryDrawerClientProps {
   merchants: CategoryMerchant[];
   transactions: Transaction[];
   period: string;
-  total: number;
-  monthlyTotals: number[];
-  average: number;
+  stats: { label: string; value: number }[];
+  chart: number[];
   accounts: Account[];
   mainCurrency: string;
 }
@@ -34,9 +33,8 @@ export function CategoryDrawerClient({
   merchants,
   transactions,
   period,
-  total,
-  monthlyTotals,
-  average,
+  stats,
+  chart,
   accounts,
   mainCurrency,
 }: CategoryDrawerClientProps) {
@@ -86,9 +84,8 @@ export function CategoryDrawerClient({
       }
       actions={category && <CategoryActions category={category} categories={categories} />}
       period={period}
-      total={total}
-      monthlyTotals={monthlyTotals}
-      average={average}
+      stats={stats}
+      chart={chart}
       mainCurrency={mainCurrency}
     >
       <Tabs defaultValue="merchants" className="min-h-0 flex-1">

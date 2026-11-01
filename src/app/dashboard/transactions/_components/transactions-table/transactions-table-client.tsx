@@ -2,12 +2,12 @@
 
 import { createColumnHelper } from '@tanstack/react-table';
 import { Trash2Icon } from 'lucide-react';
-import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
 
 import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
 import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
 import { TransactionCategoryBadge } from '@/components/categories/transaction-category-badge';
+import { DrawerLink } from '@/components/drawers/drawer-link';
 import { TransactionActions } from '@/components/transactions/transaction-actions';
 import { TransactionAmount, TransactionSummary } from '@/components/transactions/transaction-item';
 import { AccountIcon } from '@/components/ui/account-avatar';
@@ -78,14 +78,14 @@ const staticColumns = [
     enableSorting: false,
     enableGlobalFilter: false,
     cell: ({ row }) => (
-      <Link
-        href={`/dashboard/accounts/${row.original.account.id}`}
+      <DrawerLink
+        to={{ account: row.original.account.id }}
         className="flex items-center gap-1.5 hover:underline"
       >
         <AccountIcon category={row.original.account.category} className="size-4 shrink-0" />
         {row.original.account.name}
         <span className="text-muted-foreground">{row.original.subaccount.name}</span>
-      </Link>
+      </DrawerLink>
     ),
   }),
   // Sorted by the value in the main currency, so different currencies compare

@@ -48,9 +48,8 @@ interface MerchantDrawerClientProps {
   categories: Category[];
   transactions: Transaction[];
   period: string;
-  total: number;
-  monthlyTotals: number[];
-  average: number;
+  stats: { label: string; value: number }[];
+  chart: number[];
   accounts: Account[];
   mainCurrency: string;
 }
@@ -61,9 +60,8 @@ export function MerchantDrawerClient({
   categories,
   transactions,
   period,
-  total,
-  monthlyTotals,
-  average,
+  stats,
+  chart,
   accounts,
   mainCurrency,
 }: MerchantDrawerClientProps) {
@@ -95,9 +93,8 @@ export function MerchantDrawerClient({
         </DropdownMenu>
       }
       period={period}
-      total={total}
-      monthlyTotals={monthlyTotals}
-      average={average}
+      stats={stats}
+      chart={chart}
       mainCurrency={mainCurrency}
     >
       <Tabs defaultValue="transactions" className="min-h-0 flex-1">

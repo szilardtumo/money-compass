@@ -221,15 +221,10 @@ export const getTransactions = createApiQuery<
 
 /**
  * Returns the balance of every account and subaccount at the end of each month, in the main
- * currency, the current month last.
- *
- * @param input.months How many months back it starts, else from the month before the first
- * transaction, when there was no balance yet
+ * currency, from the month before the first transaction, when there was no balance yet, to the
+ * current one.
  */
-export const getTransactionHistory = createApiQuery<
-  { months?: number } | void,
-  TransactionHistory[]
->(async ({ input }) => {
+export const getTransactionHistory = createApiQuery<void, TransactionHistory[]>(async () => {
   'use cache: private';
   const { db } = await createApiContext();
   const t = schema.transactions;
@@ -254,9 +249,7 @@ export const getTransactionHistory = createApiQuery<
 
   const now = parsePeriod(undefined);
   const firstMonth = formatPeriodParam(
-    input?.months !== undefined
-      ? shiftPeriod(now, -input.months)
-      : shiftPeriod(parsePeriod(sums.map((item) => item.month).toSorted()[0]), -1),
+    shiftPeriod(parsePeriod(sums.map((item) => item.month).toSorted()[0]), -1),
   );
   // The balances in the subaccounts' currencies, from the months before the first one
   const balances: Record<string, number> = {};

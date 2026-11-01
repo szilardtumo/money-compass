@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/sheet';
 import { Sparkline } from '@/components/ui/sparkline';
 import { formatCurrency } from '@/lib/utils/formatters';
-import { formatPeriodLabel, parsePeriod } from '@/lib/utils/periods';
+import { parsePeriod } from '@/lib/utils/periods';
 
 /** The tabs of a drawer scroll on their own, under its header */
 export const TAB_CONTENT = 'min-h-0 overflow-y-auto px-4 pb-4';
@@ -28,12 +28,10 @@ interface DrawerSheetProps {
   actions?: ReactNode;
   /** Like "2026-10" or "2026" */
   period: string;
-  /** The total of the period in the main currency */
-  total: number;
-  /** The months of the period's year in the main currency */
-  monthlyTotals: number[];
-  /** Of the months so far */
-  average: number;
+  /** The figures under the period picker, in the main currency */
+  stats: { label: string; value: number }[];
+  /** A bar per month of the period's year, in the main currency */
+  chart: number[];
   mainCurrency: string;
   children: ReactNode;
 }
@@ -49,9 +47,8 @@ export function DrawerSheet({
   description,
   actions,
   period,
-  total,
-  monthlyTotals,
-  average,
+  stats,
+  chart,
   mainCurrency,
   children,
 }: DrawerSheetProps) {
@@ -82,17 +79,15 @@ export function DrawerSheet({
           </div>
           <PeriodPicker period={period} className="justify-between" />
           <div className="flex items-end gap-6">
-            <div>
-              <p className="text-xs text-muted-foreground">{formatPeriodLabel(selected)}</p>
-              <p className="text-xl font-semibold">{format(total)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Monthly average in {selected.year}</p>
-              <p className="text-xl font-semibold">{format(average)}</p>
-            </div>
+            {stats.map((stat) => (
+              <div key={stat.label}>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="text-xl font-semibold">{format(stat.value)}</p>
+              </div>
+            ))}
             <div className="ml-auto">
               <Sparkline
-                values={monthlyTotals}
+                values={chart}
                 color={color}
                 width={168}
                 height={40}

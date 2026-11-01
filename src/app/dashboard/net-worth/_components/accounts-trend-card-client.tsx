@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-
 import { AccountActionsDropdown } from '@/components/cards/accounts-card/account-actions-dropdown';
 import { CreateAccountButton } from '@/components/cards/accounts-card/create-account-button';
 import { NoAccountsPlaceholder } from '@/components/cards/accounts-card/no-accounts-placeholder';
@@ -10,6 +8,7 @@ import {
   sliceHistory,
   useHistoryRange,
 } from '@/components/cards/net-worth-history-card/use-history-range';
+import { DrawerLink } from '@/components/drawers/drawer-link';
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { chartColors } from '@/components/ui/chart';
@@ -71,8 +70,8 @@ export function AccountsTrendCardClient({
 
               return (
                 <li key={account.id} className="flex items-start gap-1">
-                  <Link
-                    href={`/dashboard/accounts/${account.id}`}
+                  <DrawerLink
+                    to={{ account: account.id }}
                     className="-ml-2 block min-w-0 flex-1 rounded-md px-2 py-2.5 hover:bg-muted/50"
                   >
                     <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_4rem_6.5rem] items-center gap-3 sm:grid-cols-[2.25rem_minmax(0,1fr)_6rem_7.5rem_7.5rem]">
@@ -143,7 +142,7 @@ export function AccountsTrendCardClient({
                           </span>
                         </div>
                       ))}
-                  </Link>
+                  </DrawerLink>
                   <AccountActionsDropdown account={account} className="mt-3.5" />
                 </li>
               );

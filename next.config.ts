@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
     { source: '/', destination: '/dashboard', permanent: false },
     { source: '/dashboard/statistics', destination: '/dashboard/net-worth', permanent: true },
     { source: '/dashboard/accounts', destination: '/dashboard/net-worth', permanent: true },
+    {
+      source: '/dashboard/accounts/:id',
+      destination: '/dashboard/net-worth?account=:id',
+      permanent: true,
+    },
   ],
 };
 

@@ -3,6 +3,7 @@ import 'server-only';
 import { connection } from 'next/server';
 
 import {
+  formatPeriodLabel,
   formatPeriodParam,
   getChartMonths,
   getPeriodRange,
@@ -53,15 +54,23 @@ export async function getDrawerData(
 
   return {
     transactions,
-    total: monthlyTotals.reduce(
-      (total, value, index) => (months[index].startsWith(period) ? total + value : total),
-      0,
-    ),
-    monthlyTotals,
-    // This year's months to come don't count
-    average:
-      monthlyTotals.reduce((total, value) => total + value, 0) /
-      Math.max(months.filter((month) => month <= currentMonth).length, 1),
+    stats: [
+      {
+        label: formatPeriodLabel(parsePeriod(period)),
+        value: monthlyTotals.reduce(
+          (total, value, index) => (months[index].startsWith(period) ? total + value : total),
+          0,
+        ),
+      },
+      {
+        label: `Monthly average in ${parsePeriod(period).year}`,
+        // This year's months to come don't count
+        value:
+          monthlyTotals.reduce((total, value) => total + value, 0) /
+          Math.max(months.filter((month) => month <= currentMonth).length, 1),
+      },
+    ],
+    chart: monthlyTotals,
     accounts,
     mainCurrency,
   };

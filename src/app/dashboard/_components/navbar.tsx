@@ -10,7 +10,6 @@ import {
 import { Suspense } from 'react';
 
 import { AccountSection } from '@/app/dashboard/_components/account-section';
-import { AccountIcon } from '@/components/ui/account-avatar';
 import { Button } from '@/components/ui/button';
 import { ResizableHandle, ResizablePanel } from '@/components/ui/resizable';
 import { Separator } from '@/components/ui/separator';
@@ -18,6 +17,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiQueries } from '@/server/api/queries';
 
+import { AccountNavItems } from './account-nav-items';
 import { NavItem } from './nav-item';
 
 function NavbarAccountItemsSkeleton() {
@@ -33,19 +33,7 @@ function NavbarAccountItemsSkeleton() {
 async function NavbarAccountItems() {
   const accounts = await apiQueries.accounts.getAccounts();
 
-  return (
-    <div className="pl-4 flex flex-col gap-1">
-      {accounts.map((account) => (
-        <NavItem
-          key={account.id}
-          href={`/dashboard/accounts/${account.id}`}
-          icon={<AccountIcon category={account.category} className="w-4 h-4 mr-2" />}
-        >
-          {account.name}
-        </NavItem>
-      ))}
-    </div>
-  );
+  return <AccountNavItems accounts={accounts} />;
 }
 
 function NavbarContent() {

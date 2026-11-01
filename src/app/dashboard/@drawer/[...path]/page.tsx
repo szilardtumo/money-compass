@@ -5,11 +5,12 @@ import { z } from 'zod';
 import { parseSubaccountsParam } from '@/lib/utils/params';
 import { formatPeriodParam, isPeriodParam, parsePeriod } from '@/lib/utils/periods';
 
+import { AccountDrawer } from '../_components/account-drawer';
 import { CategoryDrawer } from '../_components/category-drawer';
 import { MerchantDrawer } from '../_components/merchant-drawer';
 
 /**
- * The drawer of the category or merchant in the URL, for its period, on every dashboard page. It
+ * The drawer of the category, merchant or account in the URL, for its period, on every dashboard page. It
  * matches every path, so it renders again on each navigation and closes when the param is gone.
  */
 export default function DrawerPage({ searchParams }: PageProps<'/dashboard/[...path]'>) {
@@ -32,6 +33,10 @@ async function Drawer({
     ? query.period
     : formatPeriodParam(parsePeriod(undefined));
   const subaccountIds = parseSubaccountsParam(query.subaccounts);
+  const accountId = z.uuid().safeParse(query.account).data;
+  if (accountId) {
+    return <AccountDrawer accountId={accountId} period={period} />;
+  }
   const merchantId = z.uuid().safeParse(query.merchant).data;
   if (merchantId) {
     return <MerchantDrawer merchantId={merchantId} period={period} subaccountIds={subaccountIds} />;

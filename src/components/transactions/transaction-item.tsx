@@ -107,13 +107,13 @@ export function TransactionItem({ transaction, categories }: TransactionItemProp
       <TransactionSummary
         transaction={transaction}
         extra={[
-          <Link
+          <DrawerLink
             key="account"
-            href={`/dashboard/accounts/${transaction.account.id}`}
+            to={{ account: transaction.account.id }}
             className="hover:underline"
           >
             {transaction.account.name} ({transaction.subaccount.name})
-          </Link>,
+          </DrawerLink>,
           // Bank dates have no time
           transaction.dataSource === 'manual' && formatTime(transaction.startedDate),
         ]}

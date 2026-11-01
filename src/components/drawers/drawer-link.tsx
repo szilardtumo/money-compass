@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ComponentProps } from 'react';
 
-/** A category ID or "uncategorized", or a merchant ID, and the period it shows */
-type DrawerTarget = ({ category: string } | { merchant: string }) & { period?: string };
+/** A category ID or "uncategorized", a merchant ID or an account ID, and the period it shows */
+type DrawerTarget = ({ category: string } | { merchant: string } | { account: string }) & {
+  period?: string;
+};
 
 /**
- * Returns the URL of the current page with the drawer of a category or a merchant open, or with no
+ * Returns the URL of the current page with the drawer of a category, merchant or account open, or with no
  * drawer for null. The page keeps its own params, like the analytics period.
  */
 export function useDrawerHref() {
@@ -19,6 +21,7 @@ export function useDrawerHref() {
     const params = new URLSearchParams(searchParams);
     params.delete('category');
     params.delete('merchant');
+    params.delete('account');
     for (const [key, value] of Object.entries(target ?? {})) {
       params.set(key, value);
     }

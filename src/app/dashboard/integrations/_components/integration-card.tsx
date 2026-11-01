@@ -1,6 +1,6 @@
 import { cn } from 'cn';
-import Link from 'next/link';
 
+import { DrawerLink } from '@/components/drawers/drawer-link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -120,12 +120,12 @@ export function IntegrationCard({
                     </TableCell>
                     <TableCell>
                       {linked ? (
-                        <Link
-                          href={`/dashboard/accounts/${linked.accountId}`}
+                        <DrawerLink
+                          to={{ account: linked.accountId }}
                           className="underline underline-offset-4"
                         >
                           {linked.label}
-                        </Link>
+                        </DrawerLink>
                       ) : (
                         <span className="text-muted-foreground">Not linked</span>
                       )}
