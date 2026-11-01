@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { AccountsTrendCard } from './_components/accounts-trend-card';
 import { CashRunwayCard } from './_components/cash-runway-card';
+import { HistoryRangeTabs } from './_components/history-range-tabs';
 import { NetWorthChangesCard } from './_components/net-worth-changes-card';
 import { StaleBalancesAlert } from './_components/stale-balances-alert';
 
@@ -16,6 +17,9 @@ export default function NetWorthPage() {
     <>
       <PageHeaderSlotContent>
         <PageHeaderTitle>Net worth</PageHeaderTitle>
+        <Suspense fallback={<Skeleton className="h-9 w-52" />}>
+          <HistoryRangeTabs />
+        </Suspense>
       </PageHeaderSlotContent>
 
       <Suspense fallback={null}>

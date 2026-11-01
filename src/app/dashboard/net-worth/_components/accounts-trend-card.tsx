@@ -3,7 +3,7 @@ import { apiQueries } from '@/server/api/queries';
 import { AccountsTrendCardClient } from './accounts-trend-card-client';
 
 /**
- * The accounts with their balance, share and trend over the last year.
+ * The accounts with their balance, share and trend over the page's range.
  */
 export async function AccountsTrendCard() {
   const [accounts, history, { mainCurrency }] = await Promise.all([
@@ -20,6 +20,7 @@ export async function AccountsTrendCard() {
           Object.entries(item.accountBalances).map(([id, balance]) => [id, balance.totalBalance]),
         ),
       )}
+      firstDate={history[0]?.date}
       mainCurrency={mainCurrency}
     />
   );

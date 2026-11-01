@@ -8,7 +8,7 @@ export const HISTORY_RANGES = ['6M', '1Y', 'YTD', 'All'] as const;
 export type HistoryRange = (typeof HISTORY_RANGES)[number];
 
 /**
- * The range of the net worth history in the URL. It changes the URL without loading the page again.
+ * The range of the net worth page in the URL. It changes the URL without loading the page again.
  */
 export function useHistoryRange() {
   const searchParams = useSearchParams();

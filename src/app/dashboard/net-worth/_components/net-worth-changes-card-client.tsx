@@ -3,14 +3,21 @@
 import { cn } from 'cn';
 import { ComponentProps } from 'react';
 
+import {
+  getRangeLabel,
+  sliceHistory,
+  useHistoryRange,
+} from '@/components/cards/net-worth-history-card/use-history-range';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, ChartTooltipContent } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { formatPeriodLabel, parsePeriod } from '@/lib/utils/periods';
 
 interface NetWorthChangesCardClientProps {
-  /** Like "2026-10", the oldest first */
+  /** Every month of the history, like "2026-10", the oldest first */
   months: { month: string; saved: number; other: number }[];
+  /** Of the first month of the history */
+  firstDate: Date;
   mainCurrency: string;
   className?: string;
 }
@@ -19,10 +26,14 @@ const getColor = (value: number) =>
   value > 0 ? 'text-success' : value < 0 ? 'text-destructive' : undefined;
 
 export function NetWorthChangesCardClient({
-  months,
+  months: allMonths,
+  firstDate,
   mainCurrency,
   className,
 }: NetWorthChangesCardClientProps) {
+  const [range] = useHistoryRange();
+  // Like the history card, which compares the range's last balance with the one before the range
+  const months = sliceHistory(allMonths, range).slice(1);
   const format = (value: number) =>
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0, signDisplay: 'exceptZero' });
   const saved = months.reduce((total, item) => total + item.saved, 0);
@@ -33,9 +44,9 @@ export function NetWorthChangesCardClient({
       <CardHeader>
         <CardTitle>Where the change came from</CardTitle>
         <CardDescription>
-          The last 12 full months. Saved is income minus spending. Transfers and adjustments are the
-          transactions excluded from analytics, like investments, currency exchanges and balance
-          corrections.
+          The change {getRangeLabel(range, firstDate)}. Saved is income minus spending. Transfers
+          and adjustments are the transactions excluded from analytics, like investments, currency
+          exchanges and balance corrections.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">

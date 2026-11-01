@@ -3,7 +3,11 @@
 import { AccountActionsDropdown } from '@/components/cards/accounts-card/account-actions-dropdown';
 import { CreateAccountButton } from '@/components/cards/accounts-card/create-account-button';
 import { NoAccountsPlaceholder } from '@/components/cards/accounts-card/no-accounts-placeholder';
-import { sliceHistory } from '@/components/cards/net-worth-history-card/use-history-range';
+import {
+  getRangeLabel,
+  sliceHistory,
+  useHistoryRange,
+} from '@/components/cards/net-worth-history-card/use-history-range';
 import { DrawerLink } from '@/components/drawers/drawer-link';
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,15 +20,19 @@ interface AccountsTrendCardClientProps {
   accounts: Account[];
   /** The balance of each account at the end of each month, by account ID */
   history: Record<string, number>[];
+  /** Of the first month of the history */
+  firstDate: Date | undefined;
   mainCurrency: string;
 }
 
 export function AccountsTrendCardClient({
   accounts,
   history,
+  firstDate,
   mainCurrency,
 }: AccountsTrendCardClientProps) {
-  const points = sliceHistory(history, '1Y');
+  const [range] = useHistoryRange();
+  const points = sliceHistory(history, range);
   const format = (value: number, options: Intl.NumberFormatOptions = {}) =>
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0, ...options });
   const formatChange = (from: number, to: number) => {
@@ -46,7 +54,7 @@ export function AccountsTrendCardClient({
       <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
         <div>
           <CardTitle>Accounts</CardTitle>
-          <CardDescription>Balances now, change in a year</CardDescription>
+          <CardDescription>Balances now, change {getRangeLabel(range, firstDate)}</CardDescription>
         </div>
         <CreateAccountButton />
       </CardHeader>
