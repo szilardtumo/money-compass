@@ -1,7 +1,7 @@
 import { connection } from 'next/server';
 
 import { parseSubaccountsParam } from '@/lib/utils/params';
-import { formatPeriodParam, parsePeriod } from '@/lib/utils/periods';
+import { formatPeriodParam, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
 import { apiQueries } from '@/server/api/queries';
 
 import { AnalyticsParams } from './analytics-params';
@@ -23,13 +23,30 @@ export async function AnalyticsContent({
     view: getParam(query.view) === 'income' ? 'income' : 'spending',
     subaccountIds: parseSubaccountsParam(query.subaccounts),
   };
-  const [analytics, accounts] = await Promise.all([
+  const { start, end } = getPeriodRange(parsePeriod(params.period));
+  const [analytics, accounts, { data: transactions }, categories] = await Promise.all([
     apiQueries.analytics.getAnalytics({
       period: params.period,
       subaccountIds: params.subaccountIds,
     }),
     apiQueries.accounts.getAccounts(),
+    apiQueries.transactions.getTransactions({
+      side: params.view,
+      subaccountIds: params.subaccountIds,
+      fromDate: start.toISOString(),
+      toDate: new Date(end.getTime() - 1).toISOString(),
+      pageSize: 10_000,
+    }),
+    apiQueries.categories.getCategories(),
   ]);
 
-  return <AnalyticsView analytics={analytics} accounts={accounts} params={params} />;
+  return (
+    <AnalyticsView
+      analytics={analytics}
+      accounts={accounts}
+      transactions={transactions}
+      categories={categories}
+      params={params}
+    />
+  );
 }

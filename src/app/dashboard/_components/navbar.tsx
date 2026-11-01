@@ -3,6 +3,7 @@ import {
   HistoryIcon,
   LayoutDashboardIcon,
   MenuIcon,
+  PlugIcon,
   StoreIcon,
   TagsIcon,
   TrendingUpIcon,
@@ -11,29 +12,23 @@ import { Suspense } from 'react';
 
 import { AccountSection } from '@/app/dashboard/_components/account-section';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { ResizableHandle, ResizablePanel } from '@/components/ui/resizable';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiQueries } from '@/server/api/queries';
 
-import { AccountNavItems } from './account-nav-items';
+import { MainCurrencySelect } from './main-currency-select';
 import { NavItem } from './nav-item';
 
-function NavbarAccountItemsSkeleton() {
-  return (
-    <div className="pl-8 flex flex-col gap-1">
-      <Skeleton className="h-5 my-2 w-20 max-w-full" />
-      <Skeleton className="h-5 my-2 w-12 max-w-full" />
-      <Skeleton className="h-5 my-2 w-28 max-w-full" />
-    </div>
-  );
-}
+async function NavbarMainCurrency() {
+  const [profile, currencies] = await Promise.all([
+    apiQueries.profiles.getProfile(),
+    apiQueries.currencies.getCurrencies(),
+  ]);
 
-async function NavbarAccountItems() {
-  const accounts = await apiQueries.accounts.getAccounts();
-
-  return <AccountNavItems accounts={accounts} />;
+  return <MainCurrencySelect mainCurrency={profile.mainCurrency} currencies={currencies} />;
 }
 
 function NavbarContent() {
@@ -72,13 +67,19 @@ function NavbarContent() {
             Categories
           </NavItem>
         </div>
-
-        <Separator className="my-2" />
-
-        <Suspense fallback={<NavbarAccountItemsSkeleton />}>
-          <NavbarAccountItems />
-        </Suspense>
+        <NavItem href="/dashboard/integrations" icon={<PlugIcon className="size-4 mr-2" />}>
+          Integrations
+        </NavItem>
       </nav>
+      <Separator />
+      <div className="flex flex-col gap-2 p-4">
+        <Label htmlFor="main-currency" className="text-muted-foreground">
+          Main currency
+        </Label>
+        <Suspense fallback={<Skeleton className="h-9 w-full" />}>
+          <NavbarMainCurrency />
+        </Suspense>
+      </div>
     </aside>
   );
 }

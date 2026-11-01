@@ -5,6 +5,7 @@ import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
+import { AnalyticsSide } from '@/lib/types/analytics.types';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
@@ -96,6 +97,8 @@ export const getTransactions = createApiQuery<
     categoryId?: string | null;
     /** The ID of the merchant to filter by */
     merchantId?: string;
+    /** Only the transactions that count on this side in analytics */
+    side?: AnalyticsSide;
     /** The page number to fetch */
     page?: number;
     /** The number of transactions per page */
@@ -111,6 +114,7 @@ export const getTransactions = createApiQuery<
       toDate,
       categoryId,
       merchantId,
+      side,
       page = 0,
       pageSize = 20,
     } = {},
@@ -161,6 +165,7 @@ export const getTransactions = createApiQuery<
                 ? eq(schema.categories.id, categoryId)
                 : undefined,
             merchantId ? eq(schema.merchants.id, merchantId) : undefined,
+            side ? sql`${analyticsSide} = ${side}` : undefined,
           ),
         )
         .orderBy(desc(schema.transactions.startedDate), desc(schema.transactions.sequence))

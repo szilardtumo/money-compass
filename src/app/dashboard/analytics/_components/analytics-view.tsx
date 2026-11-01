@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { CategoryAvatar, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { PeriodPicker } from '@/components/period-picker';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TransactionDayList } from '@/components/transactions/transaction-day-list';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, DonutChart } from '@/components/ui/chart';
 import { Metric } from '@/components/ui/metric';
 import { MultiSelectFilter } from '@/components/ui/multi-select-filter';
@@ -16,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Account } from '@/lib/types/accounts.types';
 import { Analytics, AnalyticsTotal } from '@/lib/types/analytics.types';
 import { Category } from '@/lib/types/categories.types';
+import { Transaction } from '@/lib/types/transactions.types';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
 import {
   formatPeriodLabel,
@@ -33,10 +35,20 @@ interface AnalyticsViewProps {
   analytics: Analytics;
   /** For the account filter */
   accounts: Account[];
+  /** Of the period that count in the view */
+  transactions: Transaction[];
+  /** For changing the transactions' categories */
+  categories: Category[];
   params: AnalyticsParams;
 }
 
-export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProps) {
+export function AnalyticsView({
+  analytics,
+  accounts,
+  transactions,
+  categories: allCategories,
+  params,
+}: AnalyticsViewProps) {
   const router = useRouter();
   const getDrawerHref = useDrawerHref();
   const period = parsePeriod(params.period);
@@ -205,6 +217,25 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
             </TabsContent>
           </CardContent>
         </Tabs>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {params.view === 'spending' ? 'Spending' : 'Income'} transactions in{' '}
+            {formatPeriodLabel(period)}
+          </CardTitle>
+          <CardDescription>
+            {transactions.length} transaction{transactions.length === 1 ? '' : 's'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TransactionDayList
+            transactions={transactions}
+            accounts={accounts}
+            categories={allCategories}
+          />
+        </CardContent>
       </Card>
     </>
   );
