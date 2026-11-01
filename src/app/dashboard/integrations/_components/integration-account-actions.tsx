@@ -146,8 +146,8 @@ export function IntegrationAccountActions({
           ) : (
             <p className="text-sm">
               There are no unlinked {currency.toUpperCase()} subaccounts. Add one on the{' '}
-              <Link href="/dashboard/accounts" className="underline">
-                accounts page
+              <Link href="/dashboard/net-worth" className="underline">
+                net worth page
               </Link>
               .
             </p>

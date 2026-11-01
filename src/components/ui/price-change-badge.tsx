@@ -1,3 +1,5 @@
+'use client';
+
 import NumberFlow, { continuous } from '@number-flow/react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from 'cn';

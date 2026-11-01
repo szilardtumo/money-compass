@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
-import { AccountsCard } from '@/components/cards/accounts-card';
 import { AssetDistributionCard } from '@/components/cards/asset-distribution-card';
 import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { QuickActionsCard } from '@/components/cards/quick-actions-card/quick-actions-card';
@@ -35,8 +34,6 @@ export default async function TestPage() {
       <AssetDistributionCard />
 
       <QuickActionsCard />
-
-      <AccountsCard />
 
       <RecentTransactionsCard />
 

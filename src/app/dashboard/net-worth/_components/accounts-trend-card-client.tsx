@@ -1,8 +1,10 @@
 'use client';
 
-import { ChevronRightIcon } from 'lucide-react';
 import Link from 'next/link';
 
+import { AccountActionsDropdown } from '@/components/cards/accounts-card/account-actions-dropdown';
+import { CreateAccountButton } from '@/components/cards/accounts-card/create-account-button';
+import { NoAccountsPlaceholder } from '@/components/cards/accounts-card/no-accounts-placeholder';
 import {
   getRangeLabel,
   sliceHistory,
@@ -11,6 +13,7 @@ import {
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { chartColors } from '@/components/ui/chart';
+import { TrendLine } from '@/components/ui/trend-line';
 import { Account } from '@/lib/types/accounts.types';
 import { capitalize, formatCurrency, formatPercent } from '@/lib/utils/formatters';
 
@@ -49,9 +52,12 @@ export function AccountsTrendCardClient({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Accounts</CardTitle>
-        <CardDescription>Balances now, change {getRangeLabel(range, firstDate)}</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
+        <div>
+          <CardTitle>Accounts</CardTitle>
+          <CardDescription>Balances now, change {getRangeLabel(range, firstDate)}</CardDescription>
+        </div>
+        <CreateAccountButton />
       </CardHeader>
       <CardContent>
         <ul className="flex flex-col divide-y">
@@ -64,12 +70,12 @@ export function AccountsTrendCardClient({
               const change = (values.at(-1) ?? 0) - (values[0] ?? 0);
 
               return (
-                <li key={account.id}>
+                <li key={account.id} className="flex items-start gap-1">
                   <Link
                     href={`/dashboard/accounts/${account.id}`}
-                    className="-mx-2 block rounded-md px-2 py-2.5 hover:bg-muted/50"
+                    className="-ml-2 block min-w-0 flex-1 rounded-md px-2 py-2.5 hover:bg-muted/50"
                   >
-                    <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_4rem_6.5rem] items-center gap-3 sm:grid-cols-[2.25rem_minmax(0,1fr)_6rem_7.5rem_7.5rem_1rem]">
+                    <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_4rem_6.5rem] items-center gap-3 sm:grid-cols-[2.25rem_minmax(0,1fr)_6rem_7.5rem_7.5rem]">
                       <span
                         className="flex size-9 items-center justify-center rounded-full"
                         style={{
@@ -122,13 +128,12 @@ export function AccountsTrendCardClient({
                           {formatChange(values[0] ?? 0, values.at(-1) ?? 0)}
                         </p>
                       </div>
-                      <ChevronRightIcon className="hidden size-4 text-muted-foreground sm:block" />
                     </div>
                     {account.subaccounts.length > 1 &&
                       account.subaccounts.map((subaccount) => (
                         <div
                           key={subaccount.id}
-                          className="flex justify-between gap-3 pt-1 pl-12 text-xs text-muted-foreground sm:pr-7"
+                          className="flex justify-between gap-3 pt-1 pl-12 text-xs text-muted-foreground"
                         >
                           <span className="truncate">{subaccount.name}</span>
                           <span className="whitespace-nowrap">
@@ -139,10 +144,12 @@ export function AccountsTrendCardClient({
                         </div>
                       ))}
                   </Link>
+                  <AccountActionsDropdown account={account} className="mt-3.5" />
                 </li>
               );
             })}
         </ul>
+        {!accounts.length && <NoAccountsPlaceholder />}
         <div className="mt-1 flex justify-between gap-3 border-t pt-3 text-sm font-semibold">
           <span>Total</span>
           <span>
@@ -154,33 +161,5 @@ export function AccountsTrendCardClient({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-/**
- * A line of the values with the area under it, stretched to its box.
- */
-function TrendLine({ values, color }: { values: number[]; color: string }) {
-  const min = Math.min(...values);
-  const spread = Math.max(...values) - min || 1;
-  const line = values
-    .map((value, index) => {
-      const x = (index / Math.max(values.length - 1, 1)) * 100;
-      const y = 28 - ((value - min) / spread) * 26;
-      return `${index ? 'L' : 'M'}${x} ${y}`;
-    })
-    .join(' ');
-
-  return (
-    <svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden className="h-8 w-full">
-      <path d={`${line} L100 30 L0 30 Z`} fill={color} opacity={0.15} />
-      <path
-        d={line}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
   );
 }

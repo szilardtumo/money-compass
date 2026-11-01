@@ -7,7 +7,6 @@ import {
   StoreIcon,
   TagsIcon,
   TrendingUpIcon,
-  WalletCardsIcon,
 } from 'lucide-react';
 import { Suspense } from 'react';
 
@@ -89,9 +88,6 @@ function NavbarContent() {
 
         <Separator className="my-2" />
 
-        <NavItem href="/dashboard/accounts" icon={<WalletCardsIcon className="size-4 mr-2" />}>
-          All Accounts
-        </NavItem>
         <Suspense fallback={<NavbarAccountItemsSkeleton />}>
           <NavbarAccountItems />
         </Suspense>
