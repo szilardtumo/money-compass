@@ -10,19 +10,26 @@ import { PriceChangeBadge } from '@/components/ui/price-change-badge';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { Account } from '@/lib/types/accounts.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';
-import { formatCurrency, formatDate } from '@/lib/utils/formatters';
+import { capitalize, formatCurrency, formatDate } from '@/lib/utils/formatters';
+import { groupBy } from '@/lib/utils/group-by';
 
 interface TransactionHistoryChartProps {
   data: TransactionHistory[];
   accounts: Account[];
-  /** If there are multiple accounts, it stacks accounts, if there is only one account, it stacks its subaccounts */
-  stack?: boolean;
+  /**
+   * Stacks the accounts, or the subaccounts of a single account, or the account categories, else
+   * shows the total
+   */
+  stack?: false | 'account' | 'category';
+  /** Shows the change since the first point with this label, like "this year", else since the one before */
+  changeLabel?: string;
 }
 
 export function TransactionHistoryChart({
   data,
   accounts,
   stack = false,
+  changeLabel,
 }: TransactionHistoryChartProps) {
   const currency = data[0]?.mainCurrency ?? 'eur';
 
@@ -51,6 +58,17 @@ export function TransactionHistoryChart({
               ),
             ]),
           ),
+          ...Object.fromEntries(
+            Object.entries(groupBy(accounts, (account) => capitalize(account.category))).map(
+              ([category, items]) => [
+                category,
+                items.reduce(
+                  (total, account) => total + item.accountBalances[account.id].totalBalance,
+                  0,
+                ),
+              ],
+            ),
+          ),
         }) as {
           Date: Date;
           Month: string;
@@ -67,6 +85,9 @@ export function TransactionHistoryChart({
   }, [accounts, data]);
 
   const chartCategories = useMemo(() => {
+    if (stack === 'category') {
+      return [...new Set(accounts.map((account) => capitalize(account.category)))];
+    }
     if (accounts.length === 1) {
       if (stack) {
         return accounts[0].subaccounts.map((subaccount) => subaccount.name);
@@ -90,10 +111,11 @@ export function TransactionHistoryChart({
           0,
         )
       : 0;
-    const prevValue = parsedData[parsedData.length - 2]
+    const previous = parsedData[changeLabel ? 0 : parsedData.length - 2];
+    const prevValue = previous
       ? chartCategories.reduce(
-          // @ts-expect-error - TS doesn't know that parsedData[parsedData.length - 2] contains all the categories
-          (acc, category) => acc + parsedData[parsedData.length - 2][category],
+          // @ts-expect-error - TS doesn't know that previous contains all the categories
+          (acc, category) => acc + previous[category],
           0,
         )
       : 0;
@@ -104,7 +126,7 @@ export function TransactionHistoryChart({
       difference: value - prevValue,
       change: (value - prevValue) / prevValue || 0,
     };
-  }, [parsedData, chartCategories]);
+  }, [parsedData, chartCategories, changeLabel]);
 
   const minValue = useMemo(() => {
     const min = parsedData.length
@@ -131,6 +153,7 @@ export function TransactionHistoryChart({
             formatOptions={{ signDisplay: 'always' }}
           />
           <PriceChangeBadge variant="default" percent={metric.change} />
+          {changeLabel && <span className="text-sm text-muted-foreground">{changeLabel}</span>}
         </div>
       </NumberFlowGroup>
 

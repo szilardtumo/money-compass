@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { DonutChart, chartColors } from '@/components/ui/chart';
@@ -14,41 +14,32 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Account } from '@/lib/types/accounts.types';
-import { capitalize, formatCurrency, formatPercent } from '@/lib/utils/formatters';
-import { groupBy } from '@/lib/utils/group-by';
+import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
 
-interface AccountCategoryDistributionChartProps {
-  accounts: Account[];
+interface BalanceDistributionChartProps {
+  /** The header of the groups' column */
+  label: string;
+  /** In the main currency, with a detail under the name, like the balance in its own currency */
+  groups: { name: string; balance: number; detail?: string }[];
   mainCurrency: string;
 }
 
-export function AccountCategoryDistributionChart({
-  accounts,
+/**
+ * A donut of the balance by group, like account categories or currencies, with a table of them.
+ */
+export function BalanceDistributionChart({
+  label,
+  groups,
   mainCurrency,
-}: AccountCategoryDistributionChartProps) {
-  const data = useMemo(() => {
-    const groups = groupBy(accounts, (account) => capitalize(account.category));
-
-    return Object.entries(groups).map(([category, items]) => ({
-      id: category,
-      category,
-      balance: items.reduce((acc, current) => acc + current.totalBalance, 0),
-    }));
-  }, [accounts]);
-
-  const totalBalance = useMemo(
-    () => data.reduce((acc, current) => acc + current.balance, 0),
-    [data],
-  );
-
-  const [selectedSlice, setSelectedSlice] = useState<(typeof data)[number] | null>(null);
+}: BalanceDistributionChartProps) {
+  const totalBalance = groups.reduce((acc, current) => acc + current.balance, 0);
+  const [selectedSlice, setSelectedSlice] = useState<(typeof groups)[number] | null>(null);
 
   return (
     <div>
       <DonutChart
-        data={data}
-        categories={['category']}
+        data={groups}
+        categories={['name']}
         index="balance"
         showTooltip
         showLabel
@@ -61,26 +52,27 @@ export function AccountCategoryDistributionChart({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Category</TableHead>
+            <TableHead>{label}</TableHead>
             <TableHead>Share</TableHead>
             <TableHead className="text-right">Balance</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((item, i) => (
-            <TableRow key={item.id}>
+          {groups.map((item, i) => (
+            <TableRow key={item.name}>
               <TableCell className="font-medium whitespace-nowrap">
                 <div
                   className={cn('inline-block align-baseline h-3 w-3 rounded-sm mr-2')}
                   style={{ backgroundColor: chartColors[i % chartColors.length] }}
                 />
-                {item.category}
+                {item.name}
               </TableCell>
               <TableCell>
                 <Badge>{formatPercent(item.balance / totalBalance)}</Badge>
               </TableCell>
               <TableCell className="text-right">
                 {formatCurrency(item.balance, mainCurrency)}
+                {item.detail && <div className="text-xs text-muted-foreground">{item.detail}</div>}
               </TableCell>
             </TableRow>
           ))}

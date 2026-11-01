@@ -34,7 +34,11 @@ export function AccountHistoryCardClient({
         )}
       </CardHeader>
       <CardContent>
-        <TransactionHistoryChart accounts={[account]} data={transactionHistory} stack={stack} />
+        <TransactionHistoryChart
+          accounts={[account]}
+          data={transactionHistory}
+          stack={stack && 'account'}
+        />
       </CardContent>
     </Card>
   );

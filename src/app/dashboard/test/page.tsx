@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { AccountHistoryCard } from '@/components/cards/account-history-card';
 import { AccountsCard } from '@/components/cards/accounts-card';
 import { AssetDistributionCard } from '@/components/cards/asset-distribution-card';
-import { NetWorthDifferenceCard } from '@/components/cards/net-worth-difference-card';
 import { NetWorthHistoryCard } from '@/components/cards/net-worth-history-card';
 import { QuickActionsCard } from '@/components/cards/quick-actions-card/quick-actions-card';
 import { RecentTransactionsCard } from '@/components/cards/recent-transactions-card';
@@ -34,8 +33,6 @@ export default async function TestPage() {
       {!!accounts[0] && <AccountHistoryCard accountId={accounts[0].id} />}
 
       <AssetDistributionCard />
-
-      <NetWorthDifferenceCard />
 
       <QuickActionsCard />
 

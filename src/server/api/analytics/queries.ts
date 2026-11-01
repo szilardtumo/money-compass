@@ -16,7 +16,12 @@ import {
 } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
-import { analyticsSide, categoryColumns, joinCategory } from '../categories/joins';
+import {
+  analyticsSide,
+  categoryColumns,
+  joinCategory,
+  transactionMonth,
+} from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 const t = schema.transactions;
@@ -232,3 +237,55 @@ export const getAnalytics = createApiQuery<{ period: string; subaccountIds?: str
     };
   },
 );
+
+/**
+ * Returns the income and the spending of this month and the 12 before it in the main currency, the
+ * oldest first. Spending is positive.
+ */
+export const getMonthlyCashFlow = createApiQuery<
+  void,
+  { mainCurrency: string; months: ({ month: string } & Record<AnalyticsSide, number>)[] }
+>(async () => {
+  'use cache: private';
+  const { db } = await createApiContext();
+  const now = parsePeriod(undefined);
+  const months = Array.from({ length: 13 }, (_, index) => shiftPeriod(now, index - 12));
+
+  const [rows, { mainCurrency, mapper }] = await Promise.all([
+    db.rls((tx) =>
+      joinCategory(
+        tx
+          .select({
+            month: transactionMonth.as('month'),
+            side: analyticsSide.as('side'),
+            currency: schema.subaccounts.currency,
+            amount: sum(t.amount).mapWith(Number),
+          })
+          .from(t)
+          .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+          .$dynamic(),
+      )
+        .where(gte(t.startedDate, getPeriodRange(months[0]).start))
+        .groupBy(sql`month`, sql`side`, schema.subaccounts.currency),
+    ),
+    getMainCurrencyWithMapper(),
+  ]);
+
+  return {
+    mainCurrency,
+    months: months.map((period) => {
+      const month = formatPeriodParam(period);
+      const totals = { month, spending: 0, income: 0 };
+      for (const row of rows) {
+        if (row.month === month && row.side !== 'excluded') {
+          const rate = mapper[row.currency];
+          if (!rate) {
+            throw new MissingExchangeRateError(row.currency);
+          }
+          totals[row.side] += row.amount * rate * (row.side === 'spending' ? -1 : 1);
+        }
+      }
+      return totals;
+    }),
+  };
+});
