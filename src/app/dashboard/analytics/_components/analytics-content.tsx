@@ -20,7 +20,6 @@ export async function AnalyticsContent({
   await connection();
   const params: AnalyticsParams = {
     period: formatPeriodParam(parsePeriod(getParam(query.period))),
-    view: getParam(query.view) === 'income' ? 'income' : 'spending',
     subaccountIds: parseSubaccountsParam(query.subaccounts),
   };
   const { start, end } = getPeriodRange(parsePeriod(params.period));
@@ -31,7 +30,6 @@ export async function AnalyticsContent({
     }),
     apiQueries.accounts.getAccounts(),
     apiQueries.transactions.getTransactions({
-      side: params.view,
       subaccountIds: params.subaccountIds,
       fromDate: start.toISOString(),
       toDate: new Date(end.getTime() - 1).toISOString(),
@@ -44,7 +42,7 @@ export async function AnalyticsContent({
     <AnalyticsView
       analytics={analytics}
       accounts={accounts}
-      transactions={transactions}
+      transactions={transactions.filter((transaction) => !transaction.excluded)}
       categories={categories}
       params={params}
     />

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import { CategoryAvatar, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
@@ -15,7 +16,7 @@ import { PriceChangeBadge } from '@/components/ui/price-change-badge';
 import { Sparkline } from '@/components/ui/sparkline';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Account } from '@/lib/types/accounts.types';
-import { Analytics, AnalyticsTotal } from '@/lib/types/analytics.types';
+import { Analytics, AnalyticsSide, AnalyticsTotal } from '@/lib/types/analytics.types';
 import { Category } from '@/lib/types/categories.types';
 import { Transaction } from '@/lib/types/transactions.types';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
@@ -35,7 +36,7 @@ interface AnalyticsViewProps {
   analytics: Analytics;
   /** For the account filter */
   accounts: Account[];
-  /** Of the period that count in the view */
+  /** Of the period that count in analytics */
   transactions: Transaction[];
   /** For changing the transactions' categories */
   categories: Category[];
@@ -63,8 +64,9 @@ export function AnalyticsView({
     })),
   );
 
-  const categories = analytics.categories[params.view];
-  const sideLabel = params.view === 'spending' ? 'Spent' : 'Income';
+  const [view, setView] = useState<AnalyticsSide>('spending');
+  const categories = analytics.categories[view];
+  const sideLabel = view === 'spending' ? 'Spent' : 'Income';
   const now = parsePeriod(undefined);
   // This year's months so far, the current one included
   const monthCount = period.year < now.year ? 12 : now.month + 1;
@@ -91,15 +93,6 @@ export function AnalyticsView({
             }
           />
         )}
-        <Tabs value={params.view} className="sm:ml-auto">
-          <TabsList>
-            {(['spending', 'income'] as const).map((view) => (
-              <TabsTrigger key={view} value={view} asChild>
-                <Link href={href({ view })}>{view === 'spending' ? 'Spending' : 'Income'}</Link>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -159,10 +152,16 @@ export function AnalyticsView({
 
       <Card>
         <Tabs defaultValue="categories">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+            <CardTitle className="mr-auto">
               {sideLabel} in {formatPeriodLabel(period)}
             </CardTitle>
+            <Tabs value={view} onValueChange={(value) => setView(value as AnalyticsSide)}>
+              <TabsList>
+                <TabsTrigger value="spending">Spending</TabsTrigger>
+                <TabsTrigger value="income">Income</TabsTrigger>
+              </TabsList>
+            </Tabs>
             <TabsList>
               <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="merchants">Merchants</TabsTrigger>
@@ -183,7 +182,7 @@ export function AnalyticsView({
                 index="amount"
                 categories={['name']}
                 showLabel
-                label={format(totals[params.view].amount)}
+                label={format(totals[view].amount)}
                 valueFormatter={(value) => format(value as number)}
               />
               <TotalsList
@@ -196,23 +195,23 @@ export function AnalyticsView({
                     period: params.period,
                   }),
                 }))}
-                total={totals[params.view].amount}
+                total={totals[view].amount}
                 format={format}
-                invert={params.view === 'spending'}
+                invert={view === 'spending'}
               />
             </TabsContent>
             <TabsContent value="merchants">
               <TotalsList
-                items={analytics.merchants[params.view].map((item) => ({
+                items={analytics.merchants[view].map((item) => ({
                   ...item,
                   key: item.merchant.id,
                   name: item.merchant.name,
                   detail: item.category?.name ?? 'Uncategorized',
                   href: getDrawerHref({ merchant: item.merchant.id, period: params.period }),
                 }))}
-                total={totals[params.view].amount}
+                total={totals[view].amount}
                 format={format}
-                invert={params.view === 'spending'}
+                invert={view === 'spending'}
               />
             </TabsContent>
           </CardContent>
@@ -221,10 +220,7 @@ export function AnalyticsView({
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            {params.view === 'spending' ? 'Spending' : 'Income'} transactions in{' '}
-            {formatPeriodLabel(period)}
-          </CardTitle>
+          <CardTitle>Transactions in {formatPeriodLabel(period)}</CardTitle>
           <CardDescription>
             {transactions.length} transaction{transactions.length === 1 ? '' : 's'}
           </CardDescription>
