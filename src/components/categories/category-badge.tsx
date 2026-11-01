@@ -5,6 +5,7 @@ import {
   BanknoteIcon,
   BriefcaseIcon,
   CarIcon,
+  CoffeeIcon,
   DumbbellIcon,
   EyeOffIcon,
   GiftIcon,
@@ -21,6 +22,8 @@ import {
   SparklesIcon,
   TagIcon,
   TicketIcon,
+  TrendingUpIcon,
+  UsersIcon,
   UtensilsIcon,
 } from 'lucide-react';
 import { ComponentProps } from 'react';
@@ -34,6 +37,7 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   banknote: BanknoteIcon,
   briefcase: BriefcaseIcon,
   car: CarIcon,
+  coffee: CoffeeIcon,
   dumbbell: DumbbellIcon,
   'eye-off': EyeOffIcon,
   gift: GiftIcon,
@@ -49,6 +53,8 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   sparkles: SparklesIcon,
   tag: TagIcon,
   ticket: TicketIcon,
+  'trending-up': TrendingUpIcon,
+  users: UsersIcon,
   utensils: UtensilsIcon,
 };
 
