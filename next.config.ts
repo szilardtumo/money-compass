@@ -12,16 +12,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   cacheComponents: true,
   partialPrefetching: true,
-  redirects: async () => [
-    { source: '/', destination: '/dashboard', permanent: false },
-    { source: '/dashboard/statistics', destination: '/dashboard/net-worth', permanent: true },
-    { source: '/dashboard/accounts', destination: '/dashboard/net-worth', permanent: true },
-    {
-      source: '/dashboard/accounts/:id',
-      destination: '/dashboard/net-worth?account=:id',
-      permanent: true,
-    },
-  ],
+  redirects: async () => [{ source: '/', destination: '/dashboard', permanent: false }],
 };
 
 export default nextConfig;
