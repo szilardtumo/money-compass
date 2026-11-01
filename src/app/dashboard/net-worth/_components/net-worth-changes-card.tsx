@@ -1,9 +1,11 @@
+import { formatPeriodParam, parsePeriod, shiftPeriod } from '@/lib/utils/periods';
 import { apiQueries } from '@/server/api/queries';
 
 import { NetWorthChangesCardClient } from './net-worth-changes-card-client';
 
 /**
- * The change of the net worth in each of the last 12 months, split into what was saved and the rest.
+ * The change of the net worth in each of the last 12 full months, split into what was saved and the
+ * rest.
  */
 export async function NetWorthChangesCard({ className }: { className?: string }) {
   const [history, cashFlow] = await Promise.all([
@@ -18,10 +20,10 @@ export async function NetWorthChangesCard({ className }: { className?: string })
     <NetWorthChangesCardClient
       className={className}
       mainCurrency={cashFlow.mainCurrency}
-      months={cashFlow.months.slice(1).map((item, index) => {
+      months={cashFlow.months.slice(0, -1).map((item) => {
         const saved = item.income - item.spending;
-        const change =
-          (totals.get(item.month) ?? 0) - (totals.get(cashFlow.months[index].month) ?? 0);
+        const previous = formatPeriodParam(shiftPeriod(parsePeriod(item.month), -1));
+        const change = (totals.get(item.month) ?? 0) - (totals.get(previous) ?? 0);
         return { month: item.month, saved, other: change - saved };
       })}
     />
