@@ -23,3 +23,16 @@ export interface Analytics {
   /** The running total of the month's spending per day, null after today, and of the month before */
   pace: { month: string; days: (number | null)[]; previousDays: (number | null)[] } | null;
 }
+
+/** The sum of transactions of a day, month or year, by where they count, category and merchant */
+export interface TransactionTotal {
+  /** Like "2026-10-05", "2026-10" or "2026" */
+  bucket: string;
+  side: AnalyticsSide | 'excluded';
+  category: Category | null;
+  /** With its own category, which isn't always the transactions' */
+  merchant: { id: string; name: string; category: Category | null } | null;
+  /** In the main currency, negative for spending */
+  amount: number;
+  transactionCount: number;
+}
