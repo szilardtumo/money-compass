@@ -7,9 +7,6 @@ import { apiQueries } from '@/server/api/queries';
 import { AnalyticsParams } from './analytics-params';
 import { AnalyticsView } from './analytics-view';
 
-const getParam = (value: string | string[] | undefined) =>
-  typeof value === 'string' ? value : undefined;
-
 export async function AnalyticsContent({
   searchParams,
 }: {
@@ -19,7 +16,9 @@ export async function AnalyticsContent({
   // The default period and the Month tab depend on today
   await connection();
   const params: AnalyticsParams = {
-    period: formatPeriodParam(parsePeriod(getParam(query.period))),
+    period: formatPeriodParam(
+      parsePeriod(typeof query.period === 'string' ? query.period : undefined),
+    ),
     subaccountIds: parseSubaccountsParam(query.subaccounts),
   };
   const { start, end } = getPeriodRange(parsePeriod(params.period));

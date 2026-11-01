@@ -251,14 +251,13 @@ export const getTransactionHistory = createApiQuery<void, TransactionHistory[]>(
   const firstMonth = formatPeriodParam(
     shiftPeriod(parsePeriod(sums.map((item) => item.month).toSorted()[0]), -1),
   );
-  // The balances in the subaccounts' currencies, from the months before the first one
+  // The balances in the subaccounts' currencies
   const balances: Record<string, number> = {};
   const addMonths = (items: typeof sums) => {
     for (const item of items) {
       balances[item.subaccountId] = (balances[item.subaccountId] ?? 0) + item.amount;
     }
   };
-  addMonths(sums.filter((item) => item.month < firstMonth));
   const sumsByMonth = groupBy(sums, (item) => item.month);
 
   const history: TransactionHistory[] = [];
@@ -267,7 +266,12 @@ export const getTransactionHistory = createApiQuery<void, TransactionHistory[]>(
     if (param > formatPeriodParam(now)) {
       return history;
     }
-    addMonths(sumsByMonth[param] ?? []);
+    // The current month includes the transactions dated later
+    addMonths(
+      param === formatPeriodParam(now)
+        ? sums.filter((item) => item.month >= param)
+        : (sumsByMonth[param] ?? []),
+    );
 
     const accountBalances = Object.fromEntries(
       accounts.map((account) => {

@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, asc, count, countDistinct, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, asc, count, countDistinct, eq, gte, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { Category, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
@@ -98,7 +98,12 @@ export const getCategoryMerchants = createApiQuery<
   const { db } = await createApiContext();
   const m = schema.merchants;
   const { start, end } = getPeriodRange(parsePeriod(period));
-  const inPeriod = and(gte(t.startedDate, start), lt(t.startedDate, end));
+  // Without the transactions that have a category of their own
+  const inPeriod = and(
+    gte(t.startedDate, start),
+    lt(t.startedDate, end),
+    or(isNull(t.categoryId), eq(t.categoryId, m.categoryId)),
+  );
 
   const [rows, { mapper }] = await Promise.all([
     db.rls((tx) =>

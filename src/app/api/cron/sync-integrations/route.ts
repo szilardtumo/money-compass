@@ -26,14 +26,14 @@ export async function GET(request: NextRequest) {
   const results = await Promise.allSettled(
     activeAccounts.map((account) => syncAccount(account, transaction, 'cron')),
   );
+  const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
+  errors.forEach((error) => console.error('Integration sync error:', error));
   // Once per user, after all their accounts brought their new merchants
   await Promise.all(
     [...new Set(activeAccounts.map((account) => account.userId))].map((userId) =>
       enrichMerchants(transaction, userId),
     ),
   );
-  const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
-  errors.forEach((error) => console.error('Integration sync error:', error));
 
   return Response.json({
     success: !errors.length,

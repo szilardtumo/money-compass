@@ -231,8 +231,10 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
         }
 
         const results = response.parsed_output.merchants;
-        // Answers are matched by the name they echo, which is unique in a batch like the keys
-        const requested = new Map(
+        // Answers are matched by the name they echo, else by its key, which "Aldi" and "ALDI Kft"
+        // share
+        const byName = new Map(batch.map((merchant) => [merchant.name, merchant]));
+        const byKey = new Map(
           batch.map((merchant) => [normalizeMerchantName(merchant.name), merchant]),
         );
 
@@ -240,7 +242,9 @@ export async function enrichMerchants(transaction: DbClient['rls'], userId: stri
           await lockMerchants(tx, userId);
 
           for (const result of results) {
-            const merchantId = requested.get(normalizeMerchantName(result.input))?.id;
+            const merchantId = (
+              byName.get(result.input) ?? byKey.get(normalizeMerchantName(result.input))
+            )?.id;
             const name = result.name.trim();
             if (!merchantId || !name) {
               continue;

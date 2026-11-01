@@ -5,8 +5,6 @@ import { connection } from 'next/server';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { apiQueries } from '@/server/api/queries';
 
-const STALE_DAYS = 30;
-
 /**
  * Lists the subaccounts with a balance that hasn't synced or changed for a month, which makes the
  * net worth out of date.
@@ -29,7 +27,7 @@ export async function StaleBalancesAlert() {
       const dates = [balances[subaccount.id]?.lastTransactionDate, syncedAt.get(subaccount.id)];
       const updatedAt = Math.max(...dates.map((date) => (date ? new Date(date).getTime() : 0)));
       const days = differenceInDays(new Date(), updatedAt);
-      return subaccount.balance.originalValue && days > STALE_DAYS
+      return subaccount.balance.originalValue && days > 30
         ? [{ id: subaccount.id, name: `${account.name} (${subaccount.name})`, days }]
         : [];
     }),

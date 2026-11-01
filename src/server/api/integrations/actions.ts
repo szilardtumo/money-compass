@@ -136,7 +136,8 @@ export const syncIntegrationAccount = authenticatedActionClient
 
     try {
       await syncAccount(account, ctx.db.rls, 'manual');
-      await enrichMerchants(ctx.db.rls, ctx.userId);
+      // The LLM can take minutes, the new merchants get their categories by the next page load
+      after(() => enrichMerchants(ctx.db.rls, ctx.userId));
     } finally {
       // A failed sync can mark the integration as revoked
       revalidatePath('/dashboard', 'layout');

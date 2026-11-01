@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
 import { formatDate } from '@/lib/utils/formatters';
-import { getMerchantKey } from '@/lib/utils/merchants';
+import { TYPES_WITHOUT_MERCHANT, getMerchantKey } from '@/lib/utils/merchants';
 import { setTransactionCategorySchema } from '@/lib/validation/categories';
 import {
   createTransactionSchema,
@@ -110,11 +110,14 @@ export const updateTransaction = authenticatedActionClient
         });
       }
 
-      // A synced transaction keeps the merchant of the bank's text when its description is edited,
-      // and loses it when its new type has none
-      const merchantKey = getMerchantKey(
-        transaction.dataSource === 'manual' ? params : { ...transaction, type: params.type },
-      );
+      // A synced transaction keeps the merchant of the bank's text, which an earlier edit may have
+      // overwritten, and loses it when its new type has none
+      const merchantKey =
+        transaction.dataSource === 'manual'
+          ? getMerchantKey(params)
+          : TYPES_WITHOUT_MERCHANT.includes(params.type)
+            ? null
+            : (transaction.merchantKey ?? getMerchantKey({ ...transaction, type: params.type }));
 
       await tx
         .update(schema.transactions)
