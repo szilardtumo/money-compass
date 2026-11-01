@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Selectbox } from '@/components/ui/selectbox';
 import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
+import { TRANSACTION_TYPE_OPTIONS } from '@/lib/types/transactions.types';
 import { updateTransactionSchema } from '@/lib/validation/transactions';
 import { apiActions } from '@/server/api/actions';
 
@@ -29,15 +30,6 @@ interface UpdateTransactionFormProps {
   defaultValues: FormFields;
   onSuccess?: () => void;
 }
-
-const transactionTypeOptions = [
-  { label: 'Card payment', value: 'card_payment' },
-  { label: 'Other', value: 'other' },
-  { label: 'Correction', value: 'correction' },
-  { label: 'Transfer', value: 'transfer' },
-  { label: 'Exchange', value: 'exchange' },
-  { label: 'Top-up', value: 'topup' },
-] satisfies { label: string; value: string }[];
 
 export function UpdateTransactionForm({
   currency,
@@ -73,7 +65,7 @@ export function UpdateTransactionForm({
             <FormItem>
               <FormLabel>Transaction type</FormLabel>
               <FormControl>
-                <Selectbox options={transactionTypeOptions} onValueChange={onChange} {...field} />
+                <Selectbox options={TRANSACTION_TYPE_OPTIONS} onValueChange={onChange} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

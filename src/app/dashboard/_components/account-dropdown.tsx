@@ -1,7 +1,6 @@
 'use client';
 
 import { ChevronDownIcon, LogOutIcon, MoonIcon, SunIcon } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback } from 'react';
@@ -24,44 +23,21 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useOptimisticActionWithToast } from '@/hooks/useActionWithToast';
-import { Currency } from '@/lib/types/currencies.types';
 import { Profile } from '@/lib/types/profiles.types';
-import { apiActions } from '@/server/api/actions';
 
 interface AccountDropdownProps {
   profile: Profile;
-  currencies: Currency[];
 }
 
-export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
+export function AccountDropdown({ profile }: AccountDropdownProps) {
   const supabaseAuth = useSupabaseAuth();
   const router = useRouter();
   const { theme, setTheme, systemTheme } = useTheme();
-
-  const { execute: executeUpdateProfile, optimisticState: optimisticMainCurrency } =
-    useOptimisticActionWithToast(apiActions.profiles.updateProfile, {
-      currentState: profile.mainCurrency,
-      updateFn: (_, input) => input.mainCurrency,
-      errorToast: ({ errorMessage }) => ({
-        title: 'Failed to change main currency',
-        description: errorMessage,
-      }),
-    });
 
   const handleLogout = useCallback(async () => {
     await supabaseAuth.signOut();
     router.refresh();
   }, [router, supabaseAuth]);
-
-  const handleMainCurrencyChange = useCallback(
-    async (currencyId: string) => {
-      if (currencyId !== profile.mainCurrency) {
-        executeUpdateProfile({ mainCurrency: currencyId });
-      }
-    },
-    [profile.mainCurrency, executeUpdateProfile],
-  );
 
   const displayedName = profile.name ?? profile.email ?? 'Account';
   const initials = displayedName
@@ -92,9 +68,6 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
       <DropdownMenuContent className="w-(--radix-popper-anchor-width) min-w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/dashboard/integrations">Integrations</Link>
-        </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>App Theme</DropdownMenuSubTrigger>
           <DropdownMenuPortal>
@@ -122,27 +95,6 @@ export function AccountDropdown({ profile, currencies }: AccountDropdownProps) {
                     <SunIcon className="size-4" />
                   </DropdownMenuShortcut>
                 </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuPortal>
-        </DropdownMenuSub>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Main currency</DropdownMenuSubTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup
-                value={optimisticMainCurrency}
-                onValueChange={handleMainCurrencyChange}
-              >
-                {currencies.map((currency) => (
-                  <DropdownMenuRadioItem
-                    key={currency.id}
-                    value={currency.id}
-                    onSelect={(e) => e.preventDefault()} // Prevents the dropdown menu from closing when selecting the item
-                  >
-                    {currency.name}
-                  </DropdownMenuRadioItem>
-                ))}
               </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
           </DropdownMenuPortal>

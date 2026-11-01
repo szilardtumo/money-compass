@@ -21,12 +21,14 @@ interface DataTableProps<TData extends RowData> {
   table: ReactTable<DataTableFeatures, TData>;
   emptyMessage?: string;
   enableRowSelection?: boolean;
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData extends RowData>({
   table,
   emptyMessage = 'No results.',
   enableRowSelection = false,
+  onRowClick,
 }: DataTableProps<TData>) {
   return (
     <div className="rounded-md border">
@@ -85,7 +87,24 @@ export function DataTable<TData extends RowData>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && 'selected'}
+                className={cn(onRowClick && 'cursor-pointer')}
+                onClick={
+                  onRowClick &&
+                  ((event) => {
+                    // Clicks on buttons, links and their portals, like menus and dialogs, are theirs
+                    const target = event.target as Element;
+                    if (
+                      event.currentTarget.contains(target) &&
+                      !target.closest('a, button, input')
+                    ) {
+                      onRowClick(row.original);
+                    }
+                  })
+                }
+              >
                 {enableRowSelection && (
                   <TableCell>
                     <Checkbox

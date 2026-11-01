@@ -17,12 +17,15 @@ interface TransactionHistoryChartProps {
   accounts: Account[];
   /** If there are multiple accounts, it stacks accounts, if there is only one account, it stacks its subaccounts */
   stack?: boolean;
+  /** Shows the change since the first point with this label, like "this year", else since the one before */
+  changeLabel?: string;
 }
 
 export function TransactionHistoryChart({
   data,
   accounts,
   stack = false,
+  changeLabel,
 }: TransactionHistoryChartProps) {
   const currency = data[0]?.mainCurrency ?? 'eur';
 
@@ -32,11 +35,7 @@ export function TransactionHistoryChart({
         ({
           Date: item.date,
           Month: formatDate(item.date, 'MMMM yyyy'),
-          // Generate an entry for the total value
-          Total: Object.values(item.accountBalances).reduce(
-            (acc, item) => acc + item.totalBalance,
-            0,
-          ),
+          Total: item.totalBalance,
           // Generate an entry for every account and subaccount
           ...Object.fromEntries(
             accounts.flatMap((account) => [
@@ -90,10 +89,11 @@ export function TransactionHistoryChart({
           0,
         )
       : 0;
-    const prevValue = parsedData[parsedData.length - 2]
+    const previous = parsedData[changeLabel ? 0 : parsedData.length - 2];
+    const prevValue = previous
       ? chartCategories.reduce(
-          // @ts-expect-error - TS doesn't know that parsedData[parsedData.length - 2] contains all the categories
-          (acc, category) => acc + parsedData[parsedData.length - 2][category],
+          // @ts-expect-error - TS doesn't know that previous contains all the categories
+          (acc, category) => acc + previous[category],
           0,
         )
       : 0;
@@ -104,7 +104,7 @@ export function TransactionHistoryChart({
       difference: value - prevValue,
       change: (value - prevValue) / prevValue || 0,
     };
-  }, [parsedData, chartCategories]);
+  }, [parsedData, chartCategories, changeLabel]);
 
   const minValue = useMemo(() => {
     const min = parsedData.length
@@ -131,6 +131,7 @@ export function TransactionHistoryChart({
             formatOptions={{ signDisplay: 'always' }}
           />
           <PriceChangeBadge variant="default" percent={metric.change} />
+          {changeLabel && <span className="text-sm text-muted-foreground">{changeLabel}</span>}
         </div>
       </NumberFlowGroup>
 

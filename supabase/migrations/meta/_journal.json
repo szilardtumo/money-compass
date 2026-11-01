@@ -92,6 +92,13 @@
       "when": 1793175299707,
       "tag": "20261028081459_transactions_linked_transaction",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793208031455,
+      "tag": "20261028172031_categories_and_merchants",
+      "breakpoints": true
     }
   ]
 }

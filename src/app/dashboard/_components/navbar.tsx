@@ -1,50 +1,34 @@
 import {
-  ChartPieIcon,
-  FlaskConicalIcon,
+  ChartColumnIcon,
   HistoryIcon,
   LayoutDashboardIcon,
   MenuIcon,
-  WalletCardsIcon,
+  PlugIcon,
+  StoreIcon,
+  TagsIcon,
+  TrendingUpIcon,
 } from 'lucide-react';
 import { Suspense } from 'react';
 
 import { AccountSection } from '@/app/dashboard/_components/account-section';
-import { AccountIcon } from '@/components/ui/account-avatar';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { ResizableHandle, ResizablePanel } from '@/components/ui/resizable';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiQueries } from '@/server/api/queries';
 
+import { MainCurrencySelect } from './main-currency-select';
 import { NavItem } from './nav-item';
 
-function NavbarAccountItemsSkeleton() {
-  return (
-    <div className="pl-8 flex flex-col gap-1">
-      <Skeleton className="h-5 my-2 w-20 max-w-full" />
-      <Skeleton className="h-5 my-2 w-12 max-w-full" />
-      <Skeleton className="h-5 my-2 w-28 max-w-full" />
-    </div>
-  );
-}
+async function NavbarMainCurrency() {
+  const [profile, currencies] = await Promise.all([
+    apiQueries.profiles.getProfile(),
+    apiQueries.currencies.getCurrencies(),
+  ]);
 
-async function NavbarAccountItems() {
-  const accounts = await apiQueries.accounts.getAccounts();
-
-  return (
-    <div className="pl-4 flex flex-col gap-1">
-      {accounts.map((account) => (
-        <NavItem
-          key={account.id}
-          href={`/dashboard/accounts/${account.id}`}
-          icon={<AccountIcon category={account.category} className="w-4 h-4 mr-2" />}
-        >
-          {account.name}
-        </NavItem>
-      ))}
-    </div>
-  );
+  return <MainCurrencySelect mainCurrency={profile.mainCurrency} currencies={currencies} />;
 }
 
 function NavbarContent() {
@@ -60,32 +44,42 @@ function NavbarContent() {
         <NavItem href="/dashboard" icon={<LayoutDashboardIcon className="size-4 mr-2" />}>
           Dashboard
         </NavItem>
+        <NavItem href="/dashboard/net-worth" icon={<TrendingUpIcon className="size-4 mr-2" />}>
+          Net worth
+        </NavItem>
         <NavItem href="/dashboard/transactions" icon={<HistoryIcon className="size-4 mr-2" />}>
           Transactions
         </NavItem>
-        <NavItem href="/dashboard/statistics" icon={<ChartPieIcon className="size-4 mr-2" />}>
-          Statistics
+        <NavItem href="/dashboard/analytics" icon={<ChartColumnIcon className="size-4 mr-2" />}>
+          Analytics
         </NavItem>
-
-        <Separator className="my-2" />
-
-        <NavItem href="/dashboard/accounts" icon={<WalletCardsIcon className="size-4 mr-2" />}>
-          All Accounts
+        <div className="pl-4 flex flex-col gap-1">
+          <NavItem
+            href="/dashboard/analytics/merchants"
+            icon={<StoreIcon className="size-4 mr-2" />}
+          >
+            Merchants
+          </NavItem>
+          <NavItem
+            href="/dashboard/analytics/categories"
+            icon={<TagsIcon className="size-4 mr-2" />}
+          >
+            Categories
+          </NavItem>
+        </div>
+        <NavItem href="/dashboard/integrations" icon={<PlugIcon className="size-4 mr-2" />}>
+          Integrations
         </NavItem>
-        <Suspense fallback={<NavbarAccountItemsSkeleton />}>
-          <NavbarAccountItems />
-        </Suspense>
-
-        {process.env.NODE_ENV === 'development' && (
-          <>
-            <Separator className="my-2" />
-
-            <NavItem href="/dashboard/test" icon={<FlaskConicalIcon className="size-4 mr-2" />}>
-              Test
-            </NavItem>
-          </>
-        )}
       </nav>
+      <Separator />
+      <div className="flex flex-col gap-2 p-4">
+        <Label htmlFor="main-currency" className="text-muted-foreground">
+          Main currency
+        </Label>
+        <Suspense fallback={<Skeleton className="h-9 w-full" />}>
+          <NavbarMainCurrency />
+        </Suspense>
+      </div>
     </aside>
   );
 }

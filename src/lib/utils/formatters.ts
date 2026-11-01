@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, isThisYear, isToday, isYesterday } from 'date-fns';
 
 import { Transaction } from '@/lib/types/transactions.types';
 
@@ -42,7 +42,6 @@ export function getCurrencySymbol(currency: string) {
 export function formatPercent(value: number, options: Intl.NumberFormatOptions = {}) {
   return Intl.NumberFormat('en-US', {
     style: 'percent',
-    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     ...options,
   }).format(Number.isNaN(value) ? 0 : value);
@@ -50,6 +49,15 @@ export function formatPercent(value: number, options: Intl.NumberFormatOptions =
 
 export function formatDate(date: string | Date, pattern = 'dd-MM-yyyy') {
   return format(new Date(date), pattern);
+}
+
+/** "Today", "Yesterday", or a date like "Fri, 30 Oct", with the year when it isn't this one */
+export function formatDay(date: string | Date) {
+  return isToday(date)
+    ? 'Today'
+    : isYesterday(date)
+      ? 'Yesterday'
+      : formatDate(date, isThisYear(date) ? 'EEE, d MMM' : 'EEE, d MMM yyyy');
 }
 
 export function formatTime(date: string | Date, options: Intl.DateTimeFormatOptions = {}) {

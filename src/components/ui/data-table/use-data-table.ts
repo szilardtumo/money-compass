@@ -49,20 +49,25 @@ export type DataTableFeatures = typeof dataTableFeatures;
 interface UseDataTableOptions<TData extends RowData> {
   data: TableOptions<DataTableFeatures, TData>['data'];
   columns: TableOptions<DataTableFeatures, TData>['columns'];
+  /** Keeps the selection on the same rows when the data reloads in another order */
+  getRowId?: TableOptions<DataTableFeatures, TData>['getRowId'];
   enableSorting?: boolean;
   enableRowSelection?: boolean;
   enablePagination?: boolean;
+  initialSorting?: SortingState;
+  initialColumnFilters?: ColumnFiltersState;
 }
 
 export function useDataTable<TData extends RowData>(options: UseDataTableOptions<TData>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = useState(options.initialSorting ?? []);
+  const [columnFilters, setColumnFilters] = useState(options.initialColumnFilters ?? []);
   const [rowSelection, setRowSelection] = useState({});
 
   const table = useTable<DataTableFeatures, TData>({
     features: dataTableFeatures,
     data: options.data,
     columns: options.columns,
+    getRowId: options.getRowId,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,
@@ -71,6 +76,7 @@ export function useDataTable<TData extends RowData>(options: UseDataTableOptions
       columnFilters,
       rowSelection,
     },
+    initialState: { pagination: { pageIndex: 0, pageSize: 50 } },
     manualPagination: !options.enablePagination,
     enableSortingRemoval: true,
     enableSorting: options.enableSorting,

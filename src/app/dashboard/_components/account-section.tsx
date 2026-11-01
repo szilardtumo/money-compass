@@ -3,10 +3,7 @@ import { apiQueries } from '@/server/api/queries';
 import { AccountDropdown } from './account-dropdown';
 
 export async function AccountSection() {
-  const [profile, currencies] = await Promise.all([
-    apiQueries.profiles.getProfile(),
-    apiQueries.currencies.getCurrencies(),
-  ]);
+  const profile = await apiQueries.profiles.getProfile();
 
-  return <AccountDropdown profile={profile} currencies={currencies} />;
+  return <AccountDropdown profile={profile} />;
 }

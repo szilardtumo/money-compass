@@ -22,6 +22,9 @@ const serverEnvSchema = z.object({
   ENABLE_BANKING_APP_ID: z.string().min(1),
   ENABLE_BANKING_PRIVATE_KEY: z.string().min(1),
 
+  // Anthropic, optional: merchants stay uncategorized without it
+  ANTHROPIC_API_KEY: z.string().optional(),
+
   // Cron Jobs
   CRON_SECRET: z.string(),
 

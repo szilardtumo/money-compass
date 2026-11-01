@@ -193,7 +193,8 @@ const BarChart = <TPayload extends Record<string, unknown>>(props: BarChartProps
           right: yAxisLabel ? 5 : undefined,
           top: 5,
         }}
-        stackOffset={type === 'percent' ? 'expand' : undefined}
+        // Negative values stack downwards
+        stackOffset={type === 'percent' ? 'expand' : type === 'stacked' ? 'sign' : undefined}
         layout={layout}
         barCategoryGap={barCategoryGap}
       >

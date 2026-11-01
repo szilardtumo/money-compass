@@ -21,6 +21,7 @@ import { schema } from '@/server/db';
 import { AUTH_COOKIE, CALLBACK_PATH } from './auth';
 import { getInstitutions } from './queries';
 import { syncAccount } from './sync';
+import { enrichMerchants } from '../merchants/categorize';
 
 /**
  * Starts connecting a bank, or renewing the access of an integration.
@@ -135,6 +136,8 @@ export const syncIntegrationAccount = authenticatedActionClient
 
     try {
       await syncAccount(account, ctx.db.rls, 'manual');
+      // The LLM can take minutes, the new merchants get their categories by the next page load
+      after(() => enrichMerchants(ctx.db.rls, ctx.userId));
     } finally {
       // A failed sync can mark the integration as revoked
       revalidatePath('/dashboard', 'layout');

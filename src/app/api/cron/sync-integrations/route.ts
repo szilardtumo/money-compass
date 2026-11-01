@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 
 import { env } from '@/lib/env';
 import { syncAccount } from '@/server/api/integrations/sync';
+import { enrichMerchants } from '@/server/api/merchants/categorize';
 import { getAdminDb, schema } from '@/server/db';
 
 export async function GET(request: NextRequest) {
@@ -18,13 +19,21 @@ export async function GET(request: NextRequest) {
     with: { integration: true },
   });
 
+  const transaction = db.admin.transaction.bind(db.admin);
+  const activeAccounts = accounts.filter(
+    ({ integration }) => !integration.revokedAt && !isPast(integration.expiresAt),
+  );
   const results = await Promise.allSettled(
-    accounts
-      .filter(({ integration }) => !integration.revokedAt && !isPast(integration.expiresAt))
-      .map((account) => syncAccount(account, db.admin.transaction.bind(db.admin), 'cron')),
+    activeAccounts.map((account) => syncAccount(account, transaction, 'cron')),
   );
   const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
   errors.forEach((error) => console.error('Integration sync error:', error));
+  // Once per user, after all their accounts brought their new merchants
+  await Promise.all(
+    [...new Set(activeAccounts.map((account) => account.userId))].map((userId) =>
+      enrichMerchants(transaction, userId),
+    ),
+  );
 
   return Response.json({
     success: !errors.length,

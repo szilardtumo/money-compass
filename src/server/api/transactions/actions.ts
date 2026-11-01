@@ -8,6 +8,8 @@ import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
 import { formatDate } from '@/lib/utils/formatters';
+import { TYPES_WITHOUT_MERCHANT, getMerchantKey } from '@/lib/utils/merchants';
+import { setTransactionCategorySchema } from '@/lib/validation/categories';
 import {
   createTransactionSchema,
   deleteTransactionsSchema,
@@ -17,19 +19,23 @@ import {
 import { apiQueries } from '@/server/api/queries';
 import { schema } from '@/server/db';
 
+import { assignMerchants } from '../merchants/categorize';
+
 export const createTransaction = authenticatedActionClient
   .inputSchema(createTransactionSchema)
   .action(async ({ parsedInput: params, ctx }) => {
-    await ctx.db.rls((tx) =>
-      tx.insert(schema.transactions).values({
+    await ctx.db.rls(async (tx) => {
+      await tx.insert(schema.transactions).values({
         type: params.type,
         amount: params.amount,
         subaccountId: params.subaccountId,
         startedDate: params.date,
         completedDate: params.date,
         description: params.description,
-      }),
-    );
+        merchantKey: getMerchantKey(params),
+      });
+      await assignMerchants(tx, ctx.userId);
+    });
 
     revalidatePath('/dashboard', 'layout');
   });
@@ -93,8 +99,27 @@ export const updateBalances = authenticatedActionClient
 export const updateTransaction = authenticatedActionClient
   .inputSchema(updateTransactionSchema)
   .action(async ({ parsedInput: params, ctx }) => {
-    const [transaction] = await ctx.db.rls((tx) =>
-      tx
+    await ctx.db.rls(async (tx) => {
+      const [transaction] = await tx
+        .select()
+        .from(schema.transactions)
+        .where(eq(schema.transactions.id, params.id));
+      if (!transaction) {
+        returnValidationErrors(updateTransactionSchema, {
+          id: { _errors: ['Transaction not found.'] },
+        });
+      }
+
+      // A synced transaction keeps the merchant of the bank's text, which an earlier edit may have
+      // overwritten, and loses it when its new type has none
+      const merchantKey =
+        transaction.dataSource === 'manual'
+          ? getMerchantKey(params)
+          : TYPES_WITHOUT_MERCHANT.includes(params.type)
+            ? null
+            : (transaction.merchantKey ?? getMerchantKey({ ...transaction, type: params.type }));
+
+      await tx
         .update(schema.transactions)
         .set({
           type: params.type,
@@ -102,16 +127,13 @@ export const updateTransaction = authenticatedActionClient
           description: params.description,
           startedDate: params.date,
           completedDate: params.date,
+          merchantKey,
+          // A new key gets its merchant from assignMerchants
+          ...(merchantKey !== transaction.merchantKey && { merchantId: null }),
         })
-        .where(eq(schema.transactions.id, params.id))
-        .returning({ id: schema.transactions.id }),
-    );
-
-    if (!transaction) {
-      returnValidationErrors(updateTransactionSchema, {
-        id: { _errors: ['Transaction not found.'] },
-      });
-    }
+        .where(eq(schema.transactions.id, params.id));
+      await assignMerchants(tx, ctx.userId);
+    });
 
     revalidatePath('/dashboard', 'layout');
   });
@@ -130,4 +152,20 @@ export const deleteTransaction = authenticatedActionClient
   .inputSchema(z.uuid())
   .action(async ({ parsedInput: transactionId }) => {
     await deleteTransactions({ transactionIds: [transactionId] });
+  });
+
+/**
+ * Sets the transactions' own category, which overrides their merchant's. Null removes it.
+ */
+export const setTransactionCategory = authenticatedActionClient
+  .inputSchema(setTransactionCategorySchema)
+  .action(async ({ parsedInput: { transactionIds, categoryId }, ctx }) => {
+    await ctx.db.rls((tx) =>
+      tx
+        .update(schema.transactions)
+        .set({ categoryId })
+        .where(inArray(schema.transactions.id, transactionIds)),
+    );
+
+    revalidatePath('/dashboard', 'layout');
   });
