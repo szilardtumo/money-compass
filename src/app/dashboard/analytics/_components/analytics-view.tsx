@@ -7,9 +7,10 @@ import { CategoryAvatar, UNCATEGORIZED_COLOR } from '@/components/categories/cat
 import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { PeriodPicker } from '@/components/period-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, DonutChart } from '@/components/ui/chart';
+import { DonutChart } from '@/components/ui/chart';
 import { Metric } from '@/components/ui/metric';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
+import { Sparkline } from '@/components/ui/sparkline';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Analytics, AnalyticsTotal } from '@/lib/types/analytics.types';
 import { Category } from '@/lib/types/categories.types';
@@ -59,8 +60,8 @@ export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
       <div className="grid gap-4 sm:grid-cols-3">
         {(
           [
-            ['Spent', totals.spending, true],
-            ['Income', totals.income, false],
+            ['Spent', totals.spending, true, analytics.chart.map((item) => item.spending)],
+            ['Income', totals.income, false, analytics.chart.map((item) => item.income)],
             [
               'Net',
               {
@@ -68,16 +69,34 @@ export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
                 previousAmount: totals.income.previousAmount - totals.spending.previousAmount,
               },
               false,
+              analytics.chart.map((item) => item.income - item.spending),
             ],
           ] as const
-        ).map(([label, total, invert]) => (
+        ).map(([label, total, invert, values]) => (
           <Card key={label}>
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center gap-2">
-              <Metric>{format(total.amount)}</Metric>
-              <PriceChangeBadge percent={getChange(total)} invert={invert} />
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <Metric>{format(total.amount)}</Metric>
+                <PriceChangeBadge percent={getChange(total)} invert={invert} />
+              </div>
+              <Sparkline
+                values={values}
+                color={label === 'Spent' ? 'var(--chart-1)' : 'var(--chart-2)'}
+                negativeColor="var(--chart-1)"
+                width={240}
+                height={48}
+                className="h-12 w-full"
+                tooltips={analytics.chart.map(
+                  (item, index) =>
+                    `${formatPeriodLabel(parsePeriod(item.period))}: ${format(values[index])}`,
+                )}
+                onBarClick={(index) =>
+                  router.push(href({ period: analytics.chart[index].period }), { scroll: false })
+                }
+              />
             </CardContent>
           </Card>
         ))}
@@ -96,29 +115,6 @@ export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
           </Link>
         </p>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {sideLabel} by {period.unit}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <BarChart
-            className="h-56"
-            data={analytics.chart}
-            index="label"
-            categories={[params.view]}
-            valueFormatter={(value) => format(value as number)}
-            showLegend={false}
-            onValueChange={(value) => {
-              if (value?.payload) {
-                router.push(href({ period: value.payload.period }), { scroll: false });
-              }
-            }}
-          />
-        </CardContent>
-      </Card>
 
       <Card>
         <Tabs defaultValue="categories">
