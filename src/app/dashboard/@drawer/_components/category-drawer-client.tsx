@@ -20,7 +20,7 @@ interface CategoryDrawerClientProps {
   categories: CategoryWithStats[];
   merchants: CategoryMerchant[];
   transactions: Transaction[];
-  period: string | undefined;
+  period: string;
   total: number;
   monthlyTotals: number[];
   average: number;

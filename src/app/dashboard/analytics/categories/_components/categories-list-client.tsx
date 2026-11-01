@@ -21,6 +21,7 @@ import { Sparkline } from '@/components/ui/sparkline';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CATEGORY_KINDS, CategoryWithStats } from '@/lib/types/categories.types';
 import { formatCurrency } from '@/lib/utils/formatters';
+import { parsePeriod } from '@/lib/utils/periods';
 
 const columnHelper = createColumnHelper<DataTableFeatures, CategoryWithStats>();
 
@@ -69,7 +70,7 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
         // Sorted by size, so the biggest spending and income come first
         columnHelper.accessor((row) => Math.abs(row.yearTotal), {
           id: 'yearTotal',
-          header: 'Last 12 months',
+          header: 'This year',
           enableGlobalFilter: false,
           meta: { align: 'right' },
           cell: ({ row }) => (
@@ -88,6 +89,7 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
               color={row.original.color}
               width={60}
               height={18}
+              highlight={parsePeriod(undefined).month}
             />
           ),
         }),
@@ -139,7 +141,11 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
         table={table}
         emptyMessage="No categories."
         onRowClick={(category) =>
-          router.push(getDrawerHref({ category: category.id }), { scroll: false })
+          router.push(
+            // The year of the totals
+            getDrawerHref({ category: category.id, period: String(parsePeriod(undefined).year) }),
+            { scroll: false },
+          )
         }
       />
 

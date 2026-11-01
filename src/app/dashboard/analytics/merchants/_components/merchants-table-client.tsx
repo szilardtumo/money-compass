@@ -26,6 +26,7 @@ import { Sparkline } from '@/components/ui/sparkline';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Category, Merchant } from '@/lib/types/categories.types';
 import { formatCurrency, formatDate } from '@/lib/utils/formatters';
+import { parsePeriod } from '@/lib/utils/periods';
 import { apiActions } from '@/server/api/actions';
 
 import { MergeMerchantsDialog } from './merge-merchants-dialog';
@@ -82,7 +83,7 @@ export function MerchantsTableClient({
         // Sorted by size, so the biggest spending and income come first
         columnHelper.accessor((row) => Math.abs(row.yearTotal), {
           id: 'yearTotal',
-          header: 'Last 12 months',
+          header: 'This year',
           meta: { align: 'right' },
           cell: ({ row }) => (
             <span className="font-medium whitespace-nowrap">
@@ -100,6 +101,7 @@ export function MerchantsTableClient({
               color={row.original.category?.color ?? UNCATEGORIZED_COLOR}
               width={60}
               height={18}
+              highlight={parsePeriod(undefined).month}
             />
           ),
         }),
@@ -177,7 +179,11 @@ export function MerchantsTableClient({
         emptyMessage="No merchants."
         enableRowSelection
         onRowClick={(merchant) =>
-          router.push(getDrawerHref({ merchant: merchant.id }), { scroll: false })
+          router.push(
+            // The year of the totals
+            getDrawerHref({ merchant: merchant.id, period: String(parsePeriod(undefined).year) }),
+            { scroll: false },
+          )
         }
       />
 

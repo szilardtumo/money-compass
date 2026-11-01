@@ -47,7 +47,7 @@ interface MerchantDrawerClientProps {
   merchants: Merchant[];
   categories: Category[];
   transactions: Transaction[];
-  period: string | undefined;
+  period: string;
   total: number;
   monthlyTotals: number[];
   average: number;

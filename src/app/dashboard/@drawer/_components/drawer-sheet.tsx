@@ -26,11 +26,11 @@ interface DrawerSheetProps {
   description: ReactNode;
   /** Usually a menu, next to the title */
   actions?: ReactNode;
-  /** Like "2026-10" or "2026", else the last 12 months */
-  period: string | undefined;
+  /** Like "2026-10" or "2026" */
+  period: string;
   /** The total of the period in the main currency */
   total: number;
-  /** The months of the period's year, or the last 12 months, in the main currency */
+  /** The months of the period's year in the main currency */
   monthlyTotals: number[];
   /** Of the months so far */
   average: number;
@@ -60,7 +60,6 @@ export function DrawerSheet({
   const format = (value: number) =>
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0 });
   const selected = parsePeriod(period);
-  const isMonth = !!period && selected.unit === 'month';
 
   return (
     <Sheet open onOpenChange={() => router.push(getDrawerHref(null), { scroll: false })}>
@@ -81,18 +80,14 @@ export function DrawerSheet({
             </div>
             {actions}
           </div>
-          <PeriodPicker period={period} withLastMonths className="justify-between" />
+          <PeriodPicker period={period} className="justify-between" />
           <div className="flex items-end gap-6">
             <div>
-              <p className="text-xs text-muted-foreground">
-                {period ? formatPeriodLabel(selected) : 'Last 12 months'}
-              </p>
+              <p className="text-xs text-muted-foreground">{formatPeriodLabel(selected)}</p>
               <p className="text-xl font-semibold">{format(total)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">
-                {period ? `Monthly average in ${selected.year}` : 'Monthly average'}
-              </p>
+              <p className="text-xs text-muted-foreground">Monthly average in {selected.year}</p>
               <p className="text-xl font-semibold">{format(average)}</p>
             </div>
             <div className="ml-auto">
@@ -101,8 +96,8 @@ export function DrawerSheet({
                 color={color}
                 width={168}
                 height={40}
-                // The month in its year, the whole year, or this month of the last 12
-                highlight={isMonth ? selected.month : period ? null : undefined}
+                // The month in its year, else the whole year
+                highlight={selected.unit === 'month' ? selected.month : null}
               />
             </div>
           </div>

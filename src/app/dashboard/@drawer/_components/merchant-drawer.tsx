@@ -12,7 +12,7 @@ export async function MerchantDrawer({
   subaccountIds,
 }: {
   merchantId: string;
-  period: string | undefined;
+  period: string;
   subaccountIds: string[] | undefined;
 }) {
   const [merchants, categories, data] = await Promise.all([

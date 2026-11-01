@@ -22,7 +22,7 @@ export function joinCategory<T extends PgSelect>(query: T) {
     );
 }
 
-/** The UTC month of a transaction, like getLastMonths: "YYYY-MM" */
+/** The UTC month of a transaction, like "YYYY-MM" */
 export const transactionMonth = sql<string>`to_char(date_trunc('month', ${t.startedDate} at time zone 'UTC'), 'YYYY-MM')`;
 
 /**

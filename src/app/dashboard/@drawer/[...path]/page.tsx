@@ -1,8 +1,9 @@
+import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { z } from 'zod';
 
 import { parseSubaccountsParam } from '@/lib/utils/params';
-import { isPeriodParam } from '@/lib/utils/periods';
+import { formatPeriodParam, isPeriodParam, parsePeriod } from '@/lib/utils/periods';
 
 import { CategoryDrawer } from '../_components/category-drawer';
 import { MerchantDrawer } from '../_components/merchant-drawer';
@@ -26,7 +27,10 @@ async function Drawer({
 }) {
   const query = await searchParams;
   // The analytics page shares them, so its period and accounts show in the drawer too
-  const period = isPeriodParam(query.period) ? query.period : undefined;
+  await connection();
+  const period = isPeriodParam(query.period)
+    ? query.period
+    : formatPeriodParam(parsePeriod(undefined));
   const subaccountIds = parseSubaccountsParam(query.subaccounts);
   const merchantId = z.uuid().safeParse(query.merchant).data;
   if (merchantId) {

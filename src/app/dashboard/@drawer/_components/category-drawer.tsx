@@ -13,7 +13,7 @@ export async function CategoryDrawer({
   subaccountIds,
 }: {
   categoryId: string | null;
-  period: string | undefined;
+  period: string;
   subaccountIds: string[] | undefined;
 }) {
   const [categories, merchants, data] = await Promise.all([

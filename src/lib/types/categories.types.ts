@@ -17,13 +17,13 @@ export interface Category {
 export interface CategoryWithStats extends Category {
   merchantCount: number;
   transactionCount: number;
-  /** The sum of the last 12 months in the main currency, negative for spending */
+  /** The sum of this year in the main currency, negative for spending */
   yearTotal: number;
-  /** The same per month, oldest first */
+  /** The same per month, January first */
   monthlyTotals: number[];
 }
 
-/** A merchant of a category, with its last 12 months */
+/** A merchant of a category, with its totals of a period */
 export interface CategoryMerchant {
   id: string;
   name: string;
@@ -39,9 +39,9 @@ export interface Merchant {
   /** The normalized raw names that belong to the merchant, with their transaction counts */
   keys: { key: string; transactionCount: number }[];
   transactionCount: number;
-  /** The sum of the last 12 months in the main currency, negative for spending */
+  /** The sum of this year in the main currency, negative for spending */
   yearTotal: number;
-  /** The same per month, oldest first */
+  /** The same per month, January first */
   monthlyTotals: number[];
   lastSeen: Date | null;
 }

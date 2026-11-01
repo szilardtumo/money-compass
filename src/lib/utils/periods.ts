@@ -60,33 +60,10 @@ export function formatPeriodLabel(period: Period, format: 'long' | 'short' = 'lo
   }).format(new Date(Date.UTC(period.year, period.month, 1)));
 }
 
-/** The last 12 months, this one included, as "YYYY-MM" */
-export function getLastMonths() {
-  const current = parsePeriod(undefined);
-  return Array.from({ length: 12 }, (_, index) =>
-    formatPeriodParam(shiftPeriod(current, index - 11)),
-  );
-}
-
-/** The months of the period's year, or the last 12 months without a period, as "YYYY-MM" */
-export function getChartMonths(period?: string) {
-  if (!period) {
-    return getLastMonths();
-  }
+/** The months of the period's year, as "YYYY-MM" */
+export function getChartMonths(period: string) {
   const { year } = parsePeriod(period);
   return Array.from({ length: 12 }, (_, month) =>
     formatPeriodParam({ unit: 'month', year, month }),
   );
-}
-
-/** The first moment of the last 12 months */
-export function getLastMonthsStart() {
-  return getPeriodRange(shiftPeriod(parsePeriod(undefined), -11)).start;
-}
-
-/** The range of the period, or of the last 12 months without one */
-export function getPeriodOrLastMonthsRange(period?: string) {
-  return period
-    ? getPeriodRange(parsePeriod(period))
-    : { start: getLastMonthsStart(), end: getPeriodRange(parsePeriod(undefined)).end };
 }

@@ -1,26 +1,15 @@
 import 'server-only';
 
-import {
-  and,
-  asc,
-  count,
-  countDistinct,
-  eq,
-  gte,
-  inArray,
-  isNull,
-  lt,
-  sql,
-  sum,
-} from 'drizzle-orm';
+import { and, asc, count, countDistinct, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { Category, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
 import { toMainCurrency } from '@/lib/utils/currencies';
-import { getLastMonths, getLastMonthsStart, getPeriodOrLastMonthsRange } from '@/lib/utils/periods';
+import { getChartMonths, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
-import { categoryColumns, joinCategory, transactionMonth } from './joins';
+import { categoryColumns, joinCategory } from './joins';
+import { getTotals } from '../analytics/queries';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 const t = schema.transactions;
@@ -42,59 +31,48 @@ export const getCategories = createApiQuery<void, Category[]>(async () => {
 
 /**
  * Returns the categories of the user with the number of merchants and transactions that use them,
- * and their totals of the last 12 months in the main currency.
+ * and their totals of this year's months in the main currency.
  */
 export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(async () => {
   'use cache: private';
   const { db } = await createApiContext();
-  const months = getLastMonths();
+  const year = String(parsePeriod(undefined).year);
+  const months = getChartMonths(year);
+  const { start, end } = getPeriodRange(parsePeriod(year));
 
-  const [categories, [merchantCounts, transactionCounts, monthTotals], { mapper }] =
-    await Promise.all([
-      getCategories(),
-      db.rls((tx) =>
-        Promise.all([
-          // Merchants without transactions are hidden on the merchants page too
-          tx
-            .select({
-              categoryId: schema.merchants.categoryId,
-              value: countDistinct(schema.merchants.id),
-            })
-            .from(schema.merchants)
-            .innerJoin(t, eq(t.merchantId, schema.merchants.id))
-            .groupBy(schema.merchants.categoryId),
-          joinCategory(
-            tx.select({ categoryId: schema.categories.id, value: count() }).from(t).$dynamic(),
-          ).groupBy(schema.categories.id),
-          joinCategory(
-            tx
-              .select({
-                categoryId: schema.categories.id,
-                month: transactionMonth.as('month'),
-                currency: schema.subaccounts.currency,
-                amount: sum(t.amount).mapWith(Number),
-              })
-              .from(t)
-              .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
-              .$dynamic(),
-          )
-            .where(gte(t.startedDate, getLastMonthsStart()))
-            .groupBy(schema.categories.id, sql`month`, schema.subaccounts.currency),
-        ]),
-      ),
-      getMainCurrencyWithMapper(),
-    ]);
+  const [categories, [merchantCounts, transactionCounts], { totals }] = await Promise.all([
+    getCategories(),
+    db.rls((tx) =>
+      Promise.all([
+        // Merchants without transactions are hidden on the merchants page too
+        tx
+          .select({
+            categoryId: schema.merchants.categoryId,
+            value: countDistinct(schema.merchants.id),
+          })
+          .from(schema.merchants)
+          .innerJoin(t, eq(t.merchantId, schema.merchants.id))
+          .groupBy(schema.merchants.categoryId),
+        joinCategory(
+          tx.select({ categoryId: schema.categories.id, value: count() }).from(t).$dynamic(),
+        ).groupBy(schema.categories.id),
+      ]),
+    ),
+    getTotals({ from: start.toISOString(), to: end.toISOString(), bucket: 'month' }),
+  ]);
   const merchantsBy = new Map(merchantCounts.map((item) => [item.categoryId, item.value]));
   const transactionsBy = new Map(transactionCounts.map((item) => [item.categoryId, item.value]));
+  const monthlyTotalsBy = new Map<string, number[]>();
+  for (const row of totals) {
+    if (row.category) {
+      const monthlyTotals = monthlyTotalsBy.get(row.category.id) ?? months.map(() => 0);
+      monthlyTotals[months.indexOf(row.bucket)] += row.amount;
+      monthlyTotalsBy.set(row.category.id, monthlyTotals);
+    }
+  }
 
   return categories.map((category) => {
-    const monthlyTotals = months.map(() => 0);
-    for (const row of monthTotals) {
-      if (row.categoryId === category.id) {
-        monthlyTotals[months.indexOf(row.month)] += toMainCurrency(row, mapper);
-      }
-    }
-
+    const monthlyTotals = monthlyTotalsBy.get(category.id) ?? months.map(() => 0);
     return {
       ...category,
       merchantCount: merchantsBy.get(category.id) ?? 0,
@@ -109,17 +87,17 @@ export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(
  * Returns the merchants of a category, or without a category for null, that have transactions, with
  * their totals of the period in the main currency, the biggest first.
  *
- * @param input.period Like "2026-10" or "2026", else the last 12 months
+ * @param input.period Like "2026-10" or "2026"
  * @param input.subaccountIds Only the transactions of these subaccounts, else of all
  */
 export const getCategoryMerchants = createApiQuery<
-  { categoryId: string | null; period?: string; subaccountIds?: string[] },
+  { categoryId: string | null; period: string; subaccountIds?: string[] },
   CategoryMerchant[]
 >(async ({ input: { categoryId, period, subaccountIds } }) => {
   'use cache: private';
   const { db } = await createApiContext();
   const m = schema.merchants;
-  const { start, end } = getPeriodOrLastMonthsRange(period);
+  const { start, end } = getPeriodRange(parsePeriod(period));
   const inPeriod = and(gte(t.startedDate, start), lt(t.startedDate, end));
 
   const [rows, { mapper }] = await Promise.all([
