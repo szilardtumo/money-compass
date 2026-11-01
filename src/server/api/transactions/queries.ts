@@ -96,6 +96,8 @@ export const getTransactions = createApiQuery<
     categoryId?: string | null;
     /** The ID of the merchant to filter by */
     merchantId?: string;
+    /** Only the transactions that count in analytics */
+    countedInAnalytics?: boolean;
     /** The page number to fetch */
     page?: number;
     /** The number of transactions per page */
@@ -111,6 +113,7 @@ export const getTransactions = createApiQuery<
       toDate,
       categoryId,
       merchantId,
+      countedInAnalytics,
       page = 0,
       pageSize = 20,
     } = {},
@@ -161,6 +164,7 @@ export const getTransactions = createApiQuery<
                 ? eq(schema.categories.id, categoryId)
                 : undefined,
             merchantId ? eq(schema.merchants.id, merchantId) : undefined,
+            countedInAnalytics ? sql`${analyticsSide} <> 'excluded'` : undefined,
           ),
         )
         .orderBy(desc(schema.transactions.startedDate), desc(schema.transactions.sequence))

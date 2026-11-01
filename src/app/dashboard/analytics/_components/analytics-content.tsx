@@ -20,6 +20,7 @@ export async function AnalyticsContent({
       parsePeriod(typeof query.period === 'string' ? query.period : undefined),
     ),
     subaccountIds: parseSubaccountsParam(query.subaccounts),
+    allTransactions: query.transactions === 'all',
   };
   const { start, end } = getPeriodRange(parsePeriod(params.period));
   const [analytics, accounts, { data: transactions }, categories] = await Promise.all([
@@ -32,7 +33,9 @@ export async function AnalyticsContent({
       subaccountIds: params.subaccountIds,
       fromDate: start.toISOString(),
       toDate: new Date(end.getTime() - 1).toISOString(),
-      pageSize: 10_000,
+      countedInAnalytics: true,
+      // A year has a thousand, which makes every navigation on the page slow
+      pageSize: params.allTransactions ? 10_000 : 50,
     }),
     apiQueries.categories.getCategories(),
   ]);
@@ -41,7 +44,7 @@ export async function AnalyticsContent({
     <AnalyticsView
       analytics={analytics}
       accounts={accounts}
-      transactions={transactions.filter((transaction) => !transaction.excluded)}
+      transactions={transactions}
       categories={categories}
       params={params}
     />

@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { ReactNode } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ReactNode, useState } from 'react';
 
 import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { PeriodPicker } from '@/components/period-picker';
@@ -54,12 +54,22 @@ export function DrawerSheet({
 }: DrawerSheetProps) {
   const router = useRouter();
   const getDrawerHref = useDrawerHref();
+  const searchParams = useSearchParams().toString();
+  // Closes at once, while the page renders again without the drawer. Another drawer opened in the
+  // meantime has other params, so it shows.
+  const [closedAt, setClosedAt] = useState<string>();
   const format = (value: number) =>
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0 });
   const selected = parsePeriod(period);
 
   return (
-    <Sheet open onOpenChange={() => router.push(getDrawerHref(null), { scroll: false })}>
+    <Sheet
+      open={closedAt !== searchParams}
+      onOpenChange={() => {
+        setClosedAt(searchParams);
+        router.push(getDrawerHref(null), { scroll: false });
+      }}
+    >
       <SheetContent className="w-full gap-0 sm:max-w-xl">
         <SheetHeader className="gap-4 pr-12">
           <div className="flex items-center gap-3">

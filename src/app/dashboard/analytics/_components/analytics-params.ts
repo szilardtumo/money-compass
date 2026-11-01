@@ -3,10 +3,13 @@ export interface AnalyticsParams {
   period: string;
   /** The subaccounts it counts, else all */
   subaccountIds?: string[];
+  /** Lists every transaction of the period, else the latest ones */
+  allTransactions?: boolean;
 }
 
-export function getAnalyticsHref({ period, subaccountIds }: AnalyticsParams) {
+export function getAnalyticsHref({ period, subaccountIds, allTransactions }: AnalyticsParams) {
   const params = new URLSearchParams({ period });
   if (subaccountIds?.length) params.set('subaccounts', subaccountIds.join(','));
+  if (allTransactions) params.set('transactions', 'all');
   return `/dashboard/analytics?${params}`;
 }

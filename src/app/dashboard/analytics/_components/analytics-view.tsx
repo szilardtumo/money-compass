@@ -8,6 +8,7 @@ import { CategoryAvatar, UNCATEGORIZED_COLOR } from '@/components/categories/cat
 import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { PeriodPicker } from '@/components/period-picker';
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, DonutChart } from '@/components/ui/chart';
 import { Metric } from '@/components/ui/metric';
@@ -36,7 +37,7 @@ interface AnalyticsViewProps {
   analytics: Analytics;
   /** For the account filter */
   accounts: Account[];
-  /** Of the period that count in analytics */
+  /** Of the period that count in analytics, the latest 50 unless params.allTransactions */
   transactions: Transaction[];
   /** For changing the transactions' categories */
   categories: Category[];
@@ -66,6 +67,10 @@ export function AnalyticsView({
 
   const [view, setView] = useState<AnalyticsSide>('spending');
   const categories = analytics.categories[view];
+  const transactionCount = [
+    ...analytics.categories.spending,
+    ...analytics.categories.income,
+  ].reduce((total, item) => total + item.transactionCount, 0);
   const sideLabel = view === 'spending' ? 'Spent' : 'Income';
   const now = parsePeriod(undefined);
   // This year's months so far, the current one included
@@ -222,15 +227,24 @@ export function AnalyticsView({
         <CardHeader>
           <CardTitle>Transactions in {formatPeriodLabel(period)}</CardTitle>
           <CardDescription>
-            {transactions.length} transaction{transactions.length === 1 ? '' : 's'}
+            {transactions.length < transactionCount
+              ? `The latest ${transactions.length} of ${transactionCount}`
+              : `${transactionCount} transaction${transactionCount === 1 ? '' : 's'}`}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-6">
           <TransactionDayList
             transactions={transactions}
             accounts={accounts}
             categories={allCategories}
           />
+          {transactions.length < transactionCount && (
+            <Button variant="outline" asChild>
+              <Link href={href({ allTransactions: true })} scroll={false}>
+                Show all {transactionCount}
+              </Link>
+            </Button>
+          )}
         </CardContent>
       </Card>
     </>
