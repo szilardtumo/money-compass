@@ -2,7 +2,7 @@ import { connection } from 'next/server';
 import { Suspense } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatPeriodParam, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
+import { getPeriodOrLastMonthsRange, isPeriodParam } from '@/lib/utils/periods';
 import { apiQueries } from '@/server/api/queries';
 
 import { AnalyticsParams } from './analytics-params';
@@ -18,10 +18,10 @@ export async function AnalyticsContent({
   searchParams: PageProps<'/dashboard/analytics'>['searchParams'];
 }) {
   const query = await searchParams;
-  // The default period and the Month tab depend on today
+  // The last 12 months and the Month tab depend on today
   await connection();
   const params: AnalyticsParams = {
-    period: formatPeriodParam(parsePeriod(getParam(query.period))),
+    period: isPeriodParam(query.period) ? query.period : undefined,
     view: getParam(query.view) === 'income' ? 'income' : 'spending',
     excluded: getParam(query.excluded) === '1',
   };
@@ -48,7 +48,7 @@ async function AnalyticsData({ params }: { params: AnalyticsParams }) {
 }
 
 async function TransactionsSheetContent({ params }: { params: AnalyticsParams }) {
-  const { start, end } = getPeriodRange(parsePeriod(params.period));
+  const { start, end } = getPeriodOrLastMonthsRange(params.period);
   const [transactions, categories, accounts] = await Promise.all([
     apiQueries.transactions.getTransactions({
       fromDate: start.toISOString(),

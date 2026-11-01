@@ -45,7 +45,7 @@ export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <PeriodPicker period={params.period} />
+        <PeriodPicker period={params.period} withLastMonths />
         <LinkTabs
           className="sm:ml-auto"
           tabs={(['spending', 'income'] as const).map((view) => ({
@@ -124,7 +124,7 @@ export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
         <Tabs defaultValue="categories">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>
-              {sideLabel} in {formatPeriodLabel(period)}
+              {sideLabel} in {params.period ? formatPeriodLabel(period) : 'the last 12 months'}
             </CardTitle>
             <TabsList>
               <TabsTrigger value="categories">Categories</TabsTrigger>

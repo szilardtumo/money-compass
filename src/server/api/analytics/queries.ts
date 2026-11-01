@@ -9,6 +9,7 @@ import { Analytics, AnalyticsSide, AnalyticsTotal } from '@/lib/types/analytics.
 import {
   formatPeriodLabel,
   formatPeriodParam,
+  getLastMonths,
   getPeriodRange,
   parsePeriod,
   shiftPeriod,
@@ -24,17 +25,21 @@ const t = schema.transactions;
  * Returns the spending and income of a period by category and merchant, compared to the period
  * before, and the totals of the periods before it for a chart. Amounts are in the main currency.
  *
- * @param input The period, like "2026-10" for a month or "2026" for a year
+ * @param input The period, like "2026-10" for a month or "2026" for a year, else the last 12 months
  */
-export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async ({ input }) => {
+export const getAnalytics = createApiQuery<{ period?: string }, Analytics>(async ({ input }) => {
   'use cache: private';
   const { db } = await createApiContext();
 
   const period = parsePeriod(input.period);
-  const chartPeriods = Array.from({ length: period.unit === 'month' ? 12 : 5 }, (_, index) =>
-    shiftPeriod(period, index - (period.unit === 'month' ? 11 : 4)),
-  );
-  const chartStart = getPeriodRange(chartPeriods[0]).start;
+  const current = input.period ? [period] : getLastMonths().map((month) => parsePeriod(month));
+  const previous = current.map((item) => shiftPeriod(item, -current.length));
+  const chartPeriods = input.period
+    ? Array.from({ length: period.unit === 'month' ? 12 : 5 }, (_, index) =>
+        shiftPeriod(period, index - (period.unit === 'month' ? 11 : 4)),
+      )
+    : current;
+  const start = getPeriodRange(input.period ? chartPeriods[0] : previous[0]).start;
   const { end } = getPeriodRange(period);
   // The merchant's own category, while the side follows each transaction's category
   const merchantCategory = alias(schema.categories, 'merchant_category');
@@ -65,7 +70,7 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
           .$dynamic(),
       )
         .leftJoin(merchantCategory, eq(merchantCategory.id, schema.merchants.categoryId))
-        .where(and(gte(t.startedDate, chartStart), lt(t.startedDate, end)))
+        .where(and(gte(t.startedDate, start), lt(t.startedDate, end)))
         .groupBy(
           sql`period`,
           sql`side`,
@@ -78,8 +83,8 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
     getMainCurrencyWithMapper(),
   ]);
 
-  const currentParam = formatPeriodParam(period);
-  const previousParam = formatPeriodParam(shiftPeriod(period, -1));
+  const currentParams = current.map(formatPeriodParam);
+  const previousParams = previous.map(formatPeriodParam);
   const chart = chartPeriods.map((item) => ({
     period: formatPeriodParam(item),
     label: formatPeriodLabel(item, 'short'),
@@ -107,7 +112,7 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
   let excludedCount = 0;
 
   for (const row of rows) {
-    const isCurrent = row.period === currentParam;
+    const isCurrent = currentParams.includes(row.period);
     if (row.side === 'excluded') {
       excludedCount += isCurrent ? row.transactionCount : 0;
       continue;
@@ -123,7 +128,7 @@ export const getAnalytics = createApiQuery<{ period: string }, Analytics>(async 
     if (chartItem) {
       chartItem[row.side] += amount;
     }
-    if (!isCurrent && row.period !== previousParam) {
+    if (!isCurrent && !previousParams.includes(row.period)) {
       continue;
     }
 
