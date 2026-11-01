@@ -85,7 +85,7 @@ export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
               <Sparkline
                 values={values}
                 color={label === 'Spent' ? 'var(--chart-1)' : 'var(--chart-2)'}
-                negativeColor="var(--chart-1)"
+                negativeColor={label === 'Net' ? 'var(--destructive)' : undefined}
                 width={240}
                 height={48}
                 className="h-12 w-full"

@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 interface SparklineProps {
   values: number[];
   color: string;
-  /** For the bars of negative values, else the color */
+  /** Draws negative values downwards in this color, else all values as absolute ones */
   negativeColor?: string;
   width: number;
   height: number;
@@ -27,7 +27,7 @@ interface SparklineProps {
 export function Sparkline({
   values,
   color,
-  negativeColor = color,
+  negativeColor,
   width,
   height,
   highlight = values.length - 1,
@@ -35,7 +35,10 @@ export function Sparkline({
   onBarClick,
   className,
 }: SparklineProps) {
-  const max = Math.max(...values.map(Math.abs)) || 1;
+  const points = negativeColor ? values : values.map(Math.abs);
+  const top = Math.max(...points, 0);
+  const range = top - Math.min(...points, 0) || 1;
+  const zeroY = (top / range) * height;
   const step = width / values.length;
 
   return (
@@ -47,8 +50,8 @@ export function Sparkline({
       aria-hidden={!tooltips}
       className={cn('shrink-0', className)}
     >
-      {values.map((value, index) => {
-        const barHeight = Math.max((Math.abs(value) / max) * height, 1);
+      {points.map((value, index) => {
+        const barHeight = Math.max((Math.abs(value) / range) * height, 1);
         const bar = (
           <g
             key={index}
@@ -59,7 +62,7 @@ export function Sparkline({
             {tooltips && <rect x={index * step} width={step} height={height} fill="transparent" />}
             <rect
               x={index * step + 1}
-              y={height - barHeight}
+              y={value < 0 ? zeroY : zeroY - barHeight}
               width={Math.max(step - 2, 1)}
               height={barHeight}
               rx={1}
