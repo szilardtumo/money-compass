@@ -17,7 +17,7 @@ import { Account } from '@/lib/types/accounts.types';
 import { Analytics, AnalyticsTotal } from '@/lib/types/analytics.types';
 import { Category } from '@/lib/types/categories.types';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
-import { formatPeriodLabel, parsePeriod } from '@/lib/utils/periods';
+import { formatPeriodLabel, parsePeriod, shiftPeriod } from '@/lib/utils/periods';
 
 import { AnalyticsParams, getAnalyticsHref } from './analytics-params';
 
@@ -53,6 +53,17 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
     ? 1 - uncategorized / totals[params.view].amount
     : 1;
   const sideLabel = params.view === 'spending' ? 'Spent' : 'Income';
+  const now = parsePeriod(undefined);
+  // This year's months so far, the current one included
+  const monthCount = !params.period ? 12 : period.year < now.year ? 12 : now.month + 1;
+  const getCaption = (total: { amount: number; previousAmount: number }) =>
+    period.unit === 'month' && params.period
+      ? `${format(total.previousAmount)} in ${formatPeriodLabel(shiftPeriod(period, -1))}`
+      : `${format(total.amount / monthCount)} a month`;
+  const net = totals.income.amount - totals.spending.amount;
+  const savingsRate = totals.income.amount > 0 ? net / totals.income.amount : null;
+  const formatShare = (value: number) =>
+    formatPercent(Math.abs(value), { maximumFractionDigits: 0, minimumFractionDigits: 0 });
 
   return (
     <>
@@ -86,7 +97,7 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
             [
               'Net',
               {
-                amount: totals.income.amount - totals.spending.amount,
+                amount: net,
                 previousAmount: totals.income.previousAmount - totals.spending.previousAmount,
               },
               false,
@@ -99,9 +110,19 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
               <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <Metric>{format(total.amount)}</Metric>
-                <PriceChangeBadge percent={getChange(total)} invert={invert} />
+              <div>
+                <div className="flex items-center gap-2">
+                  <Metric>{format(total.amount)}</Metric>
+                  <PriceChangeBadge percent={getChange(total)} invert={invert} />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {getCaption(total)}
+                  {label === 'Net' &&
+                    savingsRate !== null &&
+                    (savingsRate >= 0
+                      ? ` · kept ${formatShare(savingsRate)} of income`
+                      : ` · ${formatShare(savingsRate)} over income`)}
+                </p>
               </div>
               <Sparkline
                 values={values}
