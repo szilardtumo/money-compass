@@ -12,7 +12,8 @@ import { categoryColumns } from '../categories/joins';
 
 /**
  * Returns the merchants of the user that have transactions, with their raw names, transaction
- * counts and their totals of this year's months in the main currency.
+ * counts and their totals of this year's months in the main currency. The totals count only the
+ * transactions in the merchant's category.
  */
 export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
   'use cache: private';
@@ -74,7 +75,8 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
 
   for (const row of totals) {
     const merchant = row.merchant && result.get(row.merchant.id);
-    if (merchant) {
+    // Without the transactions that have a category of their own
+    if (merchant && row.category?.id === row.merchant!.category?.id) {
       merchant.monthlyTotals[months.indexOf(row.bucket)] += row.amount;
       merchant.yearTotal += row.amount;
     }
