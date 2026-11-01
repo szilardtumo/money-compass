@@ -37,7 +37,7 @@ export async function getDrawerData(
       subaccountIds,
       fromDate: start.toISOString(),
       toDate: new Date(end.getTime() - 1).toISOString(),
-      pageSize: 1000,
+      pageSize: 10_000,
     }),
     apiQueries.analytics.getTotals({
       ...filter,

@@ -34,7 +34,7 @@ export async function AccountDrawer({ accountId, period }: { accountId: string; 
         accountId,
         fromDate: start.toISOString(),
         toDate: new Date(end.getTime() - 1).toISOString(),
-        pageSize: 1000,
+        pageSize: 10_000,
       }),
       apiQueries.categories.getCategories(),
       apiQueries.integrations.getIntegrations(),
