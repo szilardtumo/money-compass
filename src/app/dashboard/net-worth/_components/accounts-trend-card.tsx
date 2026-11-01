@@ -1,4 +1,3 @@
-import { MONTHLY_HISTORY } from '@/components/cards/net-worth-history-card/net-worth-history-card';
 import { apiQueries } from '@/server/api/queries';
 
 import { AccountsTrendCardClient } from './accounts-trend-card-client';
@@ -9,7 +8,7 @@ import { AccountsTrendCardClient } from './accounts-trend-card-client';
 export async function AccountsTrendCard() {
   const [accounts, history, { mainCurrency }] = await Promise.all([
     apiQueries.accounts.getAccounts(),
-    apiQueries.transactions.getTransactionHistory(MONTHLY_HISTORY),
+    apiQueries.transactions.getTransactionHistory(),
     apiQueries.currencies.getMainCurrencyWithMapper(),
   ]);
 

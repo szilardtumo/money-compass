@@ -35,11 +35,7 @@ export function TransactionHistoryChart({
         ({
           Date: item.date,
           Month: formatDate(item.date, 'MMMM yyyy'),
-          // Generate an entry for the total value
-          Total: Object.values(item.accountBalances).reduce(
-            (acc, item) => acc + item.totalBalance,
-            0,
-          ),
+          Total: item.totalBalance,
           // Generate an entry for every account and subaccount
           ...Object.fromEntries(
             accounts.flatMap((account) => [

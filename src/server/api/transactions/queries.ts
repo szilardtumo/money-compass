@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, count, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, isNull, lte, sql, sum } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
@@ -8,11 +8,17 @@ import { MissingExchangeRateError } from '@/lib/api/errors';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { Transaction, TransactionHistory } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
+import { toMainCurrency } from '@/lib/utils/currencies';
 import { groupBy } from '@/lib/utils/group-by';
-import { generateTimeBuckets, TimeInterval } from '@/lib/utils/time-buckets';
+import { formatPeriodParam, getPeriodRange, parsePeriod, shiftPeriod } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
-import { analyticsSide, categoryColumns, joinCategory } from '../categories/joins';
+import {
+  analyticsSide,
+  categoryColumns,
+  joinCategory,
+  transactionMonth,
+} from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
@@ -214,108 +220,89 @@ export const getTransactions = createApiQuery<
 );
 
 /**
- * Returns transaction history aggregated by time intervals
+ * Returns the balance of every account and subaccount at the end of each month, in the main
+ * currency, the current month last.
  *
- * The history includes account and subaccount balances at the end of each interval,
- * with all values converted to the user's main currency
+ * @param input.months How many months back it starts, else from the month before the first
+ * transaction, when there was no balance yet
  */
 export const getTransactionHistory = createApiQuery<
-  {
-    /** The date range to fetch the history for */
-    dateRange: TimeInterval;
-    /** The interval to aggregate the history by */
-    interval: TimeInterval;
-  },
+  { months?: number } | void,
   TransactionHistory[]
 >(async ({ input }) => {
   'use cache: private';
   const { db } = await createApiContext();
+  const t = schema.transactions;
 
-  const timeBuckets = generateTimeBuckets(input.dateRange, input.interval);
-
-  // Run the database queries in parallel
-  const [{ mainCurrency, mapper: mainCurrencyMapper }, accounts, sums] = await Promise.all([
+  const [{ mainCurrency, mapper }, accounts, sums] = await Promise.all([
     getMainCurrencyWithMapper(),
     db.rls((tx) => tx.query.accounts.findMany({ with: { subaccounts: true } })),
     db.rls((tx) =>
       tx
         .select({
-          subaccountId: schema.transactions.subaccountId,
-          // 0 for transactions before the first time bucket, n for transactions in the nth time bucket
-          bucketIndex:
-            sql<number>`width_bucket(${schema.transactions.startedDate}, array[${sql.join(
-              timeBuckets.map((date) => sql`${date.toISOString()}`),
-              sql`, `,
-            )}]::timestamptz[])`
-              .mapWith(Number)
-              .as('bucket_index'),
-          amount: sql<number>`sum(${schema.transactions.amount})`.mapWith(Number),
+          subaccountId: t.subaccountId,
+          month: transactionMonth.as('month'),
+          amount: sum(t.amount).mapWith(Number),
         })
-        .from(schema.transactions)
-        .groupBy(schema.transactions.subaccountId, sql`bucket_index`),
+        .from(t)
+        .groupBy(t.subaccountId, sql`month`),
     ),
   ]);
-
-  // If there are no transactions, return an empty array
-  if (sums.length === 0) {
+  if (!sums.length) {
     return [];
   }
 
-  const sumsByBucket = groupBy(sums, (item) => String(item.bucketIndex));
+  const now = parsePeriod(undefined);
+  const firstMonth = formatPeriodParam(
+    input?.months !== undefined
+      ? shiftPeriod(now, -input.months)
+      : shiftPeriod(parsePeriod(sums.map((item) => item.month).toSorted()[0]), -1),
+  );
+  // The balances in the subaccounts' currencies, from the months before the first one
+  const balances: Record<string, number> = {};
+  const addMonths = (items: typeof sums) => {
+    for (const item of items) {
+      balances[item.subaccountId] = (balances[item.subaccountId] ?? 0) + item.amount;
+    }
+  };
+  addMonths(sums.filter((item) => item.month < firstMonth));
+  const sumsByMonth = groupBy(sums, (item) => item.month);
 
-  // Contains the current balance of each subaccount in its original currency
-  const currentBalances: Record<string, number> = {};
-  const addBucketToBalances = (bucketIndex: number) =>
-    sumsByBucket[bucketIndex]?.forEach((item) => {
-      currentBalances[item.subaccountId] = (currentBalances[item.subaccountId] ?? 0) + item.amount;
-    });
+  const history: TransactionHistory[] = [];
+  for (let month = parsePeriod(firstMonth); ; month = shiftPeriod(month, 1)) {
+    const param = formatPeriodParam(month);
+    if (param > formatPeriodParam(now)) {
+      return history;
+    }
+    addMonths(sumsByMonth[param] ?? []);
 
-  // Transactions before the date range make up the starting balances
-  addBucketToBalances(0);
-
-  const history = timeBuckets.map((date, index) => {
-    addBucketToBalances(index + 1);
-
-    return {
-      date,
-      accountBalances: Object.fromEntries(
-        accounts.map((account) => {
-          const subaccountBalances = Object.fromEntries(
-            account.subaccounts.map((subaccount) => {
-              const originalValue = currentBalances[subaccount.id] ?? 0;
-              const exchangeRate = mainCurrencyMapper[subaccount.currency];
-
-              if (!exchangeRate) {
-                throw new MissingExchangeRateError(subaccount.currency);
-              }
-
-              return [
-                subaccount.id,
-                {
-                  originalValue,
-                  mainCurrencyValue: originalValue * exchangeRate,
-                },
-              ];
-            }),
-          );
-
-          return [
-            account.id,
-            {
-              totalBalance: Object.values(subaccountBalances).reduce(
-                (sum, balance) => sum + balance.mainCurrencyValue,
-                0,
-              ),
-              subaccountBalances,
-            },
-          ] as const;
-        }),
+    const accountBalances = Object.fromEntries(
+      accounts.map((account) => {
+        const subaccountBalances = Object.fromEntries(
+          account.subaccounts.map((subaccount) => {
+            const originalValue = balances[subaccount.id] ?? 0;
+            const mainCurrencyValue = toMainCurrency(
+              { amount: originalValue, currency: subaccount.currency },
+              mapper,
+            );
+            return [subaccount.id, { originalValue, mainCurrencyValue }];
+          }),
+        );
+        const totalBalance = Object.values(subaccountBalances).reduce(
+          (total, balance) => total + balance.mainCurrencyValue,
+          0,
+        );
+        return [account.id, { totalBalance, subaccountBalances }];
+      }),
+    );
+    history.push({
+      date: getPeriodRange(month).start,
+      totalBalance: Object.values(accountBalances).reduce(
+        (total, account) => total + account.totalBalance,
+        0,
       ),
+      accountBalances,
       mainCurrency,
-    } satisfies TransactionHistory;
-  });
-
-  // Only keep the time buckets from the first one with a balance
-  const firstBucketIndex = Math.max(Math.min(...sums.map((item) => item.bucketIndex)) - 1, 0);
-  return history.slice(firstBucketIndex);
+    });
+  }
 });

@@ -9,10 +9,7 @@ interface AccountHistoryCardProps {
 export async function AccountHistoryCard({ accountId }: AccountHistoryCardProps) {
   const [account, transactionHistory] = await Promise.all([
     apiQueries.accounts.getAccount(accountId),
-    apiQueries.transactions.getTransactionHistory({
-      dateRange: '12 month',
-      interval: '1 month',
-    }),
+    apiQueries.transactions.getTransactionHistory({ months: 12 }),
   ]);
 
   if (!account) return null;

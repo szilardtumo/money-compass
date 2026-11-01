@@ -45,7 +45,10 @@ export interface TransactionWithAccount extends Transaction {
 }
 
 export interface TransactionHistory {
+  /** The start of the month, with the balances at its end */
   date: Date;
+  /** Of all accounts in the main currency */
+  totalBalance: number;
   accountBalances: Record<
     string,
     {
