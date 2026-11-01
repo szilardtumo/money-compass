@@ -10,14 +10,16 @@ import { getDrawerData } from './drawer-data';
 export async function CategoryDrawer({
   categoryId,
   period,
+  subaccountIds,
 }: {
   categoryId: string | null;
   period: string | undefined;
+  subaccountIds: string[] | undefined;
 }) {
   const [categories, merchants, data] = await Promise.all([
     apiQueries.categories.getCategoriesWithStats(),
-    apiQueries.categories.getCategoryMerchants({ categoryId, period }),
-    getDrawerData({ categoryId }, period),
+    apiQueries.categories.getCategoryMerchants({ categoryId, period, subaccountIds }),
+    getDrawerData({ categoryId }, period, subaccountIds),
   ]);
   const category = categories.find((item) => item.id === categoryId) ?? null;
   // A deleted category closes the drawer

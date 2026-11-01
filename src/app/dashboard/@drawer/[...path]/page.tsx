@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { z } from 'zod';
 
+import { parseSubaccountsParam } from '@/lib/utils/params';
 import { isPeriodParam } from '@/lib/utils/periods';
 
 import { CategoryDrawer } from '../_components/category-drawer';
@@ -24,15 +25,18 @@ async function Drawer({
   searchParams: PageProps<'/dashboard/[...path]'>['searchParams'];
 }) {
   const query = await searchParams;
-  // The analytics page shares it, so its period shows in the drawer too
+  // The analytics page shares them, so its period and accounts show in the drawer too
   const period = isPeriodParam(query.period) ? query.period : undefined;
+  const subaccountIds = parseSubaccountsParam(query.subaccounts);
   const merchantId = z.uuid().safeParse(query.merchant).data;
   if (merchantId) {
-    return <MerchantDrawer merchantId={merchantId} period={period} />;
+    return <MerchantDrawer merchantId={merchantId} period={period} subaccountIds={subaccountIds} />;
   }
   if (query.category === 'uncategorized') {
-    return <CategoryDrawer categoryId={null} period={period} />;
+    return <CategoryDrawer categoryId={null} period={period} subaccountIds={subaccountIds} />;
   }
   const categoryId = z.uuid().safeParse(query.category).data;
-  return categoryId ? <CategoryDrawer categoryId={categoryId} period={period} /> : null;
+  return categoryId ? (
+    <CategoryDrawer categoryId={categoryId} period={period} subaccountIds={subaccountIds} />
+  ) : null;
 }

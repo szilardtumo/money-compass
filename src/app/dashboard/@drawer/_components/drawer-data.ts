@@ -17,10 +17,12 @@ import { apiQueries } from '@/server/api/queries';
  * currency, and the accounts of the list.
  *
  * @param period Like "2026-10" or "2026", else the last 12 months
+ * @param subaccountIds Only the transactions of these subaccounts, else of all
  */
 export async function getDrawerData(
   filter: { categoryId: string | null } | { merchantId: string },
   period: string | undefined,
+  subaccountIds: string[] | undefined,
 ) {
   // Without a period, the 12 months end today
   await connection();
@@ -31,6 +33,7 @@ export async function getDrawerData(
   const [{ data }, accounts, profile] = await Promise.all([
     apiQueries.transactions.getTransactions({
       ...filter,
+      subaccountIds,
       fromDate: getPeriodRange(parsePeriod(months[0])).start.toISOString(),
       toDate: new Date(getPeriodRange(parsePeriod(months[11])).end.getTime() - 1).toISOString(),
       pageSize: 1000,

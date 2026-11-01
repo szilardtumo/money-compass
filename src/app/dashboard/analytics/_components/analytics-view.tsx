@@ -9,9 +9,11 @@ import { PeriodPicker } from '@/components/period-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DonutChart } from '@/components/ui/chart';
 import { Metric } from '@/components/ui/metric';
+import { MultiSelectFilter } from '@/components/ui/multi-select-filter';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
 import { Sparkline } from '@/components/ui/sparkline';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Account } from '@/lib/types/accounts.types';
 import { Analytics, AnalyticsTotal } from '@/lib/types/analytics.types';
 import { Category } from '@/lib/types/categories.types';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
@@ -24,17 +26,26 @@ const getChange = ({ amount, previousAmount }: { amount: number; previousAmount:
 
 interface AnalyticsViewProps {
   analytics: Analytics;
+  /** For the account filter */
+  accounts: Account[];
   params: AnalyticsParams;
 }
 
-export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
+export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProps) {
   const router = useRouter();
   const getDrawerHref = useDrawerHref();
   const period = parsePeriod(params.period);
   const { mainCurrency, totals } = analytics;
   const format = (value: number) => formatCurrency(value, mainCurrency);
   const href = (changes: Partial<AnalyticsParams>) =>
-    getAnalyticsHref({ period: params.period, view: params.view, ...changes });
+    getAnalyticsHref({ ...params, excluded: false, ...changes });
+  const subaccountOptions = accounts.flatMap((account) =>
+    account.subaccounts.map((subaccount) => ({
+      label: subaccount.name,
+      value: subaccount.id,
+      group: account.name,
+    })),
+  );
 
   const categories = analytics.categories[params.view];
   const uncategorized = categories.find((item) => !item.category)?.amount ?? 0;
@@ -47,6 +58,16 @@ export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
     <>
       <div className="flex flex-wrap items-center gap-2">
         <PeriodPicker period={params.period} withLastMonths />
+        {subaccountOptions.length > 1 && (
+          <MultiSelectFilter
+            title="Account"
+            options={subaccountOptions}
+            selected={params.subaccountIds ?? []}
+            onSelectedChange={(subaccountIds) =>
+              router.push(href({ subaccountIds }), { scroll: false })
+            }
+          />
+        )}
         <LinkTabs
           className="sm:ml-auto"
           tabs={(['spending', 'income'] as const).map((view) => ({

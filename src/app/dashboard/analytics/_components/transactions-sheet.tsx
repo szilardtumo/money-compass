@@ -41,7 +41,7 @@ export function TransactionsSheet({
     <Sheet
       open
       onOpenChange={() =>
-        router.push(getAnalyticsHref({ period: params.period, view: params.view }), {
+        router.push(getAnalyticsHref({ ...params, excluded: false }), {
           scroll: false,
         })
       }

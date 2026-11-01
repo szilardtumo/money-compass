@@ -81,8 +81,8 @@ export const getTransactions = createApiQuery<
   {
     /** The ID of the account to filter by */
     accountId?: string;
-    /** The ID of the subaccount to filter by */
-    subaccountId?: string;
+    /** The IDs of the subaccounts to filter by */
+    subaccountIds?: string[];
     /** The start date of the date range to filter by */
     fromDate?: string;
     /** The end date of the date range to filter by */
@@ -103,7 +103,7 @@ export const getTransactions = createApiQuery<
   async ({
     input: {
       accountId,
-      subaccountId,
+      subaccountIds,
       fromDate,
       toDate,
       categoryId,
@@ -148,7 +148,9 @@ export const getTransactions = createApiQuery<
         .where(
           and(
             accountId ? eq(schema.subaccounts.accountId, accountId) : undefined,
-            subaccountId ? eq(schema.transactions.subaccountId, subaccountId) : undefined,
+            subaccountIds?.length
+              ? inArray(schema.transactions.subaccountId, subaccountIds)
+              : undefined,
             fromDate ? gte(schema.transactions.startedDate, new Date(fromDate)) : undefined,
             toDate ? lte(schema.transactions.startedDate, new Date(toDate)) : undefined,
             categoryId === null

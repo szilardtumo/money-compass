@@ -1,6 +1,18 @@
 import 'server-only';
 
-import { and, asc, count, countDistinct, eq, gte, isNull, lt, sql, sum } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  countDistinct,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  sql,
+  sum,
+} from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
@@ -110,11 +122,12 @@ export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(
  * their totals of the period in the main currency, the biggest first.
  *
  * @param input.period Like "2026-10" or "2026", else the last 12 months
+ * @param input.subaccountIds Only the transactions of these subaccounts, else of all
  */
 export const getCategoryMerchants = createApiQuery<
-  { categoryId: string | null; period?: string },
+  { categoryId: string | null; period?: string; subaccountIds?: string[] },
   CategoryMerchant[]
->(async ({ input: { categoryId, period } }) => {
+>(async ({ input: { categoryId, period, subaccountIds } }) => {
   'use cache: private';
   const { db } = await createApiContext();
   const m = schema.merchants;
@@ -136,7 +149,12 @@ export const getCategoryMerchants = createApiQuery<
         .from(m)
         .innerJoin(t, eq(t.merchantId, m.id))
         .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
-        .where(categoryId ? eq(m.categoryId, categoryId) : isNull(m.categoryId))
+        .where(
+          and(
+            categoryId ? eq(m.categoryId, categoryId) : isNull(m.categoryId),
+            subaccountIds?.length ? inArray(t.subaccountId, subaccountIds) : undefined,
+          ),
+        )
         .groupBy(m.id, schema.subaccounts.currency),
     ),
     getMainCurrencyWithMapper(),

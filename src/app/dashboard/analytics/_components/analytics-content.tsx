@@ -2,6 +2,7 @@ import { connection } from 'next/server';
 import { Suspense } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
+import { parseSubaccountsParam } from '@/lib/utils/params';
 import { getPeriodOrLastMonthsRange, isPeriodParam } from '@/lib/utils/periods';
 import { apiQueries } from '@/server/api/queries';
 
@@ -23,6 +24,7 @@ export async function AnalyticsContent({
   const params: AnalyticsParams = {
     period: isPeriodParam(query.period) ? query.period : undefined,
     view: getParam(query.view) === 'income' ? 'income' : 'spending',
+    subaccountIds: parseSubaccountsParam(query.subaccounts),
     excluded: getParam(query.excluded) === '1',
   };
 
@@ -42,9 +44,15 @@ export async function AnalyticsContent({
 }
 
 async function AnalyticsData({ params }: { params: AnalyticsParams }) {
-  const analytics = await apiQueries.analytics.getAnalytics({ period: params.period });
+  const [analytics, accounts] = await Promise.all([
+    apiQueries.analytics.getAnalytics({
+      period: params.period,
+      subaccountIds: params.subaccountIds,
+    }),
+    apiQueries.accounts.getAccounts(),
+  ]);
 
-  return <AnalyticsView analytics={analytics} params={params} />;
+  return <AnalyticsView analytics={analytics} accounts={accounts} params={params} />;
 }
 
 async function TransactionsSheetContent({ params }: { params: AnalyticsParams }) {
@@ -54,6 +62,7 @@ async function TransactionsSheetContent({ params }: { params: AnalyticsParams })
       fromDate: start.toISOString(),
       toDate: new Date(end.getTime() - 1).toISOString(),
       side: 'excluded',
+      subaccountIds: params.subaccountIds,
       // One more than shown, to tell whether the list is cut
       pageSize: 501,
     }),

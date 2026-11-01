@@ -9,14 +9,16 @@ import { MerchantDrawerClient } from './merchant-drawer-client';
 export async function MerchantDrawer({
   merchantId,
   period,
+  subaccountIds,
 }: {
   merchantId: string;
   period: string | undefined;
+  subaccountIds: string[] | undefined;
 }) {
   const [merchants, categories, data] = await Promise.all([
     apiQueries.merchants.getMerchants(),
     apiQueries.categories.getCategories(),
-    getDrawerData({ merchantId }, period),
+    getDrawerData({ merchantId }, period, subaccountIds),
   ]);
   const merchant = merchants.find((item) => item.id === merchantId);
   // A merged merchant, or one without transactions, closes the drawer

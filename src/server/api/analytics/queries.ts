@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, count, eq, gte, lt, sql, sum } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, lt, sql, sum } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
@@ -27,9 +27,13 @@ const t = schema.transactions;
  * before, and the totals of its year's months, of the years up to it, or of the last 12 months for
  * a chart. Amounts are in the main currency.
  *
- * @param input The period, like "2026-10" for a month or "2026" for a year, else the last 12 months
+ * @param input.period Like "2026-10" for a month or "2026" for a year, else the last 12 months
+ * @param input.subaccountIds Only the transactions of these subaccounts, else of all
  */
-export const getAnalytics = createApiQuery<{ period?: string }, Analytics>(async ({ input }) => {
+export const getAnalytics = createApiQuery<
+  { period?: string; subaccountIds?: string[] },
+  Analytics
+>(async ({ input }) => {
   'use cache: private';
   const { db } = await createApiContext();
 
@@ -72,7 +76,13 @@ export const getAnalytics = createApiQuery<{ period?: string }, Analytics>(async
           .$dynamic(),
       )
         .leftJoin(merchantCategory, eq(merchantCategory.id, schema.merchants.categoryId))
-        .where(and(gte(t.startedDate, start), lt(t.startedDate, end)))
+        .where(
+          and(
+            gte(t.startedDate, start),
+            lt(t.startedDate, end),
+            input.subaccountIds?.length ? inArray(t.subaccountId, input.subaccountIds) : undefined,
+          ),
+        )
         .groupBy(
           sql`period`,
           sql`side`,
