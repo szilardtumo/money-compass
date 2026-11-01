@@ -9,6 +9,7 @@ import { Analytics, AnalyticsSide, AnalyticsTotal } from '@/lib/types/analytics.
 import {
   formatPeriodLabel,
   formatPeriodParam,
+  getChartMonths,
   getLastMonths,
   getPeriodRange,
   parsePeriod,
@@ -23,7 +24,8 @@ const t = schema.transactions;
 
 /**
  * Returns the spending and income of a period by category and merchant, compared to the period
- * before, and the totals of the periods before it for a chart. Amounts are in the main currency.
+ * before, and the totals of its year's months, of the years up to it, or of the last 12 months for
+ * a chart. Amounts are in the main currency.
  *
  * @param input The period, like "2026-10" for a month or "2026" for a year, else the last 12 months
  */
@@ -34,13 +36,13 @@ export const getAnalytics = createApiQuery<{ period?: string }, Analytics>(async
   const period = parsePeriod(input.period);
   const current = input.period ? [period] : getLastMonths().map((month) => parsePeriod(month));
   const previous = current.map((item) => shiftPeriod(item, -current.length));
-  const chartPeriods = input.period
-    ? Array.from({ length: period.unit === 'month' ? 12 : 5 }, (_, index) =>
-        shiftPeriod(period, index - (period.unit === 'month' ? 11 : 4)),
-      )
-    : current;
-  const start = getPeriodRange(input.period ? chartPeriods[0] : previous[0]).start;
-  const { end } = getPeriodRange(period);
+  const chartPeriods =
+    input.period && period.unit === 'year'
+      ? Array.from({ length: 5 }, (_, index) => shiftPeriod(period, index - 4))
+      : getChartMonths(input.period).map((month) => parsePeriod(month));
+  const ranges = [...chartPeriods, ...previous].map(getPeriodRange);
+  const start = new Date(Math.min(...ranges.map((range) => range.start.getTime())));
+  const end = new Date(Math.max(...ranges.map((range) => range.end.getTime())));
   // The merchant's own category, while the side follows each transaction's category
   const merchantCategory = alias(schema.categories, 'merchant_category');
   const bucket = sql<string>`to_char(date_trunc(${period.unit}, ${t.startedDate} at time zone 'UTC'), ${period.unit === 'month' ? 'YYYY-MM' : 'YYYY'})`;

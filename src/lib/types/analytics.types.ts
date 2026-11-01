@@ -13,7 +13,10 @@ export interface Analytics {
   mainCurrency: string;
   /** The selected period and the one before it */
   totals: Record<AnalyticsSide, { amount: number; previousAmount: number }>;
-  /** The periods up to the selected one, oldest first */
+  /**
+   * The months of the selected month's year, the years up to the selected one, or the last 12
+   * months, oldest first
+   */
   chart: ({ period: string; label: string } & Record<AnalyticsSide, number>)[];
   categories: Record<AnalyticsSide, (AnalyticsTotal & { category: Category | null })[]>;
   merchants: Record<

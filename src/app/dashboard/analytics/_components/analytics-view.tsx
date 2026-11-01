@@ -89,6 +89,11 @@ export function AnalyticsView({ analytics, params }: AnalyticsViewProps) {
                 width={240}
                 height={48}
                 className="h-12 w-full"
+                highlight={
+                  params.period
+                    ? analytics.chart.findIndex((item) => item.period === params.period)
+                    : undefined
+                }
                 tooltips={analytics.chart.map(
                   (item, index) =>
                     `${formatPeriodLabel(parsePeriod(item.period))}: ${format(values[index])}`,
