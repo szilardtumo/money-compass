@@ -1,4 +1,3 @@
-import { AccountDistributionChart } from '@/components/charts/account-distribution-chart';
 import { BalanceDistributionChart } from '@/components/charts/balance-distribution-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,15 +17,11 @@ export async function AssetDistributionCard() {
         <CardTitle>Asset distribution</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="account">
+        <Tabs defaultValue="category">
           <TabsList>
-            <TabsTrigger value="account">By Account</TabsTrigger>
             <TabsTrigger value="category">By Category</TabsTrigger>
             <TabsTrigger value="currency">By Currency</TabsTrigger>
           </TabsList>
-          <TabsContent value="account">
-            <AccountDistributionChart accounts={accounts} mainCurrency={mainCurrency} />
-          </TabsContent>
           <TabsContent value="category">
             <BalanceDistributionChart
               label="Category"

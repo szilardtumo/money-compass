@@ -6,6 +6,7 @@ import { PageHeaderSlotContent } from '@/components/ui/page-header-slot';
 import { PageHeaderTitle } from '@/components/ui/page-layout';
 import { Skeleton } from '@/components/ui/skeleton';
 
+import { AccountsTrendCard } from './_components/accounts-trend-card';
 import { CashRunwayCard } from './_components/cash-runway-card';
 import { NetWorthChangesCard } from './_components/net-worth-changes-card';
 import { StaleBalancesAlert } from './_components/stale-balances-alert';
@@ -22,6 +23,9 @@ export default function NetWorthPage() {
       </Suspense>
       <Suspense fallback={<Skeleton className="h-[360px]" />}>
         <NetWorthHistoryCard />
+      </Suspense>
+      <Suspense fallback={<Skeleton className="h-[320px]" />}>
+        <AccountsTrendCard />
       </Suspense>
       <div className="grid gap-4 lg:grid-cols-3">
         <Suspense fallback={<Skeleton className="h-[360px] lg:col-span-2" />}>

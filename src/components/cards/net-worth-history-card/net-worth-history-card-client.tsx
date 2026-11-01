@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Account } from '@/lib/types/accounts.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';
-import { formatDate } from '@/lib/utils/formatters';
+
+import { HISTORY_RANGES, getRangeLabel, sliceHistory, useHistoryRange } from './use-history-range';
 
 interface NetWorthHistoryCardProps {
   /** Monthly, from the first month with a transaction */
@@ -15,17 +16,13 @@ interface NetWorthHistoryCardProps {
   accounts: Account[];
 }
 
-type Range = '6M' | '1Y' | 'YTD' | 'All';
-
 export function NetWorthHistoryCardClient({
   transactionHistory,
   accounts,
 }: NetWorthHistoryCardProps) {
-  const [range, setRange] = useState<Range>('1Y');
+  const [range, setRange] = useHistoryRange();
   const [view, setView] = useState<'total' | 'account' | 'category'>('total');
-  const months = { '6M': 6, '1Y': 12, YTD: new Date().getUTCMonth(), All: Infinity }[range];
-  // A point is the balance at the end of its month, so the range starts with the one before it
-  const data = transactionHistory.slice(-(months + 2));
+  const data = sliceHistory(transactionHistory, range);
 
   return (
     <Card>
@@ -39,9 +36,9 @@ export function NetWorthHistoryCardClient({
               <TabsTrigger value="category">Categories</TabsTrigger>
             </TabsList>
           </Tabs>
-          <Tabs value={range} onValueChange={(value) => setRange(value as Range)}>
+          <Tabs value={range} onValueChange={(value) => setRange(value as typeof range)}>
             <TabsList>
-              {(['6M', '1Y', 'YTD', 'All'] as const).map((item) => (
+              {HISTORY_RANGES.map((item) => (
                 <TabsTrigger key={item} value={item}>
                   {item}
                 </TabsTrigger>
@@ -55,14 +52,7 @@ export function NetWorthHistoryCardClient({
           accounts={accounts}
           data={data}
           stack={view !== 'total' && view}
-          changeLabel={
-            {
-              '6M': 'in 6 months',
-              '1Y': 'in a year',
-              YTD: 'this year',
-              All: data[0] && `since ${formatDate(data[0].date, 'MMMM yyyy')}`,
-            }[range]
-          }
+          changeLabel={getRangeLabel(range, data[0]?.date)}
         />
       </CardContent>
     </Card>
