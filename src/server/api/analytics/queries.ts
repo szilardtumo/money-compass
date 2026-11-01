@@ -4,10 +4,9 @@ import { and, count, eq, gte, inArray, lt, sql, sum } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
-import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Analytics, AnalyticsSide, AnalyticsTotal } from '@/lib/types/analytics.types';
+import { toMainCurrency } from '@/lib/utils/currencies';
 import {
-  formatPeriodLabel,
   formatPeriodParam,
   getChartMonths,
   getPeriodRange,
@@ -123,10 +122,10 @@ export const getAnalytics = createApiQuery<{ period: string; subaccountIds?: str
     const previousParam = formatPeriodParam(previous);
     const chart = chartPeriods.map((item) => ({
       period: formatPeriodParam(item),
-      label: formatPeriodLabel(item, 'short'),
       spending: 0,
       income: 0,
     }));
+    const chartByPeriod = new Map(chart.map((item) => [item.period, item]));
     type CategoryTotal = Analytics['categories'][AnalyticsSide][number];
     type MerchantTotal = Analytics['merchants'][AnalyticsSide][number];
     const categories = {
@@ -145,22 +144,15 @@ export const getAnalytics = createApiQuery<{ period: string; subaccountIds?: str
         total.previousAmount += amount;
       }
     };
-    let excludedCount = 0;
-
     for (const row of rows) {
       const isCurrent = row.period === currentParam;
       if (row.side === 'excluded') {
-        excludedCount += isCurrent ? row.transactionCount : 0;
         continue;
       }
 
-      const rate = mapper[row.currency];
-      if (!rate) {
-        throw new MissingExchangeRateError(row.currency);
-      }
       // Spending is positive, so a category's refunds lower it
-      const amount = row.amount * rate * (row.side === 'spending' ? -1 : 1);
-      const chartItem = chart.find((item) => item.period === row.period);
+      const amount = toMainCurrency(row, mapper) * (row.side === 'spending' ? -1 : 1);
+      const chartItem = chartByPeriod.get(row.period);
       if (chartItem) {
         chartItem[row.side] += amount;
       }
@@ -203,6 +195,10 @@ export const getAnalytics = createApiQuery<{ period: string; subaccountIds?: str
 
     // The running total of each day of the months, until today
     const today = new Date().toISOString().slice(0, 10);
+    const spentByDay = new Map<string, number>();
+    for (const row of paceRows) {
+      spentByDay.set(row.day, (spentByDay.get(row.day) ?? 0) - toMainCurrency(row, mapper));
+    }
     const [previousDays, days] = paceMonths.map((month) => {
       const param = formatPeriodParam(month);
       let total = 0;
@@ -210,11 +206,7 @@ export const getAnalytics = createApiQuery<{ period: string; subaccountIds?: str
         { length: new Date(Date.UTC(month.year, month.month + 1, 0)).getUTCDate() },
         (_, index) => {
           const day = `${param}-${String(index + 1).padStart(2, '0')}`;
-          for (const row of paceRows) {
-            if (row.day === day) {
-              total -= row.amount * (mapper[row.currency] ?? 0);
-            }
-          }
+          total += spentByDay.get(day) ?? 0;
           return day > today ? null : total;
         },
       );
@@ -232,7 +224,6 @@ export const getAnalytics = createApiQuery<{ period: string; subaccountIds?: str
         spending: byAmount(merchants.spending.values()).slice(0, 50),
         income: byAmount(merchants.income.values()).slice(0, 50),
       },
-      excludedCount,
       pace: days ? { month: formatPeriodParam(period), days, previousDays } : null,
     };
   },
@@ -271,21 +262,18 @@ export const getMonthlyCashFlow = createApiQuery<
     getMainCurrencyWithMapper(),
   ]);
 
-  return {
-    mainCurrency,
-    months: months.map((period) => {
+  const totals = new Map(
+    months.map((period) => {
       const month = formatPeriodParam(period);
-      const totals = { month, spending: 0, income: 0 };
-      for (const row of rows) {
-        if (row.month === month && row.side !== 'excluded') {
-          const rate = mapper[row.currency];
-          if (!rate) {
-            throw new MissingExchangeRateError(row.currency);
-          }
-          totals[row.side] += row.amount * rate * (row.side === 'spending' ? -1 : 1);
-        }
-      }
-      return totals;
+      return [month, { month, spending: 0, income: 0 }];
     }),
-  };
+  );
+  for (const row of rows) {
+    const total = totals.get(row.month);
+    if (total && row.side !== 'excluded') {
+      total[row.side] += toMainCurrency(row, mapper) * (row.side === 'spending' ? -1 : 1);
+    }
+  }
+
+  return { mainCurrency, months: [...totals.values()] };
 });

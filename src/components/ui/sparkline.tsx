@@ -16,7 +16,6 @@ interface SparklineProps {
   highlight?: number | null;
   /** Shown when hovering a bar */
   tooltips?: ReactNode[];
-  onBarClick?: (index: number) => void;
   /** A size here stretches the bars */
   className?: string;
 }
@@ -32,7 +31,6 @@ export function Sparkline({
   height,
   highlight = values.length - 1,
   tooltips,
-  onBarClick,
   className,
 }: SparklineProps) {
   const points = negativeColor ? values : values.map(Math.abs);
@@ -53,11 +51,7 @@ export function Sparkline({
       {points.map((value, index) => {
         const barHeight = Math.max((Math.abs(value) / range) * height, 1);
         const bar = (
-          <g
-            key={index}
-            className={cn('group', onBarClick && 'cursor-pointer')}
-            onClick={onBarClick && (() => onBarClick(index))}
-          >
+          <g key={index} className="group">
             {/* Hovers the whole column, as low bars are hard to hit */}
             {tooltips && <rect x={index * step} width={step} height={height} fill="transparent" />}
             <rect

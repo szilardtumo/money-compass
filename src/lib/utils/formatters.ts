@@ -42,7 +42,6 @@ export function getCurrencySymbol(currency: string) {
 export function formatPercent(value: number, options: Intl.NumberFormatOptions = {}) {
   return Intl.NumberFormat('en-US', {
     style: 'percent',
-    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     ...options,
   }).format(Number.isNaN(value) ? 0 : value);

@@ -3,8 +3,8 @@ import 'server-only';
 import { and, count, eq, gte, isNotNull, max, sql, sum } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
-import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Merchant } from '@/lib/types/categories.types';
+import { toMainCurrency } from '@/lib/utils/currencies';
 import { getLastMonths, getLastMonthsStart } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
@@ -86,13 +86,10 @@ export const getMerchants = createApiQuery<void, Merchant[]>(async () => {
 
   for (const row of monthTotals) {
     const merchant = result.get(row.merchantId!);
-    const rate = mapper[row.currency];
-    if (!rate) {
-      throw new MissingExchangeRateError(row.currency);
-    }
+    const amount = toMainCurrency(row, mapper);
     if (merchant) {
-      merchant.monthlyTotals[months.indexOf(row.month)] += row.amount * rate;
-      merchant.yearTotal += row.amount * rate;
+      merchant.monthlyTotals[months.indexOf(row.month)] += amount;
+      merchant.yearTotal += amount;
     }
   }
 

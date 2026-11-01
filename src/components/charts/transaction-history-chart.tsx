@@ -10,17 +10,13 @@ import { PriceChangeBadge } from '@/components/ui/price-change-badge';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { Account } from '@/lib/types/accounts.types';
 import { TransactionHistory } from '@/lib/types/transactions.types';
-import { capitalize, formatCurrency, formatDate } from '@/lib/utils/formatters';
-import { groupBy } from '@/lib/utils/group-by';
+import { formatCurrency, formatDate } from '@/lib/utils/formatters';
 
 interface TransactionHistoryChartProps {
   data: TransactionHistory[];
   accounts: Account[];
-  /**
-   * Stacks the accounts, or the subaccounts of a single account, or the account categories, else
-   * shows the total
-   */
-  stack?: false | 'account' | 'category';
+  /** If there are multiple accounts, it stacks accounts, if there is only one account, it stacks its subaccounts */
+  stack?: boolean;
   /** Shows the change since the first point with this label, like "this year", else since the one before */
   changeLabel?: string;
 }
@@ -58,17 +54,6 @@ export function TransactionHistoryChart({
               ),
             ]),
           ),
-          ...Object.fromEntries(
-            Object.entries(groupBy(accounts, (account) => capitalize(account.category))).map(
-              ([category, items]) => [
-                category,
-                items.reduce(
-                  (total, account) => total + item.accountBalances[account.id].totalBalance,
-                  0,
-                ),
-              ],
-            ),
-          ),
         }) as {
           Date: Date;
           Month: string;
@@ -85,9 +70,6 @@ export function TransactionHistoryChart({
   }, [accounts, data]);
 
   const chartCategories = useMemo(() => {
-    if (stack === 'category') {
-      return [...new Set(accounts.map((account) => capitalize(account.category)))];
-    }
     if (accounts.length === 1) {
       if (stack) {
         return accounts[0].subaccounts.map((subaccount) => subaccount.name);

@@ -1,10 +1,9 @@
 'use client';
 
-import { ChevronRightIcon, TriangleAlertIcon } from 'lucide-react';
+import { ChevronRightIcon } from 'lucide-react';
 import Link from 'next/link';
 
 import {
-  HISTORY_RANGES,
   getRangeLabel,
   sliceHistory,
   useHistoryRange,
@@ -12,7 +11,6 @@ import {
 import { AccountIcon } from '@/components/ui/account-avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { chartColors } from '@/components/ui/chart';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Account } from '@/lib/types/accounts.types';
 import { capitalize, formatCurrency, formatPercent } from '@/lib/utils/formatters';
 
@@ -22,8 +20,6 @@ interface AccountsTrendCardClientProps {
   history: Record<string, number>[];
   /** Of the first month of the history */
   firstDate: Date | undefined;
-  /** The days since the oldest stale balance of an account, by account ID */
-  staleDays: Record<string, number>;
   mainCurrency: string;
 }
 
@@ -31,10 +27,9 @@ export function AccountsTrendCardClient({
   accounts,
   history,
   firstDate,
-  staleDays,
   mainCurrency,
 }: AccountsTrendCardClientProps) {
-  const [range, setRange] = useHistoryRange();
+  const [range] = useHistoryRange();
   const points = sliceHistory(history, range);
   const format = (value: number, options: Intl.NumberFormatOptions = {}) =>
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0, ...options });
@@ -43,11 +38,7 @@ export function AccountsTrendCardClient({
     return [
       format(change, { signDisplay: 'exceptZero' }),
       from > 0 &&
-        formatPercent(change / from, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 1,
-          signDisplay: 'exceptZero',
-        }),
+        formatPercent(change / from, { maximumFractionDigits: 1, signDisplay: 'exceptZero' }),
     ]
       .filter(Boolean)
       .join(' · ');
@@ -58,20 +49,9 @@ export function AccountsTrendCardClient({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <div>
-          <CardTitle>Accounts</CardTitle>
-          <CardDescription>Balances now, change {getRangeLabel(range, firstDate)}</CardDescription>
-        </div>
-        <Tabs value={range} onValueChange={(value) => setRange(value as typeof range)}>
-          <TabsList>
-            {HISTORY_RANGES.map((item) => (
-              <TabsTrigger key={item} value={item}>
-                {item}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+      <CardHeader>
+        <CardTitle>Accounts</CardTitle>
+        <CardDescription>Balances now, change {getRangeLabel(range, firstDate)}</CardDescription>
       </CardHeader>
       <CardContent>
         <ul className="flex flex-col divide-y">
@@ -102,33 +82,22 @@ export function AccountsTrendCardClient({
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{account.name}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {staleDays[account.id] ? (
-                            <span className="text-amber-600 dark:text-amber-500">
-                              <TriangleAlertIcon className="mr-1 inline size-3 align-[-1px]" />
-                              Updated {staleDays[account.id]} days ago
-                            </span>
-                          ) : (
+                          {[
+                            capitalize(account.category),
                             [
-                              capitalize(account.category),
-                              [
-                                ...new Set(
-                                  account.subaccounts.map((item) =>
-                                    item.originalCurrency.toUpperCase(),
-                                  ),
+                              ...new Set(
+                                account.subaccounts.map((item) =>
+                                  item.originalCurrency.toUpperCase(),
                                 ),
-                              ].join(', '),
-                            ].join(' · ')
-                          )}
+                              ),
+                            ].join(', '),
+                          ].join(' · ')}
                         </p>
                       </div>
                       <TrendLine values={values} color={color} />
                       <div className="hidden sm:block">
                         <p className="text-xs text-muted-foreground">
-                          {formatPercent(share, {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          })}{' '}
-                          of net worth
+                          {formatPercent(share, { maximumFractionDigits: 0 })} of net worth
                         </p>
                         <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
                           <div

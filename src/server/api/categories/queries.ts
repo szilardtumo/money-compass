@@ -15,9 +15,8 @@ import {
 } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
-import { MissingExchangeRateError } from '@/lib/api/errors';
 import { Category, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
-import { CurrencyMapper } from '@/lib/types/currencies.types';
+import { toMainCurrency } from '@/lib/utils/currencies';
 import { getLastMonths, getLastMonthsStart, getPeriodOrLastMonthsRange } from '@/lib/utils/periods';
 import { schema } from '@/server/db';
 
@@ -40,17 +39,6 @@ export const getCategories = createApiQuery<void, Category[]>(async () => {
       .orderBy(asc(schema.categories.kind), asc(schema.categories.name)),
   );
 });
-
-const toMain = (
-  { amount, currency }: { amount: number; currency: string },
-  mapper: CurrencyMapper,
-) => {
-  const rate = mapper[currency];
-  if (!rate) {
-    throw new MissingExchangeRateError(currency);
-  }
-  return amount * rate;
-};
 
 /**
  * Returns the categories of the user with the number of merchants and transactions that use them,
@@ -103,7 +91,7 @@ export const getCategoriesWithStats = createApiQuery<void, CategoryWithStats[]>(
     const monthlyTotals = months.map(() => 0);
     for (const row of monthTotals) {
       if (row.categoryId === category.id) {
-        monthlyTotals[months.indexOf(row.month)] += toMain(row, mapper);
+        monthlyTotals[months.indexOf(row.month)] += toMainCurrency(row, mapper);
       }
     }
 
@@ -171,7 +159,7 @@ export const getCategoryMerchants = createApiQuery<
     };
     merchants.set(row.id, merchant);
     merchant.transactionCount += row.transactionCount;
-    merchant.total += toMain(row, mapper);
+    merchant.total += toMainCurrency(row, mapper);
   }
 
   return [...merchants.values()].toSorted(

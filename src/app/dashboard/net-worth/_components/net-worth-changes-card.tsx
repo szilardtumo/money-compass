@@ -1,3 +1,4 @@
+import { MONTHLY_HISTORY } from '@/components/cards/net-worth-history-card/net-worth-history-card';
 import { apiQueries } from '@/server/api/queries';
 
 import { NetWorthChangesCardClient } from './net-worth-changes-card-client';
@@ -7,8 +8,7 @@ import { NetWorthChangesCardClient } from './net-worth-changes-card-client';
  */
 export async function NetWorthChangesCard({ className }: { className?: string }) {
   const [history, cashFlow] = await Promise.all([
-    // The same as the history card's, so it loads once
-    apiQueries.transactions.getTransactionHistory({ dateRange: '30 year', interval: '1 month' }),
+    apiQueries.transactions.getTransactionHistory(MONTHLY_HISTORY),
     apiQueries.analytics.getMonthlyCashFlow(),
   ]);
   const totals = new Map(

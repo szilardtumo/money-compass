@@ -6,14 +6,11 @@ export interface AnalyticsParams {
   view: AnalyticsSide;
   /** The subaccounts it counts, else all */
   subaccountIds?: string[];
-  /** Shows the transactions excluded from analytics in a sheet */
-  excluded?: boolean;
 }
 
-export function getAnalyticsHref({ period, view, subaccountIds, excluded }: AnalyticsParams) {
+export function getAnalyticsHref({ period, view, subaccountIds }: AnalyticsParams) {
   const params = new URLSearchParams({ period });
   if (subaccountIds?.length) params.set('subaccounts', subaccountIds.join(','));
   if (view === 'income') params.set('view', view);
-  if (excluded) params.set('excluded', '1');
   return `/dashboard/analytics?${params}`;
 }

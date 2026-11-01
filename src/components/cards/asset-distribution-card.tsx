@@ -6,8 +6,10 @@ import { groupBy } from '@/lib/utils/group-by';
 import { apiQueries } from '@/server/api/queries';
 
 export async function AssetDistributionCard() {
-  const accounts = await apiQueries.accounts.getAccounts();
-  const { mainCurrency } = await apiQueries.currencies.getMainCurrencyWithMapper();
+  const [accounts, { mainCurrency }] = await Promise.all([
+    apiQueries.accounts.getAccounts(),
+    apiQueries.currencies.getMainCurrencyWithMapper(),
+  ]);
   const subaccounts = accounts.flatMap((account) => account.subaccounts);
   const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 

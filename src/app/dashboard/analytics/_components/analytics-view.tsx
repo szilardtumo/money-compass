@@ -42,8 +42,7 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
   const period = parsePeriod(params.period);
   const { mainCurrency, totals } = analytics;
   const format = (value: number) => formatCurrency(value, mainCurrency);
-  const href = (changes: Partial<AnalyticsParams>) =>
-    getAnalyticsHref({ ...params, excluded: false, ...changes });
+  const href = (changes: Partial<AnalyticsParams>) => getAnalyticsHref({ ...params, ...changes });
   const subaccountOptions = accounts.flatMap((account) =>
     account.subaccounts.map((subaccount) => ({
       label: subaccount.name,
@@ -53,10 +52,6 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
   );
 
   const categories = analytics.categories[params.view];
-  const uncategorized = categories.find((item) => !item.category)?.amount ?? 0;
-  const categorizedShare = totals[params.view].amount
-    ? 1 - uncategorized / totals[params.view].amount
-    : 1;
   const sideLabel = params.view === 'spending' ? 'Spent' : 'Income';
   const now = parsePeriod(undefined);
   // This year's months so far, the current one included
@@ -68,7 +63,7 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
   const net = totals.income.amount - totals.spending.amount;
   const savingsRate = totals.income.amount > 0 ? net / totals.income.amount : null;
   const formatShare = (value: number) =>
-    formatPercent(Math.abs(value), { maximumFractionDigits: 0, minimumFractionDigits: 0 });
+    formatPercent(Math.abs(value), { maximumFractionDigits: 0 });
 
   return (
     <>
@@ -84,14 +79,15 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
             }
           />
         )}
-        <LinkTabs
-          className="sm:ml-auto"
-          tabs={(['spending', 'income'] as const).map((view) => ({
-            label: view === 'spending' ? 'Spending' : 'Income',
-            href: href({ view }),
-            active: params.view === view,
-          }))}
-        />
+        <Tabs value={params.view} className="sm:ml-auto">
+          <TabsList>
+            {(['spending', 'income'] as const).map((view) => (
+              <TabsTrigger key={view} value={view} asChild>
+                <Link href={href({ view })}>{view === 'spending' ? 'Spending' : 'Income'}</Link>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -141,9 +137,6 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
                   (item, index) =>
                     `${formatPeriodLabel(parsePeriod(item.period))}: ${format(values[index])}`,
                 )}
-                onBarClick={(index) =>
-                  router.push(href({ period: analytics.chart[index].period }), { scroll: false })
-                }
               />
             </CardContent>
           </Card>
@@ -151,20 +144,6 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
       </div>
 
       {analytics.pace && <PaceCard pace={analytics.pace} format={format} />}
-
-      {categorizedShare < 1 && (
-        <p className="text-sm text-muted-foreground">
-          {formatPercent(categorizedShare, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}{' '}
-          of this {params.view} is categorized.{' '}
-          <Link
-            href={getDrawerHref({ category: 'uncategorized', period: params.period })}
-            scroll={false}
-            className="font-medium underline"
-          >
-            Review uncategorized
-          </Link>
-        </p>
-      )}
 
       <Card>
         <Tabs defaultValue="categories">
@@ -227,16 +206,6 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
           </CardContent>
         </Tabs>
       </Card>
-
-      {analytics.excludedCount > 0 && (
-        <Link
-          href={href({ excluded: true })}
-          scroll={false}
-          className="text-sm text-muted-foreground underline"
-        >
-          {analytics.excludedCount} transactions excluded from analytics
-        </Link>
-      )}
     </>
   );
 }
@@ -299,26 +268,6 @@ function PaceCard({
   );
 }
 
-function LinkTabs({
-  tabs,
-  className,
-}: {
-  tabs: { label: string; href: string; active: boolean }[];
-  className?: string;
-}) {
-  return (
-    <Tabs value={tabs.find((tab) => tab.active)?.label} className={className}>
-      <TabsList>
-        {tabs.map((tab) => (
-          <TabsTrigger key={tab.label} value={tab.label} asChild>
-            <Link href={tab.href}>{tab.label}</Link>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
-  );
-}
-
 function TotalsList({
   items,
   total,
@@ -358,11 +307,7 @@ function TotalsList({
                 {[
                   item.detail,
                   `${item.transactionCount} transaction${item.transactionCount === 1 ? '' : 's'}`,
-                  total > 0 &&
-                    formatPercent(item.amount / total, {
-                      maximumFractionDigits: 0,
-                      minimumFractionDigits: 0,
-                    }),
+                  total > 0 && formatPercent(item.amount / total, { maximumFractionDigits: 0 }),
                 ]
                   .filter(Boolean)
                   .join(' · ')}
