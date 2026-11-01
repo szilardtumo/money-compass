@@ -60,9 +60,9 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
   const sideLabel = params.view === 'spending' ? 'Spent' : 'Income';
   const now = parsePeriod(undefined);
   // This year's months so far, the current one included
-  const monthCount = !params.period ? 12 : period.year < now.year ? 12 : now.month + 1;
+  const monthCount = period.year < now.year ? 12 : now.month + 1;
   const getCaption = (total: { amount: number; previousAmount: number }) =>
-    period.unit === 'month' && params.period
+    period.unit === 'month'
       ? `${format(total.previousAmount)} in ${formatPeriodLabel(shiftPeriod(period, -1))}`
       : `${format(total.amount / monthCount)} a month`;
   const net = totals.income.amount - totals.spending.amount;
@@ -73,7 +73,7 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <PeriodPicker period={params.period} withLastMonths />
+        <PeriodPicker period={params.period} />
         {subaccountOptions.length > 1 && (
           <MultiSelectFilter
             title="Account"
@@ -136,11 +136,7 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
                 width={240}
                 height={48}
                 className="h-12 w-full"
-                highlight={
-                  params.period
-                    ? analytics.chart.findIndex((item) => item.period === params.period)
-                    : undefined
-                }
+                highlight={analytics.chart.findIndex((item) => item.period === params.period)}
                 tooltips={analytics.chart.map(
                   (item, index) =>
                     `${formatPeriodLabel(parsePeriod(item.period))}: ${format(values[index])}`,
@@ -174,7 +170,7 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
         <Tabs defaultValue="categories">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>
-              {sideLabel} in {params.period ? formatPeriodLabel(period) : 'the last 12 months'}
+              {sideLabel} in {formatPeriodLabel(period)}
             </CardTitle>
             <TabsList>
               <TabsTrigger value="categories">Categories</TabsTrigger>

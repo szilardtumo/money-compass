@@ -1,8 +1,8 @@
 import { AnalyticsSide } from '@/lib/types/analytics.types';
 
 export interface AnalyticsParams {
-  /** Like "2026-10" or "2026", else the last 12 months */
-  period?: string;
+  /** Like "2026-10" or "2026" */
+  period: string;
   view: AnalyticsSide;
   /** The subaccounts it counts, else all */
   subaccountIds?: string[];
@@ -11,8 +11,7 @@ export interface AnalyticsParams {
 }
 
 export function getAnalyticsHref({ period, view, subaccountIds, excluded }: AnalyticsParams) {
-  const params = new URLSearchParams();
-  if (period) params.set('period', period);
+  const params = new URLSearchParams({ period });
   if (subaccountIds?.length) params.set('subaccounts', subaccountIds.join(','));
   if (view === 'income') params.set('view', view);
   if (excluded) params.set('excluded', '1');

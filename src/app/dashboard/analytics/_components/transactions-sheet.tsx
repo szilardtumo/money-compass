@@ -50,7 +50,7 @@ export function TransactionsSheet({
         <SheetHeader>
           <SheetTitle>Excluded from analytics</SheetTitle>
           <SheetDescription>
-            {params.period ? formatPeriodLabel(parsePeriod(params.period)) : 'Last 12 months'},{' '}
+            {formatPeriodLabel(parsePeriod(params.period))},{' '}
             {isCut
               ? `the latest ${transactions.length} transactions`
               : `${transactions.length} transaction${transactions.length === 1 ? '' : 's'}`}

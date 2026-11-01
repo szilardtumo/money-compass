@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { parseSubaccountsParam } from '@/lib/utils/params';
-import { getPeriodOrLastMonthsRange, isPeriodParam } from '@/lib/utils/periods';
+import { formatPeriodParam, getPeriodRange, parsePeriod } from '@/lib/utils/periods';
 import { apiQueries } from '@/server/api/queries';
 
 import { AnalyticsParams } from './analytics-params';
@@ -19,10 +19,10 @@ export async function AnalyticsContent({
   searchParams: PageProps<'/dashboard/analytics'>['searchParams'];
 }) {
   const query = await searchParams;
-  // The last 12 months and the Month tab depend on today
+  // The default period and the Month tab depend on today
   await connection();
   const params: AnalyticsParams = {
-    period: isPeriodParam(query.period) ? query.period : undefined,
+    period: formatPeriodParam(parsePeriod(getParam(query.period))),
     view: getParam(query.view) === 'income' ? 'income' : 'spending',
     subaccountIds: parseSubaccountsParam(query.subaccounts),
     excluded: getParam(query.excluded) === '1',
@@ -56,7 +56,7 @@ async function AnalyticsData({ params }: { params: AnalyticsParams }) {
 }
 
 async function TransactionsSheetContent({ params }: { params: AnalyticsParams }) {
-  const { start, end } = getPeriodOrLastMonthsRange(params.period);
+  const { start, end } = getPeriodRange(parsePeriod(params.period));
   const [transactions, categories, accounts] = await Promise.all([
     apiQueries.transactions.getTransactions({
       fromDate: start.toISOString(),
