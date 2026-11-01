@@ -1,6 +1,5 @@
 import {
   ChartColumnIcon,
-  FlaskConicalIcon,
   HistoryIcon,
   LayoutDashboardIcon,
   MenuIcon,
@@ -91,16 +90,6 @@ function NavbarContent() {
         <Suspense fallback={<NavbarAccountItemsSkeleton />}>
           <NavbarAccountItems />
         </Suspense>
-
-        {process.env.NODE_ENV === 'development' && (
-          <>
-            <Separator className="my-2" />
-
-            <NavItem href="/dashboard/test" icon={<FlaskConicalIcon className="size-4 mr-2" />}>
-              Test
-            </NavItem>
-          </>
-        )}
       </nav>
     </aside>
   );
