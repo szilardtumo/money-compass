@@ -7,7 +7,7 @@ import { CategoryAvatar, UNCATEGORIZED_COLOR } from '@/components/categories/cat
 import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { PeriodPicker } from '@/components/period-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DonutChart } from '@/components/ui/chart';
+import { AreaChart, DonutChart } from '@/components/ui/chart';
 import { Metric } from '@/components/ui/metric';
 import { MultiSelectFilter } from '@/components/ui/multi-select-filter';
 import { PriceChangeBadge } from '@/components/ui/price-change-badge';
@@ -17,7 +17,12 @@ import { Account } from '@/lib/types/accounts.types';
 import { Analytics, AnalyticsTotal } from '@/lib/types/analytics.types';
 import { Category } from '@/lib/types/categories.types';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
-import { formatPeriodLabel, parsePeriod, shiftPeriod } from '@/lib/utils/periods';
+import {
+  formatPeriodLabel,
+  formatPeriodParam,
+  parsePeriod,
+  shiftPeriod,
+} from '@/lib/utils/periods';
 
 import { AnalyticsParams, getAnalyticsHref } from './analytics-params';
 
@@ -149,6 +154,8 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
         ))}
       </div>
 
+      {analytics.pace && <PaceCard pace={analytics.pace} format={format} />}
+
       {categorizedShare < 1 && (
         <p className="text-sm text-muted-foreground">
           {formatPercent(categorizedShare, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}{' '}
@@ -235,6 +242,64 @@ export function AnalyticsView({ analytics, accounts, params }: AnalyticsViewProp
         </Link>
       )}
     </>
+  );
+}
+
+/**
+ * The running total of a month's spending against the month before, day by day.
+ */
+function PaceCard({
+  pace,
+  format,
+}: {
+  pace: NonNullable<Analytics['pace']>;
+  format: (value: number) => string;
+}) {
+  const month = parsePeriod(pace.month);
+  const label = formatPeriodLabel(month);
+  const previousLabel = formatPeriodLabel(shiftPeriod(month, -1));
+  const isCurrent = pace.month === formatPeriodParam(parsePeriod(undefined));
+  const lastDay = pace.days.findLastIndex((value) => value !== null);
+  const spent = pace.days[lastDay] ?? 0;
+  // This month against the same day of the last one, a past month against the whole one before
+  const difference =
+    spent -
+    ((isCurrent
+      ? pace.previousDays[Math.min(lastDay, pace.previousDays.length - 1)]
+      : pace.previousDays.at(-1)) ?? 0);
+  const comparison = `${format(Math.abs(difference))} ${difference > 0 ? 'more' : 'less'}`;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Spending pace</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          {isCurrent
+            ? `${format(spent)} so far, ${comparison} than at this point in ${previousLabel}`
+            : `${format(spent)} in ${label}, ${comparison} than in ${previousLabel}`}
+        </p>
+      </CardHeader>
+      <CardContent>
+        <AreaChart
+          className="h-48"
+          data={Array.from(
+            { length: Math.max(pace.days.length, pace.previousDays.length) },
+            (_, index) => ({
+              day: String(index + 1),
+              [previousLabel]: pace.previousDays[index] ?? null,
+              [label]: pace.days[index] ?? null,
+            }),
+          )}
+          index="day"
+          categories={[previousLabel, label]}
+          colors={['var(--muted-foreground)', 'var(--chart-1)']}
+          curveType="monotone"
+          showYAxis={false}
+          showGridLines={false}
+          valueFormatter={(value) => format(value as number)}
+        />
+      </CardContent>
+    </Card>
   );
 }
 

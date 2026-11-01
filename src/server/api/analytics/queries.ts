@@ -25,7 +25,7 @@ const t = schema.transactions;
 /**
  * Returns the spending and income of a period by category and merchant, compared to the period
  * before, and the totals of its year's months, of the years up to it, or of the last 12 months for
- * a chart. Amounts are in the main currency.
+ * a chart, and the daily spending of its month and the one before. Amounts are in the main currency.
  *
  * @param input.period Like "2026-10" for a month or "2026" for a year, else the last 12 months
  * @param input.subaccountIds Only the transactions of these subaccounts, else of all
@@ -50,8 +50,13 @@ export const getAnalytics = createApiQuery<
   // The merchant's own category, while the side follows each transaction's category
   const merchantCategory = alias(schema.categories, 'merchant_category');
   const bucket = sql<string>`to_char(date_trunc(${period.unit}, ${t.startedDate} at time zone 'UTC'), ${period.unit === 'month' ? 'YYYY-MM' : 'YYYY'})`;
+  const inSubaccounts = input.subaccountIds?.length
+    ? inArray(t.subaccountId, input.subaccountIds)
+    : undefined;
+  // The selected month, or this one in the last 12 months
+  const paceMonths = period.unit === 'month' ? [shiftPeriod(period, -1), period] : [];
 
-  const [rows, { mainCurrency, mapper }] = await Promise.all([
+  const [rows, paceRows, { mainCurrency, mapper }] = await Promise.all([
     db.rls((tx) =>
       joinCategory(
         tx
@@ -76,13 +81,7 @@ export const getAnalytics = createApiQuery<
           .$dynamic(),
       )
         .leftJoin(merchantCategory, eq(merchantCategory.id, schema.merchants.categoryId))
-        .where(
-          and(
-            gte(t.startedDate, start),
-            lt(t.startedDate, end),
-            input.subaccountIds?.length ? inArray(t.subaccountId, input.subaccountIds) : undefined,
-          ),
-        )
+        .where(and(gte(t.startedDate, start), lt(t.startedDate, end), inSubaccounts))
         .groupBy(
           sql`period`,
           sql`side`,
@@ -92,6 +91,32 @@ export const getAnalytics = createApiQuery<
           schema.subaccounts.currency,
         ),
     ),
+    paceMonths.length
+      ? db.rls((tx) =>
+          joinCategory(
+            tx
+              .select({
+                day: sql<string>`to_char(${t.startedDate} at time zone 'UTC', 'YYYY-MM-DD')`.as(
+                  'day',
+                ),
+                currency: schema.subaccounts.currency,
+                amount: sum(t.amount).mapWith(Number),
+              })
+              .from(t)
+              .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+              .$dynamic(),
+          )
+            .where(
+              and(
+                gte(t.startedDate, getPeriodRange(paceMonths[0]).start),
+                lt(t.startedDate, getPeriodRange(period).end),
+                inSubaccounts,
+                sql`${analyticsSide} = 'spending'`,
+              ),
+            )
+            .groupBy(sql`day`, schema.subaccounts.currency),
+        )
+      : [],
     getMainCurrencyWithMapper(),
   ]);
 
@@ -177,6 +202,25 @@ export const getAnalytics = createApiQuery<
     };
   };
 
+  // The running total of each day of the months, until today
+  const today = new Date().toISOString().slice(0, 10);
+  const [previousDays, days] = paceMonths.map((month) => {
+    const param = formatPeriodParam(month);
+    let total = 0;
+    return Array.from(
+      { length: new Date(Date.UTC(month.year, month.month + 1, 0)).getUTCDate() },
+      (_, index) => {
+        const day = `${param}-${String(index + 1).padStart(2, '0')}`;
+        for (const row of paceRows) {
+          if (row.day === day) {
+            total -= row.amount * (mapper[row.currency] ?? 0);
+          }
+        }
+        return day > today ? null : total;
+      },
+    );
+  });
+
   return {
     mainCurrency,
     totals: { spending: totalOf('spending'), income: totalOf('income') },
@@ -190,5 +234,6 @@ export const getAnalytics = createApiQuery<
       income: byAmount(merchants.income.values()).slice(0, 50),
     },
     excludedCount,
+    pace: days ? { month: formatPeriodParam(period), days, previousDays } : null,
   };
 });

@@ -24,4 +24,6 @@ export interface Analytics {
     (AnalyticsTotal & { merchant: { id: string; name: string }; category: Category | null })[]
   >;
   excludedCount: number;
+  /** The running total of the month's spending per day, null after today, and of the month before */
+  pace: { month: string; days: (number | null)[]; previousDays: (number | null)[] } | null;
 }
