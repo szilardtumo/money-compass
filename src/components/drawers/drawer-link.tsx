@@ -1,8 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ComponentProps } from 'react';
+
+import { ProgressLink } from '@/components/navigation-progress';
 
 /** A category ID or "uncategorized", a merchant ID or an account ID, and the period it shows */
 type DrawerTarget = ({ category: string } | { merchant: string } | { account: string }) & {
@@ -32,8 +33,8 @@ export function useDrawerHref() {
 export function DrawerLink({
   to,
   ...props
-}: { to: DrawerTarget } & Omit<ComponentProps<typeof Link>, 'href'>) {
+}: { to: DrawerTarget } & Omit<ComponentProps<typeof ProgressLink>, 'href'>) {
   const getHref = useDrawerHref();
   // Lists have hundreds of these
-  return <Link href={getHref(to)} scroll={false} prefetch={false} {...props} />;
+  return <ProgressLink href={getHref(to)} prefetch={false} {...props} />;
 }

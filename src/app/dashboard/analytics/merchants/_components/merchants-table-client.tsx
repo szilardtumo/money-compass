@@ -2,7 +2,6 @@
 
 import { createColumnHelper } from '@tanstack/react-table';
 import { MergeIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
@@ -10,6 +9,7 @@ import { UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
 import { MerchantCategoryPicker } from '@/components/categories/merchant-category-picker';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
+import { useNavigate } from '@/components/navigation-progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,7 +44,7 @@ export function MerchantsTableClient({
   categories,
   mainCurrency,
 }: MerchantsTableClientProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const getDrawerHref = useDrawerHref();
   const [mergeOpen, setMergeOpen] = useState(false);
 
@@ -179,10 +179,9 @@ export function MerchantsTableClient({
         emptyMessage="No merchants."
         enableRowSelection
         onRowClick={(merchant) =>
-          router.push(
+          navigate(
             // The year of the totals
             getDrawerHref({ merchant: merchant.id, period: String(parsePeriod(undefined).year) }),
-            { scroll: false },
           )
         }
       />

@@ -1,11 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { CategoryAvatar, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
+import { ProgressLink, useNavigate } from '@/components/navigation-progress';
 import { PeriodPicker } from '@/components/period-picker';
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
 import { Button } from '@/components/ui/button';
@@ -51,7 +50,7 @@ export function AnalyticsView({
   categories: allCategories,
   params,
 }: AnalyticsViewProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const getDrawerHref = useDrawerHref();
   const period = parsePeriod(params.period);
   const { mainCurrency, totals } = analytics;
@@ -93,9 +92,7 @@ export function AnalyticsView({
             title="Account"
             options={subaccountOptions}
             selected={params.subaccountIds ?? []}
-            onSelectedChange={(subaccountIds) =>
-              router.push(href({ subaccountIds }), { scroll: false })
-            }
+            onSelectedChange={(subaccountIds) => navigate(href({ subaccountIds }))}
           />
         )}
       </div>
@@ -240,9 +237,9 @@ export function AnalyticsView({
           />
           {transactions.length < transactionCount && (
             <Button variant="outline" asChild>
-              <Link href={href({ allTransactions: true })} scroll={false}>
+              <ProgressLink href={href({ allTransactions: true })}>
                 Show all {transactionCount}
-              </Link>
+              </ProgressLink>
             </Button>
           )}
         </CardContent>
@@ -335,9 +332,8 @@ function TotalsList({
     <ul className="flex flex-1 flex-col">
       {items.map((item) => (
         <li key={item.key}>
-          <Link
+          <ProgressLink
             href={item.href}
-            scroll={false}
             prefetch={false}
             className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted/50"
           >
@@ -360,7 +356,7 @@ function TotalsList({
                 <PriceChangeBadge variant="secondary" percent={getChange(item)} invert={invert} />
               )}
             </div>
-          </Link>
+          </ProgressLink>
         </li>
       ))}
     </ul>

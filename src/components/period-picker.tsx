@@ -2,8 +2,9 @@
 
 import { cn } from 'cn';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
+import { useNavigate } from '@/components/navigation-progress';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -24,7 +25,7 @@ interface PeriodPickerProps {
  * period param, which the analytics page and the drawers share.
  */
 export function PeriodPicker({ period, className }: PeriodPickerProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selected = parsePeriod(period);
@@ -36,7 +37,7 @@ export function PeriodPicker({ period, className }: PeriodPickerProps) {
   const setPeriod = (value: string) => {
     const params = new URLSearchParams(searchParams);
     params.set('period', value);
-    router.push(`${pathname}?${params}`, { scroll: false });
+    navigate(`${pathname}?${params}`);
   };
   const selectUnit = (unit: string) => {
     const { year } = selected;

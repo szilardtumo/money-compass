@@ -1,9 +1,10 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 
 import { useDrawerHref } from '@/components/drawers/drawer-link';
+import { useNavigate } from '@/components/navigation-progress';
 import { PeriodPicker } from '@/components/period-picker';
 import {
   Sheet,
@@ -52,7 +53,7 @@ export function DrawerSheet({
   mainCurrency,
   children,
 }: DrawerSheetProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const getDrawerHref = useDrawerHref();
   const searchParams = useSearchParams().toString();
   // Closes at once, while the page renders again without the drawer. Another drawer opened in the
@@ -67,7 +68,7 @@ export function DrawerSheet({
       open={closedAt !== searchParams}
       onOpenChange={() => {
         setClosedAt(searchParams);
-        router.push(getDrawerHref(null), { scroll: false });
+        navigate(getDrawerHref(null));
       }}
     >
       <SheetContent className="w-full gap-0 sm:max-w-xl">
