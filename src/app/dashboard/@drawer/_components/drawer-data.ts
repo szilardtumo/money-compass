@@ -18,11 +18,13 @@ import { apiQueries } from '@/server/api/queries';
  *
  * @param period Like "2026-10" or "2026"
  * @param subaccountIds Only the transactions of these subaccounts, else of all
+ * @param allTime Lists the transactions of all time, while the totals stay those of the period
  */
 export async function getDrawerData(
   filter: { categoryId: string | null } | { merchantId: string },
   period: string,
   subaccountIds: string[] | undefined,
+  allTime = false,
 ) {
   // The average counts this year's months so far
   await connection();
@@ -35,8 +37,8 @@ export async function getDrawerData(
     apiQueries.transactions.getTransactions({
       ...filter,
       subaccountIds,
-      fromDate: start.toISOString(),
-      toDate: new Date(end.getTime() - 1).toISOString(),
+      fromDate: allTime ? undefined : start.toISOString(),
+      toDate: allTime ? undefined : new Date(end.getTime() - 1).toISOString(),
       pageSize: 10_000,
     }),
     apiQueries.analytics.getTotals({
