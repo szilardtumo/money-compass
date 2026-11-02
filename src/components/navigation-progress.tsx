@@ -31,8 +31,11 @@ export function useNavigate() {
   return navigate;
 }
 
-/** A link that shows the progress bar and keeps the scroll position */
-export function ProgressLink({ href, ...props }: ComponentProps<typeof Link> & { href: string }) {
+/** A link that shows the progress bar and keeps the scroll position. It always pushes a history entry. */
+export function ProgressLink({
+  href,
+  ...props
+}: Omit<ComponentProps<typeof Link>, 'href' | 'replace' | 'scroll'> & { href: string }) {
   const navigate = useNavigate();
 
   return (
