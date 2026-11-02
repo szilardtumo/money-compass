@@ -1,11 +1,12 @@
 'use client';
 
+import { cn } from 'cn';
 import { EllipsisVerticalIcon, PencilIcon, StoreIcon } from 'lucide-react';
 import { useState } from 'react';
 
-import { UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
+import { CategoryBadge, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { MerchantCategoryPicker } from '@/components/categories/merchant-category-picker';
-import { useDrawerHref } from '@/components/drawers/drawer-link';
+import { DrawerLink, useDrawerHref } from '@/components/drawers/drawer-link';
 import { useNavigate } from '@/components/navigation-progress';
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,8 @@ import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Account } from '@/lib/types/accounts.types';
 import { Category, Merchant } from '@/lib/types/categories.types';
 import { Transaction } from '@/lib/types/transactions.types';
+import { groupBy } from '@/lib/utils/group-by';
+import { formatPeriodLabel, parsePeriod } from '@/lib/utils/periods';
 import { apiActions } from '@/server/api/actions';
 
 import { DrawerSheet, TAB_CONTENT } from './drawer-sheet';
@@ -48,6 +51,8 @@ interface MerchantDrawerClientProps {
   categories: Category[];
   transactions: Transaction[];
   period: string;
+  /** The transactions are of all time, not of the period */
+  allTime: boolean;
   stats: { label: string; value: number }[];
   chart: number[];
   accounts: Account[];
@@ -60,13 +65,23 @@ export function MerchantDrawerClient({
   categories,
   transactions,
   period,
+  allTime,
   stats,
   chart,
   accounts,
   mainCurrency,
 }: MerchantDrawerClientProps) {
   const [isRenaming, setIsRenaming] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>();
   const color = merchant.category?.color ?? UNCATEGORIZED_COLOR;
+  // A transaction can have a category of its own, which these filter by
+  const byCategory = groupBy(
+    transactions,
+    (transaction) =>
+      transaction.category?.id ?? (transaction.excluded ? 'excluded' : 'uncategorized'),
+  );
+  // A filter of a category without transactions in the list, like after a period change, is off
+  const filter = categoryFilter && byCategory[categoryFilter] ? categoryFilter : undefined;
 
   return (
     <DrawerSheet
@@ -103,8 +118,36 @@ export function MerchantDrawerClient({
           <TabsTrigger value="names">Names {merchant.keys.length}</TabsTrigger>
         </TabsList>
         <TabsContent value="transactions" className={TAB_CONTENT}>
+          <div className="flex items-center justify-between py-2 text-xs text-muted-foreground">
+            {allTime ? 'All time' : `In ${formatPeriodLabel(parsePeriod(period))}`}
+            <DrawerLink
+              to={allTime ? { merchant: merchant.id } : { merchant: merchant.id, history: 'all' }}
+              className="hover:text-foreground hover:underline"
+            >
+              {allTime ? `Show ${formatPeriodLabel(parsePeriod(period))} only` : 'Show all time'}
+            </DrawerLink>
+          </div>
+          {Object.keys(byCategory).length > 1 && (
+            <div className="flex flex-wrap gap-1.5 pb-4">
+              {Object.entries(byCategory).map(([key, items]) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={filter === key}
+                  className={cn(
+                    'flex items-center gap-1 rounded-full text-xs text-muted-foreground',
+                    filter && filter !== key && 'opacity-50',
+                  )}
+                  onClick={() => setCategoryFilter(filter === key ? undefined : key)}
+                >
+                  <CategoryBadge category={items[0].category} excluded={items[0].excluded} />
+                  {items.length}
+                </button>
+              ))}
+            </div>
+          )}
           <TransactionDayList
-            transactions={transactions}
+            transactions={filter ? byCategory[filter] : transactions}
             accounts={accounts}
             categories={categories}
           />

@@ -39,7 +39,14 @@ async function Drawer({
   }
   const merchantId = z.uuid().safeParse(query.merchant).data;
   if (merchantId) {
-    return <MerchantDrawer merchantId={merchantId} period={period} subaccountIds={subaccountIds} />;
+    return (
+      <MerchantDrawer
+        merchantId={merchantId}
+        period={period}
+        subaccountIds={subaccountIds}
+        allTime={query.history === 'all'}
+      />
+    );
   }
   if (query.category === 'uncategorized') {
     return <CategoryDrawer categoryId={null} period={period} subaccountIds={subaccountIds} />;
