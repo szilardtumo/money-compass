@@ -2,13 +2,13 @@
 
 import { createColumnHelper } from '@tanstack/react-table';
 import { PlusIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { CategoryActions } from '@/components/categories/category-actions';
 import { CategoryIcon } from '@/components/categories/category-badge';
 import { CategoryDialog } from '@/components/categories/category-dialog';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
+import { useNavigate } from '@/components/navigation-progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,7 +31,7 @@ interface CategoriesListClientProps {
 }
 
 export function CategoriesListClient({ categories, mainCurrency }: CategoriesListClientProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const getDrawerHref = useDrawerHref();
   const [isCreating, setIsCreating] = useState(false);
 
@@ -141,10 +141,9 @@ export function CategoriesListClient({ categories, mainCurrency }: CategoriesLis
         table={table}
         emptyMessage="No categories."
         onRowClick={(category) =>
-          router.push(
+          navigate(
             // The year of the totals
             getDrawerHref({ category: category.id, period: String(parsePeriod(undefined).year) }),
-            { scroll: false },
           )
         }
       />

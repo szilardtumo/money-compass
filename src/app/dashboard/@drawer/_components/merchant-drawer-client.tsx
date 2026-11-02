@@ -1,12 +1,12 @@
 'use client';
 
 import { EllipsisVerticalIcon, PencilIcon, StoreIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
 import { MerchantCategoryPicker } from '@/components/categories/merchant-category-picker';
 import { useDrawerHref } from '@/components/drawers/drawer-link';
+import { useNavigate } from '@/components/navigation-progress';
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
 import { Button } from '@/components/ui/button';
 import {
@@ -141,7 +141,7 @@ export function MerchantDrawerClient({
 }
 
 function RenameMerchantForm({ merchant, onClose }: { merchant: Merchant; onClose: () => void }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const getDrawerHref = useDrawerHref();
   const [name, setName] = useState(merchant.name);
   const { execute, isExecuting } = useActionWithToast(apiActions.merchants.renameMerchant, {
@@ -152,7 +152,7 @@ function RenameMerchantForm({ merchant, onClose }: { merchant: Merchant; onClose
     onSuccess: ({ data }) => {
       onClose();
       if (data?.mergedInto) {
-        router.push(getDrawerHref({ merchant: data.mergedInto.id }), { scroll: false });
+        navigate(getDrawerHref({ merchant: data.mergedInto.id }));
       }
     },
   });
