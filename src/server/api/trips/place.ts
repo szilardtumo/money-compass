@@ -16,12 +16,13 @@ Return place: the city, like "Athens, Greece", or the region when the payments s
 
 /**
  * Asks Claude where the payments of a trip were, like "Athens, Greece". The answer for the same
- * payments is kept, so a failure throws instead of returning null.
+ * payments is kept until the next deploy, so a failure throws instead of returning null. It's kept
+ * in the platform's remote cache, because serverless instances lose their memory between requests.
  *
  * @param payments Sorted, so the same ones hit the cache
  */
 export async function askTripPlace(payments: { name: string; currency: string }[]) {
-  'use cache';
+  'use cache: remote';
   cacheLife('max');
 
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
