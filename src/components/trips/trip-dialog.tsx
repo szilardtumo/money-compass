@@ -148,7 +148,8 @@ function TripForm({ trip, newTrip, categories, onClose, onSaved }: Omit<TripDial
             <FormItem>
               <FormLabel>Category</FormLabel>
               <CategoryPicker
-                categories={categories}
+                // Income or excluded would make the whole trip income or leave it out of analytics
+                categories={categories.filter((category) => category.kind === 'expense')}
                 value={field.value}
                 onSelect={field.onChange}
                 clearLabel="No category"
