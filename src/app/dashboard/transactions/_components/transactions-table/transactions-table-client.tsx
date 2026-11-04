@@ -202,7 +202,6 @@ export function TransactionsTableClient({
     async (categoryId: string | null) => {
       const transactionIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
       await setTransactionCategory({ transactionIds, categoryId });
-      table.resetRowSelection();
     },
     [setTransactionCategory, table],
   );
@@ -221,7 +220,6 @@ export function TransactionsTableClient({
   const deleteSelected = useCallback(async () => {
     const transactionIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
     await deleteTransactions({ transactionIds });
-    table.resetRowSelection();
   }, [deleteTransactions, table]);
 
   return (

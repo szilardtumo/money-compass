@@ -1,6 +1,9 @@
 import {
   ColumnFiltersState,
+  OnChangeFn,
+  PaginationState,
   RowData,
+  RowSelectionState,
   SortingState,
   TableOptions,
   columnFacetingFeature,
@@ -23,7 +26,7 @@ import {
   tableFeatures,
   useTable,
 } from '@tanstack/react-table';
-import { useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 export const dataTableFeatures = tableFeatures({
   columnFilteringFeature,
@@ -61,22 +64,41 @@ interface UseDataTableOptions<TData extends RowData> {
 export function useDataTable<TData extends RowData>(options: UseDataTableOptions<TData>) {
   const [sorting, setSorting] = useState(options.initialSorting ?? []);
   const [columnFilters, setColumnFilters] = useState(options.initialColumnFilters ?? []);
-  const [rowSelection, setRowSelection] = useState({});
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 50 });
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  // Only the rows in sight stay selected, so a bulk action never reaches rows on another page or
+  // hidden by a filter. Reloaded data, like after a bulk action, starts a new selection too.
+  const [data, setData] = useState(options.data);
+  if (data !== options.data) {
+    setData(options.data);
+    setRowSelection({});
+  }
+  const clearSelectionOnChange =
+    <T>(setState: Dispatch<SetStateAction<T>>): OnChangeFn<T> =>
+    (updater) => {
+      setState(updater);
+      setRowSelection({});
+    };
 
   const table = useTable<DataTableFeatures, TData>({
     features: dataTableFeatures,
     data: options.data,
     columns: options.columns,
     getRowId: options.getRowId,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    onSortingChange: clearSelectionOnChange(setSorting),
+    onColumnFiltersChange: clearSelectionOnChange(setColumnFilters),
+    onGlobalFilterChange: clearSelectionOnChange(setGlobalFilter),
+    onPaginationChange: clearSelectionOnChange(setPagination),
     onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
+      globalFilter,
+      pagination,
       rowSelection,
     },
-    initialState: { pagination: { pageIndex: 0, pageSize: 50 } },
     manualPagination: !options.enablePagination,
     enableSortingRemoval: true,
     enableSorting: options.enableSorting,
