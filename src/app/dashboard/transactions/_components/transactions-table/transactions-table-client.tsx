@@ -28,7 +28,7 @@ import { Account } from '@/lib/types/accounts.types';
 import { Category } from '@/lib/types/categories.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
-import { formatCurrency, formatDay, formatTime } from '@/lib/utils/formatters';
+import { formatCurrency, formatDay, formatTime, formatUtcDay } from '@/lib/utils/formatters';
 import { apiActions } from '@/server/api/actions';
 
 const columnHelper = createColumnHelper<DataTableFeatures, TransactionWithAccount>();
@@ -210,10 +210,7 @@ export function TransactionsTableClient({
   const { openDialog: openAddToTripDialog } = useAddToTripDialog();
   const addSelectedToTrip = () => {
     const selected = table.getSelectedRowModel().rows.map((row) => row.original);
-    // Bank dates are midnights in UTC
-    const days = selected
-      .map((transaction) => new Date(transaction.startedDate).toISOString().slice(0, 10))
-      .toSorted();
+    const days = selected.map((transaction) => formatUtcDay(transaction.startedDate)).toSorted();
     openAddToTripDialog({
       transactionIds: selected.map((transaction) => transaction.id),
       startDate: days[0],

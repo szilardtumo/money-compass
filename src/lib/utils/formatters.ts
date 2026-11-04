@@ -60,6 +60,11 @@ export function formatDay(date: string | Date) {
       : formatDate(date, isThisYear(date) ? 'EEE, d MMM' : 'EEE, d MMM yyyy');
 }
 
+/** The UTC day of a date, like "2026-09-04", since bank dates are midnights in UTC */
+export function formatUtcDay(date: string | Date) {
+  return new Date(date).toISOString().slice(0, 10);
+}
+
 /** Days like "2026-09-04" as "4 – 7 Sep 2026", "30 Aug – 2 Sep 2026" or "30 Dec 2025 – 2 Jan 2026" */
 export function formatDateRange(start: string, end: string) {
   const [from, to] = [parseISO(start), parseISO(end)];

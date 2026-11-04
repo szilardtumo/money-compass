@@ -62,7 +62,7 @@ export function AddToTripDialogClient({
                 {trips.map((trip) => (
                   <CommandItem
                     key={trip.id}
-                    value={`${trip.name} ${trip.id}`}
+                    value={`${trip.name} ${formatDateRange(trip.startDate, trip.endDate)}`}
                     onSelect={() => {
                       execute({ transactionIds: values.transactionIds, tripId: trip.id });
                       internal.setIsOpen(false);

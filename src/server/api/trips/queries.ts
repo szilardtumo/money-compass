@@ -82,7 +82,11 @@ export const getTrips = createApiQuery<void, Trip[]>(async () => {
     ]),
   );
   for (const row of rows) {
-    const trip = result.get(row.tripId!)!;
+    const trip = result.get(row.tripId!);
+    // A trip created between the two reads
+    if (!trip) {
+      continue;
+    }
     trip.transactionCount += row.transactionCount;
     if (row.side === 'excluded') {
       continue;
@@ -119,7 +123,8 @@ export const getTripSuggestions = createApiQuery<void, TripSuggestion[]>(async (
       .select({ currency })
       .from(t)
       .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
-      .where(and(isPayment, gte(t.startedDate, subDays(new Date(), 90))))
+      // Without trips, so a long one abroad doesn't make its currency the usual one
+      .where(and(isPayment, isNull(t.tripId), gte(t.startedDate, subDays(new Date(), 90))))
       .groupBy(currency)
       .orderBy(desc(count()))
       .limit(1);
@@ -203,6 +208,7 @@ export const getTripSuggestedTransactions = createApiQuery<{ tripId: string }, T
         fromDate: addDays(end, 1).toISOString(),
         toDate: until(addDays(end, 15)),
         type: 'transfer',
+        countedInAnalytics: true,
       }),
       trip.categoryId
         ? getTransactions({

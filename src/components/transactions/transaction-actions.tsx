@@ -17,6 +17,8 @@ import {
 import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Category } from '@/lib/types/categories.types';
 import { Transaction } from '@/lib/types/transactions.types';
+import { formatUtcDay } from '@/lib/utils/formatters';
+import { TYPES_WITHOUT_MERCHANT } from '@/lib/utils/merchants';
 import { apiActions } from '@/server/api/actions';
 
 interface TransactionActionsProps {
@@ -42,8 +44,10 @@ export function TransactionActions({ transaction, categories, children }: Transa
     errorToast: 'Failed to remove from the trip. Please try again later.',
   });
   const { merchant, trip } = transaction;
+  const tripCategoryApplies =
+    !!trip?.categoryId && !TYPES_WITHOUT_MERCHANT.includes(transaction.type);
   // The trip's category outranks the merchant's, so a new one has to be the transaction's own
-  const merchantCategoryApplies = merchant && !trip?.categoryId;
+  const merchantCategoryApplies = merchant && !tripCategoryApplies;
   const { execute: setTransactionCategory } = useActionWithToast(
     apiActions.transactions.setTransactionCategory,
     CATEGORY_TOASTS,
@@ -82,8 +86,8 @@ export function TransactionActions({ transaction, categories, children }: Transa
       }
       clearLabel={
         transaction.categorySource === 'transaction'
-          ? trip?.categoryId
-            ? `Use ${trip.name}'s category`
+          ? tripCategoryApplies
+            ? `Use ${trip!.name}'s category`
             : merchant
               ? `Use ${merchant.name}'s category`
               : 'Remove category'
@@ -113,7 +117,7 @@ export function TransactionActions({ transaction, categories, children }: Transa
                   All {merchant.transactionCount} from {merchant.name}
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  Transactions with their own category keep it.
+                  Transactions with their own category or their trip&apos;s keep it.
                 </p>
               </div>
             )
@@ -158,8 +162,7 @@ export function TransactionActions({ transaction, categories, children }: Transa
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              // Bank dates are midnights in UTC
-              const day = new Date(transaction.startedDate).toISOString().slice(0, 10);
+              const day = formatUtcDay(transaction.startedDate);
               openAddToTripDialog({
                 transactionIds: [transaction.id],
                 startDate: day,
