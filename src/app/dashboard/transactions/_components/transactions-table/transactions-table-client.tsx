@@ -216,7 +216,6 @@ export function TransactionsTableClient({
       startDate: days[0],
       endDate: days.at(-1)!,
     });
-    table.resetRowSelection();
   };
 
   const deleteSelected = useCallback(async () => {

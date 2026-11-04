@@ -176,9 +176,9 @@ export const getTripSuggestions = createApiQuery<void, TripSuggestion[]>(async (
 });
 
 /**
- * Returns the transactions without a trip that may belong to one, the latest first: the ones of its
- * days, the transfers of the 14 days after it, like settle-ups, and the ones in its category of the
- * 60 days before it, like bookings.
+ * Returns the transactions without a trip or an income category that may belong to one, the latest
+ * first: the ones of its days, the transfers of the 14 days after it, like settle-ups, and the ones
+ * in its category of the 60 days before it, like bookings.
  */
 export const getTripSuggestedTransactions = createApiQuery<{ tripId: string }, Transaction[]>(
   async ({ input: { tripId } }) => {
@@ -219,8 +219,12 @@ export const getTripSuggestedTransactions = createApiQuery<{ tripId: string }, T
           })
         : null,
     ]);
-    return results
-      .flatMap((result) => result?.data ?? [])
-      .toSorted((a, b) => +new Date(b.startedDate) - +new Date(a.startedDate));
+    return (
+      results
+        .flatMap((result) => result?.data ?? [])
+        // Income like the salary would turn into trip spending
+        .filter((transaction) => transaction.category?.kind !== 'income')
+        .toSorted((a, b) => +new Date(b.startedDate) - +new Date(a.startedDate))
+    );
   },
 );
