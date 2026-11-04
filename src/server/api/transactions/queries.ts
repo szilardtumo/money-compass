@@ -72,7 +72,7 @@ const mapTransactionData = (
     trip: data.trip,
     categorySource: data.categoryId
       ? 'transaction'
-      : data.trip?.categoryId
+      : data.category && data.category.id === data.trip?.categoryId
         ? 'trip'
         : data.category
           ? 'merchant'

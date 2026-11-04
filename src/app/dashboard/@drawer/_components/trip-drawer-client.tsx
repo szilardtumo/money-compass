@@ -69,8 +69,6 @@ export function TripDrawerClient({
     apiActions.trips.setTransactionTrip,
     ADD_TO_TRIP_TOASTS,
   );
-  const add = (items: Transaction[]) =>
-    addToTrip({ transactionIds: items.map((item) => item.id), tripId: trip.id });
   const color = trip.category?.color ?? UNCATEGORIZED_COLOR;
   const days = differenceInCalendarDays(parseISO(trip.endDate), parseISO(trip.startDate)) + 1;
 
@@ -140,15 +138,10 @@ export function TripDrawerClient({
           </ul>
         </TabsContent>
         <TabsContent value="suggested" className={TAB_CONTENT}>
-          <div className="flex items-center justify-between gap-2 py-2 text-xs text-muted-foreground">
+          <p className="py-2 text-xs text-muted-foreground">
             Without a trip: the trip&apos;s days, transfers of the 14 days after it, and its
             category in the 60 days before it
-            {suggested.length > 1 && (
-              <Button size="sm" variant="outline" onClick={() => add(suggested)}>
-                Add all
-              </Button>
-            )}
-          </div>
+          </p>
           <TransactionDayList
             transactions={suggested}
             accounts={accounts}
@@ -161,7 +154,7 @@ export function TripDrawerClient({
                 aria-label={`Add to ${trip.name}`}
                 title={`Add to ${trip.name}`}
                 className="size-6 shrink-0"
-                onClick={() => add([transaction])}
+                onClick={() => addToTrip({ transactionIds: [transaction.id], tripId: trip.id })}
               />
             )}
           />

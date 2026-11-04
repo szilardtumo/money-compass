@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { PgSelect } from 'drizzle-orm/pg-core';
 
 import { AnalyticsSide } from '@/lib/types/analytics.types';
@@ -11,7 +11,8 @@ const t = schema.transactions;
 
 /**
  * Left joins the merchant and trip of a transactions query and the transaction's category: its
- * own, else its trip's, else its merchant's.
+ * own, else its trip's, else its merchant's. Exchanges, top-ups and corrections don't take their
+ * trip's, so they stay out of analytics.
  */
 export function joinCategory<T extends PgSelect>(query: T) {
   return query
@@ -21,7 +22,7 @@ export function joinCategory<T extends PgSelect>(query: T) {
       schema.categories,
       eq(
         schema.categories.id,
-        sql`coalesce(${t.categoryId}, ${schema.trips.categoryId}, ${schema.merchants.categoryId})`,
+        sql`coalesce(${t.categoryId}, case when ${notInArray(t.type, TYPES_WITHOUT_MERCHANT)} then ${schema.trips.categoryId} end, ${schema.merchants.categoryId})`,
       ),
     );
 }

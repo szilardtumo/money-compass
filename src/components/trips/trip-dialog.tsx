@@ -102,7 +102,7 @@ function TripForm({ trip, newTrip, categories, onClose, onSaved }: Omit<TripDial
             {trip
               ? 'Edit trip'
               : newTrip
-                ? `New trip with ${newTrip.transactionIds.length} transactions`
+                ? `New trip with ${newTrip.transactionIds.length === 1 ? 'the transaction' : `${newTrip.transactionIds.length} transactions`}`
                 : 'New trip'}
           </DialogTitle>
         </DialogHeader>

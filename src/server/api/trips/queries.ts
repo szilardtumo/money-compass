@@ -102,9 +102,10 @@ export const getTrips = createApiQuery<void, Trip[]>(async () => {
 });
 
 /**
- * Returns the days that look like a trip without one, the latest first: days with at least 3 card
- * payments without a trip in other currencies than most payments of the last 90 days. Days at most
- * one day apart make one suggestion. The ones the user dismissed are left out.
+ * Returns the days that look like a trip without one, the latest first: days outside every trip
+ * with at least 3 card payments without a trip in other currencies than most payments of the last
+ * 90 days. Days with at most one day between them make one suggestion. The ones the user dismissed
+ * are left out.
  */
 export const getTripSuggestions = createApiQuery<void, TripSuggestion[]>(async () => {
   'use cache: private';
@@ -140,6 +141,7 @@ export const getTripSuggestions = createApiQuery<void, TripSuggestion[]>(async (
         and(
           isPayment,
           isNull(t.tripId),
+          sql`not exists (select 1 from ${schema.trips} where ${day}::date between ${schema.trips.startDate} and ${schema.trips.endDate})`,
           ne(currency, home.currency),
           dismissedUntil ? gt(day, dismissedUntil) : undefined,
         ),

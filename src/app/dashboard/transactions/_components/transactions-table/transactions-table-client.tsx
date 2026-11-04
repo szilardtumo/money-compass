@@ -1,7 +1,6 @@
 'use client';
 
 import { createColumnHelper } from '@tanstack/react-table';
-import { format, max, min } from 'date-fns';
 import { PlaneIcon, Trash2Icon } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 
@@ -211,11 +210,14 @@ export function TransactionsTableClient({
   const { openDialog: openAddToTripDialog } = useAddToTripDialog();
   const addSelectedToTrip = () => {
     const selected = table.getSelectedRowModel().rows.map((row) => row.original);
-    const dates = selected.map((transaction) => transaction.startedDate);
+    // Bank dates are midnights in UTC
+    const days = selected
+      .map((transaction) => new Date(transaction.startedDate).toISOString().slice(0, 10))
+      .toSorted();
     openAddToTripDialog({
       transactionIds: selected.map((transaction) => transaction.id),
-      startDate: format(min(dates), 'yyyy-MM-dd'),
-      endDate: format(max(dates), 'yyyy-MM-dd'),
+      startDate: days[0],
+      endDate: days.at(-1)!,
     });
     table.resetRowSelection();
   };

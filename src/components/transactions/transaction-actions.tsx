@@ -1,6 +1,5 @@
 'use client';
 
-import { format } from 'date-fns';
 import { EllipsisVerticalIcon, Trash2Icon } from 'lucide-react';
 import { ReactNode, useRef, useState } from 'react';
 
@@ -42,7 +41,9 @@ export function TransactionActions({ transaction, categories, children }: Transa
     successToast: 'Removed from trip!',
     errorToast: 'Failed to remove from the trip. Please try again later.',
   });
-  const { merchant } = transaction;
+  const { merchant, trip } = transaction;
+  // The trip's category outranks the merchant's, so a new one has to be the transaction's own
+  const merchantCategoryApplies = merchant && !trip?.categoryId;
   const { execute: setTransactionCategory } = useActionWithToast(
     apiActions.transactions.setTransactionCategory,
     CATEGORY_TOASTS,
@@ -75,19 +76,21 @@ export function TransactionActions({ transaction, categories, children }: Transa
       onOpenChange={setIsPicking}
       value={transaction.category?.id ?? null}
       onSelect={(categoryId) =>
-        merchant && categoryId
+        merchantCategoryApplies && categoryId
           ? setForMerchant(merchant.id, categoryId)
           : setForTransaction(categoryId)
       }
       clearLabel={
         transaction.categorySource === 'transaction'
-          ? merchant
-            ? `Use ${merchant.name}'s category`
-            : 'Remove category'
+          ? trip?.categoryId
+            ? `Use ${trip.name}'s category`
+            : merchant
+              ? `Use ${merchant.name}'s category`
+              : 'Remove category'
           : undefined
       }
       renderConfirm={
-        merchant && merchant.transactionCount > 1
+        merchantCategoryApplies && merchant.transactionCount > 1
           ? (categoryId, close) => (
               <div className="flex flex-col gap-2 p-3">
                 <p className="text-sm font-medium">Apply to</p>
@@ -155,7 +158,8 @@ export function TransactionActions({ transaction, categories, children }: Transa
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              const day = format(transaction.startedDate, 'yyyy-MM-dd');
+              // Bank dates are midnights in UTC
+              const day = new Date(transaction.startedDate).toISOString().slice(0, 10);
               openAddToTripDialog({
                 transactionIds: [transaction.id],
                 startDate: day,
@@ -163,13 +167,13 @@ export function TransactionActions({ transaction, categories, children }: Transa
               });
             }}
           >
-            {transaction.trip ? 'Move to another trip' : 'Add to trip'}
+            {trip ? 'Move to another trip' : 'Add to trip'}
           </DropdownMenuItem>
-          {transaction.trip && (
+          {trip && (
             <DropdownMenuItem
               onClick={() => setTransactionTrip({ transactionIds: [transaction.id], tripId: null })}
             >
-              Remove from {transaction.trip.name}
+              Remove from {trip.name}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={() => deleteTransaction(transaction.id)}>
