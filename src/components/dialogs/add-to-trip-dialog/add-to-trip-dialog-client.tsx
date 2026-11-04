@@ -3,7 +3,7 @@
 import { PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 
-import { TripDialog } from '@/components/trips/trip-dialog';
+import { ADD_TO_TRIP_TOASTS, TripDialog } from '@/components/trips/trip-dialog';
 import {
   Command,
   CommandEmpty,
@@ -33,11 +33,7 @@ export function AddToTripDialogClient({
 }) {
   const { isOpen, internal } = useAddToTripDialog();
   const [isCreating, setIsCreating] = useState(false);
-  const { execute } = useActionWithToast(apiActions.trips.setTransactionTrip, {
-    loadingToast: 'Adding to trip...',
-    successToast: 'Added to trip!',
-    errorToast: 'Failed to add to the trip. Please try again later.',
-  });
+  const { execute } = useActionWithToast(apiActions.trips.setTransactionTrip, ADD_TO_TRIP_TOASTS);
   const values = internal.defaultValues;
   if (!values) {
     return null;

@@ -10,12 +10,11 @@ import { Trip, TripSuggestion } from '@/lib/types/trips.types';
 import { toMainCurrency } from '@/lib/utils/currencies';
 import { schema } from '@/server/db';
 
-import { analyticsSide, joinCategory } from '../categories/joins';
+import { analyticsSide, categoryColumns, joinCategory } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
 import { getTransactions } from '../transactions/queries';
 
 const t = schema.transactions;
-const tripCategory = alias(schema.categories, 'trip_category');
 // The category without the trip: the transaction's own, else its merchant's
 const baseCategory = alias(schema.categories, 'base_category');
 
@@ -32,18 +31,12 @@ export const getTrips = createApiQuery<void, Trip[]>(async () => {
         .select({
           id: schema.trips.id,
           name: schema.trips.name,
-          category: {
-            id: tripCategory.id,
-            name: tripCategory.name,
-            kind: tripCategory.kind,
-            icon: tripCategory.icon,
-            color: tripCategory.color,
-          },
+          category: categoryColumns,
           startDate: schema.trips.startDate,
           endDate: schema.trips.endDate,
         })
         .from(schema.trips)
-        .leftJoin(tripCategory, eq(tripCategory.id, schema.trips.categoryId))
+        .leftJoin(schema.categories, eq(schema.categories.id, schema.trips.categoryId))
         .orderBy(desc(schema.trips.startDate), desc(schema.trips.createdAt)),
     ),
     db.rls((tx) =>
@@ -77,10 +70,15 @@ export const getTrips = createApiQuery<void, Trip[]>(async () => {
     getMainCurrencyWithMapper(),
   ]);
 
-  const result = new Map<string, Trip & { totals: Map<string | null, Trip['breakdown'][number]> }>(
+  const result = new Map(
     trips.map((trip) => [
       trip.id,
-      { ...trip, transactionCount: 0, total: 0, breakdown: [], totals: new Map() },
+      {
+        ...trip,
+        transactionCount: 0,
+        total: 0,
+        breakdown: new Map<string | null, Trip['breakdown'][number]>(),
+      },
     ]),
   );
   for (const row of rows) {
@@ -90,18 +88,16 @@ export const getTrips = createApiQuery<void, Trip[]>(async () => {
       continue;
     }
     const amount = toMainCurrency(row, mapper);
-    trip.total += amount;
-    const item = trip.totals.get(row.baseCategory?.id ?? null) ?? {
-      category: row.baseCategory,
-      total: 0,
-    };
-    trip.totals.set(row.baseCategory?.id ?? null, item);
+    const key = row.baseCategory?.id ?? null;
+    const item = trip.breakdown.get(key) ?? { category: row.baseCategory, total: 0 };
+    trip.breakdown.set(key, item);
     item.total += amount;
+    trip.total += amount;
   }
 
-  return [...result.values()].map(({ totals, ...trip }) => ({
+  return [...result.values()].map((trip) => ({
     ...trip,
-    breakdown: [...totals.values()].toSorted((a, b) => a.total - b.total),
+    breakdown: [...trip.breakdown.values()].toSorted((a, b) => a.total - b.total),
   }));
 });
 
@@ -180,7 +176,10 @@ export const getTripSuggestions = createApiQuery<void, TripSuggestion[]>(async (
 export const getTripSuggestedTransactions = createApiQuery<{ tripId: string }, Transaction[]>(
   async ({ input: { tripId } }) => {
     'use cache: private';
-    const trip = (await getTrips()).find((item) => item.id === tripId);
+    const { db } = await createApiContext();
+    const [trip] = await db.rls((tx) =>
+      tx.select().from(schema.trips).where(eq(schema.trips.id, tripId)),
+    );
     if (!trip) {
       return [];
     }
@@ -203,12 +202,12 @@ export const getTripSuggestedTransactions = createApiQuery<{ tripId: string }, T
         toDate: until(addDays(end, 15)),
         type: 'transfer',
       }),
-      trip.category
+      trip.categoryId
         ? getTransactions({
             ...filter,
             fromDate: subDays(start, 60).toISOString(),
             toDate: until(start),
-            categoryId: trip.category.id,
+            categoryId: trip.categoryId,
           })
         : null,
     ]);

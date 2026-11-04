@@ -24,8 +24,7 @@ import { getMainCurrencyWithMapper } from '../currencies/queries';
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
   balance: number;
   subaccount: typeof schema.subaccounts.$inferSelect;
-  trip: { id: string; name: string; categoryId: string | null } | null;
-} & Pick<Transaction, 'linkedTransaction' | 'merchant' | 'category' | 'excluded'>;
+} & Pick<Transaction, 'linkedTransaction' | 'merchant' | 'trip' | 'category' | 'excluded'>;
 
 /**
  * Maps a database transaction to the Transaction domain model with currency conversion
@@ -70,7 +69,7 @@ const mapTransactionData = (
     linkedTransaction: data.linkedTransaction,
     merchant: data.merchant,
     category: data.category,
-    trip: data.trip && { id: data.trip.id, name: data.trip.name },
+    trip: data.trip,
     categorySource: data.categoryId
       ? 'transaction'
       : data.trip?.categoryId

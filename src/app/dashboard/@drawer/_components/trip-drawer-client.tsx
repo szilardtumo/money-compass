@@ -8,7 +8,7 @@ import { CategoryBadge, UNCATEGORIZED_COLOR } from '@/components/categories/cate
 import { useDrawerHref } from '@/components/drawers/drawer-link';
 import { useNavigate } from '@/components/navigation-progress';
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
-import { TripDialog } from '@/components/trips/trip-dialog';
+import { ADD_TO_TRIP_TOASTS, TripDialog } from '@/components/trips/trip-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,11 +65,10 @@ export function TripDrawerClient({
     errorToast: 'Failed to delete the trip. Please try again later.',
     onSuccess: () => navigate(getDrawerHref(null)),
   });
-  const { execute: addToTrip } = useActionWithToast(apiActions.trips.setTransactionTrip, {
-    loadingToast: 'Adding to trip...',
-    successToast: 'Added to trip!',
-    errorToast: 'Failed to add to the trip. Please try again later.',
-  });
+  const { execute: addToTrip } = useActionWithToast(
+    apiActions.trips.setTransactionTrip,
+    ADD_TO_TRIP_TOASTS,
+  );
   const add = (items: Transaction[]) =>
     addToTrip({ transactionIds: items.map((item) => item.id), tripId: trip.id });
   const color = trip.category?.color ?? UNCATEGORIZED_COLOR;

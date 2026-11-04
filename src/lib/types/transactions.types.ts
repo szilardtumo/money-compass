@@ -32,7 +32,7 @@ export interface Transaction {
   /** The other leg of an exchange, in its own currency */
   linkedTransaction: { amount: number; currency: string } | null;
   merchant: { id: string; name: string; transactionCount: number } | null;
-  trip: { id: string; name: string } | null;
+  trip: { id: string; name: string; categoryId: string | null } | null;
   /** The transaction's own category, else its trip's, else its merchant's */
   category: Category | null;
   categorySource: 'transaction' | 'trip' | 'merchant' | null;

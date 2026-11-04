@@ -26,17 +26,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { useHookFormActionWithToast } from '@/hooks/useActionWithToast';
 import { Category } from '@/lib/types/categories.types';
-import { Trip } from '@/lib/types/trips.types';
+import { Trip, TripSuggestion } from '@/lib/types/trips.types';
 import { saveTripSchema } from '@/lib/validation/trips';
 import { apiActions } from '@/server/api/actions';
 
-/** A new trip's fields, like the dates of the transactions it starts with */
-export interface NewTripValues {
-  name?: string;
-  startDate?: string;
-  endDate?: string;
-  transactionIds?: string[];
-}
+export const ADD_TO_TRIP_TOASTS = {
+  loadingToast: 'Adding to trip...',
+  successToast: 'Added to trip!',
+  errorToast: 'Failed to add to the trip. Please try again later.',
+};
+
+/** The days and transactions a new trip starts with */
+export type NewTripValues = Omit<TripSuggestion, 'currencies'>;
 
 interface TripDialogProps {
   open: boolean;
@@ -100,7 +101,7 @@ function TripForm({ trip, newTrip, categories, onClose, onSaved }: Omit<TripDial
           <DialogTitle>
             {trip
               ? 'Edit trip'
-              : newTrip?.transactionIds?.length
+              : newTrip
                 ? `New trip with ${newTrip.transactionIds.length} transactions`
                 : 'New trip'}
           </DialogTitle>
