@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { addDays, differenceInCalendarDays, parseISO, subDays, subMonths } from 'date-fns';
+import { differenceInCalendarDays, parseISO, subDays, subMonths } from 'date-fns';
 import {
   and,
   count,
@@ -213,31 +213,31 @@ export const getTripSuggestedTransactions = createApiQuery<{ tripId: string }, T
     if (!trip) {
       return [];
     }
-    // Bank dates are midnights in UTC
-    const start = parseISO(`${trip.startDate}T00:00:00Z`);
-    const end = parseISO(`${trip.endDate}T00:00:00Z`);
+    // Bank dates are midnights in UTC, so a day is 24 hours in any server time zone
+    const day = (date: string, offset = 0) =>
+      new Date(Date.parse(`${date}T00:00:00Z`) + offset * 86_400_000);
     const until = (date: Date) => new Date(date.getTime() - 1).toISOString();
     const filter = { withoutTrip: true, pageSize: 1000 };
 
     const results = await Promise.all([
       getTransactions({
         ...filter,
-        fromDate: start.toISOString(),
-        toDate: until(addDays(end, 1)),
+        fromDate: day(trip.startDate).toISOString(),
+        toDate: until(day(trip.endDate, 1)),
         countedInAnalytics: true,
       }),
       getTransactions({
         ...filter,
-        fromDate: addDays(end, 1).toISOString(),
-        toDate: until(addDays(end, 15)),
+        fromDate: day(trip.endDate, 1).toISOString(),
+        toDate: until(day(trip.endDate, 15)),
         type: 'transfer',
         countedInAnalytics: true,
       }),
       trip.categoryId
         ? getTransactions({
             ...filter,
-            fromDate: subDays(start, 60).toISOString(),
-            toDate: until(start),
+            fromDate: day(trip.startDate, -60).toISOString(),
+            toDate: until(day(trip.startDate)),
             categoryId: trip.categoryId,
           })
         : null,

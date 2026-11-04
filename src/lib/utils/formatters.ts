@@ -10,6 +10,8 @@ export function formatCurrency(
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
+    // No "-€0" for -0 or an amount that rounds to 0
+    signDisplay: 'negative',
     ...options,
   }).format(value);
 }

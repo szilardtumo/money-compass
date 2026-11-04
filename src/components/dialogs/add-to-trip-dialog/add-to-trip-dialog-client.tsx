@@ -33,24 +33,36 @@ export function AddToTripDialogClient({
 }) {
   const { isOpen, internal } = useAddToTripDialog();
   const [isCreating, setIsCreating] = useState(false);
+  const [search, setSearch] = useState('');
   const { execute } = useActionWithToast(apiActions.trips.setTransactionTrip, ADD_TO_TRIP_TOASTS);
   const values = internal.defaultValues;
   if (!values) {
     return null;
   }
   const count = values.transactionIds.length;
+  // The dialog stays mounted, so the next one starts with an empty search
+  const close = () => {
+    internal.setIsOpen(false);
+    setSearch('');
+  };
 
   return (
     <>
-      <Dialog open={isOpen && !isCreating} onOpenChange={internal.setIsOpen}>
+      <Dialog open={isOpen && !isCreating} onOpenChange={close}>
         <DialogContent className="p-0">
           <DialogHeader className="px-4 pt-4">
             <DialogTitle>
               Add {count === 1 ? 'the transaction' : `${count} transactions`} to a trip
             </DialogTitle>
           </DialogHeader>
-          <Command>
-            <CommandInput placeholder="Search trips..." className="h-9" />
+          {/* Filtered here, so trips with the same name and dates can have their IDs as values */}
+          <Command shouldFilter={false}>
+            <CommandInput
+              placeholder="Search trips..."
+              className="h-9"
+              value={search}
+              onValueChange={setSearch}
+            />
             <CommandList>
               <CommandEmpty>No trip found.</CommandEmpty>
               <CommandGroup>
@@ -59,21 +71,27 @@ export function AddToTripDialogClient({
                 </CommandItem>
               </CommandGroup>
               <CommandGroup heading="Trips">
-                {trips.map((trip) => (
-                  <CommandItem
-                    key={trip.id}
-                    value={`${trip.name} ${formatDateRange(trip.startDate, trip.endDate)}`}
-                    onSelect={() => {
-                      execute({ transactionIds: values.transactionIds, tripId: trip.id });
-                      internal.setIsOpen(false);
-                    }}
-                  >
-                    <span className="truncate">{trip.name}</span>
-                    <span className="ml-auto text-xs whitespace-nowrap text-muted-foreground">
-                      {formatDateRange(trip.startDate, trip.endDate)}
-                    </span>
-                  </CommandItem>
-                ))}
+                {trips
+                  .filter((trip) =>
+                    `${trip.name} ${formatDateRange(trip.startDate, trip.endDate)}`
+                      .toLowerCase()
+                      .includes(search.trim().toLowerCase()),
+                  )
+                  .map((trip) => (
+                    <CommandItem
+                      key={trip.id}
+                      value={trip.id}
+                      onSelect={() => {
+                        execute({ transactionIds: values.transactionIds, tripId: trip.id });
+                        close();
+                      }}
+                    >
+                      <span className="truncate">{trip.name}</span>
+                      <span className="ml-auto text-xs whitespace-nowrap text-muted-foreground">
+                        {formatDateRange(trip.startDate, trip.endDate)}
+                      </span>
+                    </CommandItem>
+                  ))}
               </CommandGroup>
             </CommandList>
           </Command>

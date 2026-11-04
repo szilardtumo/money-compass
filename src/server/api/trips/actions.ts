@@ -2,6 +2,7 @@
 
 import { eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { returnValidationErrors } from 'next-safe-action';
 import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
@@ -18,6 +19,18 @@ export const saveTrip = authenticatedActionClient
   .inputSchema(saveTripSchema)
   .action(async ({ parsedInput: { id, transactionIds, ...values }, ctx }) => {
     const tripId = await ctx.db.rls(async (tx) => {
+      // Income or excluded would make the whole trip income or leave it out of analytics
+      if (values.categoryId) {
+        const [category] = await tx
+          .select({ kind: schema.categories.kind })
+          .from(schema.categories)
+          .where(eq(schema.categories.id, values.categoryId));
+        if (category?.kind !== 'expense') {
+          returnValidationErrors(saveTripSchema, {
+            categoryId: { _errors: ['A spending category must be selected.'] },
+          });
+        }
+      }
       if (id) {
         await tx.update(schema.trips).set(values).where(eq(schema.trips.id, id));
         return id;

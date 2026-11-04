@@ -1,6 +1,6 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { returnValidationErrors } from 'next-safe-action';
 
@@ -75,9 +75,12 @@ export const deleteCategory = authenticatedActionClient
         .update(schema.transactions)
         .set({ categoryId: replacementId })
         .where(eq(schema.transactions.categoryId, id));
+      // Trips take only spending categories, else their transactions keep their merchants'
       await tx
         .update(schema.trips)
-        .set({ categoryId: replacementId })
+        .set({
+          categoryId: sql`(select ${c.id} from ${c} where ${c.id} = ${replacementId} and ${c.kind} = 'expense')`,
+        })
         .where(eq(schema.trips.categoryId, id));
       await tx.delete(c).where(eq(c.id, id));
     });
