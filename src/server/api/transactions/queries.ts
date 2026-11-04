@@ -106,6 +106,10 @@ export const getTransactions = createApiQuery<
     merchantId?: string;
     /** The ID of the trip to filter by */
     tripId?: string;
+    /** Only the transactions without a trip */
+    withoutTrip?: boolean;
+    /** The type to filter by, like "transfer" */
+    type?: string;
     /** Only the transactions that count in analytics */
     countedInAnalytics?: boolean;
     /** The page number to fetch */
@@ -124,6 +128,8 @@ export const getTransactions = createApiQuery<
       categoryId,
       merchantId,
       tripId,
+      withoutTrip,
+      type,
       countedInAnalytics,
       page = 0,
       pageSize = 20,
@@ -181,6 +187,8 @@ export const getTransactions = createApiQuery<
                 : undefined,
             merchantId ? eq(schema.merchants.id, merchantId) : undefined,
             tripId ? eq(schema.transactions.tripId, tripId) : undefined,
+            withoutTrip ? isNull(schema.transactions.tripId) : undefined,
+            type ? eq(schema.transactions.type, type) : undefined,
             countedInAnalytics ? sql`${analyticsSide} <> 'excluded'` : undefined,
           ),
         )

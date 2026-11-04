@@ -14,3 +14,14 @@ export interface Trip {
   /** The same by the category the transactions would have without the trip, the biggest first */
   breakdown: { category: Category | null; total: number }[];
 }
+
+/** Days with payments in another currency than usual, which may be a trip without one */
+export interface TripSuggestion {
+  /** Like "2026-09-04" */
+  startDate: string;
+  endDate: string;
+  /** Like ["eur"] */
+  currencies: string[];
+  /** The payments in those currencies */
+  transactionIds: string[];
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { differenceInCalendarDays, parseISO } from 'date-fns';
-import { EllipsisVerticalIcon, PencilIcon, PlaneIcon, Trash2Icon } from 'lucide-react';
+import { EllipsisVerticalIcon, PencilIcon, PlaneIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 
 import { CategoryBadge, UNCATEGORIZED_COLOR } from '@/components/categories/category-badge';
@@ -41,6 +41,8 @@ interface TripDrawerClientProps {
   trip: Trip;
   categories: Category[];
   transactions: Transaction[];
+  /** Without a trip, around the trip's days */
+  suggested: Transaction[];
   accounts: Account[];
   mainCurrency: string;
 }
@@ -49,6 +51,7 @@ export function TripDrawerClient({
   trip,
   categories,
   transactions,
+  suggested,
   accounts,
   mainCurrency,
 }: TripDrawerClientProps) {
@@ -62,6 +65,13 @@ export function TripDrawerClient({
     errorToast: 'Failed to delete the trip. Please try again later.',
     onSuccess: () => navigate(getDrawerHref(null)),
   });
+  const { execute: addToTrip } = useActionWithToast(apiActions.trips.setTransactionTrip, {
+    loadingToast: 'Adding to trip...',
+    successToast: 'Added to trip!',
+    errorToast: 'Failed to add to the trip. Please try again later.',
+  });
+  const add = (items: Transaction[]) =>
+    addToTrip({ transactionIds: items.map((item) => item.id), tripId: trip.id });
   const color = trip.category?.color ?? UNCATEGORIZED_COLOR;
   const days = differenceInCalendarDays(parseISO(trip.endDate), parseISO(trip.startDate)) + 1;
 
@@ -108,6 +118,7 @@ export function TripDrawerClient({
         <TabsList className="mx-4">
           <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
           <TabsTrigger value="categories">Categories {trip.breakdown.length}</TabsTrigger>
+          <TabsTrigger value="suggested">Suggested {suggested.length}</TabsTrigger>
         </TabsList>
         <TabsContent value="transactions" className={TAB_CONTENT}>
           <TransactionDayList
@@ -128,6 +139,33 @@ export function TripDrawerClient({
               </li>
             ))}
           </ul>
+        </TabsContent>
+        <TabsContent value="suggested" className={TAB_CONTENT}>
+          <div className="flex items-center justify-between gap-2 py-2 text-xs text-muted-foreground">
+            Without a trip: the trip&apos;s days, transfers of the 14 days after it, and its
+            category in the 60 days before it
+            {suggested.length > 1 && (
+              <Button size="sm" variant="outline" onClick={() => add(suggested)}>
+                Add all
+              </Button>
+            )}
+          </div>
+          <TransactionDayList
+            transactions={suggested}
+            accounts={accounts}
+            categories={categories}
+            action={(transaction) => (
+              <Button
+                variant="ghost"
+                size="icon"
+                icon={PlusIcon}
+                aria-label={`Add to ${trip.name}`}
+                title={`Add to ${trip.name}`}
+                className="size-6 shrink-0"
+                onClick={() => add([transaction])}
+              />
+            )}
+          />
         </TabsContent>
       </Tabs>
 

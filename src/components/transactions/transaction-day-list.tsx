@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 
 import { Account } from '@/lib/types/accounts.types';
 import { Category } from '@/lib/types/categories.types';
@@ -15,6 +15,8 @@ interface TransactionDayListProps {
   accounts: Account[];
   /** For changing the categories */
   categories: Category[];
+  /** A button next to each transaction's amount */
+  action?: (transaction: Transaction) => ReactNode;
 }
 
 /**
@@ -24,6 +26,7 @@ export function TransactionDayList({
   transactions,
   accounts,
   categories,
+  action,
 }: TransactionDayListProps) {
   const days = useMemo(() => {
     const subaccounts = new Map(
@@ -64,6 +67,7 @@ export function TransactionDayList({
                 key={transaction.id}
                 transaction={transaction}
                 categories={categories}
+                action={action?.(transaction)}
               />
             ))}
           </div>

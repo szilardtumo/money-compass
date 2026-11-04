@@ -65,3 +65,22 @@ export const setTransactionTrip = authenticatedActionClient
 
     revalidatePath('/dashboard', 'layout');
   });
+
+/**
+ * Hides the trip suggestions up to the day.
+ */
+export const dismissTripSuggestions = authenticatedActionClient
+  .inputSchema(z.iso.date())
+  .action(async ({ parsedInput: until, ctx }) => {
+    await ctx.db.rls((tx) =>
+      tx
+        .insert(schema.profiles)
+        .values({ id: ctx.userId, tripSuggestionsDismissedUntil: until })
+        .onConflictDoUpdate({
+          target: schema.profiles.id,
+          set: { tripSuggestionsDismissedUntil: until },
+        }),
+    );
+
+    revalidatePath('/dashboard', 'layout');
+  });

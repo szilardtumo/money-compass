@@ -1,15 +1,18 @@
 import 'server-only';
 
-import { desc, eq, isNotNull, sql, sum } from 'drizzle-orm';
+import { addDays, differenceInCalendarDays, parseISO, subDays } from 'date-fns';
+import { and, count, desc, eq, gt, gte, isNotNull, isNull, lt, ne, sql, sum } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
-import { Trip } from '@/lib/types/trips.types';
+import { Transaction } from '@/lib/types/transactions.types';
+import { Trip, TripSuggestion } from '@/lib/types/trips.types';
 import { toMainCurrency } from '@/lib/utils/currencies';
 import { schema } from '@/server/db';
 
 import { analyticsSide, joinCategory } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
+import { getTransactions } from '../transactions/queries';
 
 const t = schema.transactions;
 const tripCategory = alias(schema.categories, 'trip_category');
@@ -101,3 +104,116 @@ export const getTrips = createApiQuery<void, Trip[]>(async () => {
     breakdown: [...totals.values()].toSorted((a, b) => a.total - b.total),
   }));
 });
+
+/**
+ * Returns the days that look like a trip without one, the latest first: days with at least 3 card
+ * payments without a trip in other currencies than most payments of the last 90 days. Days at most
+ * one day apart make one suggestion. The ones the user dismissed are left out.
+ */
+export const getTripSuggestions = createApiQuery<void, TripSuggestion[]>(async () => {
+  'use cache: private';
+  const { db } = await createApiContext();
+  const currency = schema.subaccounts.currency;
+  const day = sql<string>`to_char(${t.startedDate} at time zone 'UTC', 'YYYY-MM-DD')`;
+  const isPayment = and(eq(t.type, 'card_payment'), lt(t.amount, 0));
+
+  const days = await db.rls(async (tx) => {
+    const [home] = await tx
+      .select({ currency })
+      .from(t)
+      .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+      .where(and(isPayment, gte(t.startedDate, subDays(new Date(), 90))))
+      .groupBy(currency)
+      .orderBy(desc(count()))
+      .limit(1);
+    if (!home) {
+      return [];
+    }
+    const profile = await tx.query.profiles.findFirst();
+    const dismissedUntil = profile?.tripSuggestionsDismissedUntil;
+
+    return tx
+      .select({
+        day: day.as('day'),
+        currencies: sql<string[]>`array_agg(distinct ${currency})`,
+        transactionIds: sql<string[]>`array_agg(${t.id}::text)`,
+      })
+      .from(t)
+      .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+      .where(
+        and(
+          isPayment,
+          isNull(t.tripId),
+          ne(currency, home.currency),
+          dismissedUntil ? gt(day, dismissedUntil) : undefined,
+        ),
+      )
+      .groupBy(sql`day`)
+      .having(sql`count(*) >= 3`)
+      .orderBy(sql`day`);
+  });
+
+  const suggestions: TripSuggestion[] = [];
+  for (const row of days) {
+    const last = suggestions.at(-1);
+    if (last && differenceInCalendarDays(parseISO(row.day), parseISO(last.endDate)) <= 2) {
+      last.endDate = row.day;
+      last.currencies = [...new Set([...last.currencies, ...row.currencies])];
+      last.transactionIds.push(...row.transactionIds);
+    } else {
+      suggestions.push({
+        startDate: row.day,
+        endDate: row.day,
+        currencies: row.currencies,
+        transactionIds: row.transactionIds,
+      });
+    }
+  }
+  return suggestions.toReversed();
+});
+
+/**
+ * Returns the transactions without a trip that may belong to one, the latest first: the ones of its
+ * days, the transfers of the 14 days after it, like settle-ups, and the ones in its category of the
+ * 60 days before it, like bookings.
+ */
+export const getTripSuggestedTransactions = createApiQuery<{ tripId: string }, Transaction[]>(
+  async ({ input: { tripId } }) => {
+    'use cache: private';
+    const trip = (await getTrips()).find((item) => item.id === tripId);
+    if (!trip) {
+      return [];
+    }
+    // Bank dates are midnights in UTC
+    const start = parseISO(`${trip.startDate}T00:00:00Z`);
+    const end = parseISO(`${trip.endDate}T00:00:00Z`);
+    const until = (date: Date) => new Date(date.getTime() - 1).toISOString();
+    const filter = { withoutTrip: true, pageSize: 1000 };
+
+    const results = await Promise.all([
+      getTransactions({
+        ...filter,
+        fromDate: start.toISOString(),
+        toDate: until(addDays(end, 1)),
+        countedInAnalytics: true,
+      }),
+      getTransactions({
+        ...filter,
+        fromDate: addDays(end, 1).toISOString(),
+        toDate: until(addDays(end, 15)),
+        type: 'transfer',
+      }),
+      trip.category
+        ? getTransactions({
+            ...filter,
+            fromDate: subDays(start, 60).toISOString(),
+            toDate: until(start),
+            categoryId: trip.category.id,
+          })
+        : null,
+    ]);
+    return results
+      .flatMap((result) => result?.data ?? [])
+      .toSorted((a, b) => +new Date(b.startedDate) - +new Date(a.startedDate));
+  },
+);
