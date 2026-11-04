@@ -37,7 +37,7 @@ export const ADD_TO_TRIP_TOASTS = {
 };
 
 /** The days and transactions a new trip starts with */
-export type NewTripValues = Omit<TripSuggestion, 'currencies'>;
+export type NewTripValues = Pick<TripSuggestion, 'startDate' | 'endDate' | 'transactionIds'>;
 
 interface TripDialogProps {
   open: boolean;

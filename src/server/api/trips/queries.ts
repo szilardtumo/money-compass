@@ -118,58 +118,62 @@ export const getTripSuggestions = createApiQuery<void, TripSuggestion[]>(async (
   const day = sql<string>`to_char(${t.startedDate} at time zone 'UTC', 'YYYY-MM-DD')`;
   const isPayment = and(eq(t.type, 'card_payment'), lt(t.amount, 0));
 
-  const days = await db.rls(async (tx) => {
-    const [home] = await tx
-      .select({ currency })
-      .from(t)
-      .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
-      // Without trips, so a long one abroad doesn't make its currency the usual one
-      .where(and(isPayment, isNull(t.tripId), gte(t.startedDate, subDays(new Date(), 90))))
-      .groupBy(currency)
-      .orderBy(desc(count()))
-      .limit(1);
-    if (!home) {
-      return [];
-    }
-    const profile = await tx.query.profiles.findFirst();
-    const dismissedUntil = profile?.tripSuggestionsDismissedUntil;
+  const [days, { mapper }] = await Promise.all([
+    db.rls(async (tx) => {
+      const [home] = await tx
+        .select({ currency })
+        .from(t)
+        .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+        // Without trips, so a long one abroad doesn't make its currency the usual one
+        .where(and(isPayment, isNull(t.tripId), gte(t.startedDate, subDays(new Date(), 90))))
+        .groupBy(currency)
+        .orderBy(desc(count()))
+        .limit(1);
+      if (!home) {
+        return [];
+      }
+      const profile = await tx.query.profiles.findFirst();
+      const dismissedUntil = profile?.tripSuggestionsDismissedUntil;
 
-    return tx
-      .select({
-        day: day.as('day'),
-        currencies: sql<string[]>`array_agg(distinct ${currency})`,
-        transactionIds: sql<string[]>`array_agg(${t.id}::text)`,
-      })
-      .from(t)
-      .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
-      .where(
-        and(
-          isPayment,
-          isNull(t.tripId),
-          sql`not exists (select 1 from ${schema.trips} where ${day}::date between ${schema.trips.startDate} and ${schema.trips.endDate})`,
-          ne(currency, home.currency),
-          dismissedUntil ? gt(day, dismissedUntil) : undefined,
-        ),
-      )
-      .groupBy(sql`day`)
-      .having(sql`count(*) >= 3`)
-      .orderBy(sql`day`);
-  });
+      return tx
+        .select({
+          day: day.as('day'),
+          payments: sql<
+            { id: string; currency: string; amount: number }[]
+          >`json_agg(json_build_object('id', ${t.id}, 'currency', ${currency}, 'amount', ${t.amount}))`,
+        })
+        .from(t)
+        .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+        .where(
+          and(
+            isPayment,
+            isNull(t.tripId),
+            sql`not exists (select 1 from ${schema.trips} where ${day}::date between ${schema.trips.startDate} and ${schema.trips.endDate})`,
+            ne(currency, home.currency),
+            dismissedUntil ? gt(day, dismissedUntil) : undefined,
+          ),
+        )
+        .groupBy(sql`day`)
+        .having(sql`count(*) >= 3`)
+        .orderBy(sql`day`);
+    }),
+    getMainCurrencyWithMapper(),
+  ]);
 
   const suggestions: TripSuggestion[] = [];
-  for (const row of days) {
-    const last = suggestions.at(-1);
-    if (last && differenceInCalendarDays(parseISO(row.day), parseISO(last.endDate)) <= 2) {
-      last.endDate = row.day;
-      last.currencies = [...new Set([...last.currencies, ...row.currencies])];
-      last.transactionIds.push(...row.transactionIds);
-    } else {
-      suggestions.push({
-        startDate: row.day,
-        endDate: row.day,
-        currencies: row.currencies,
-        transactionIds: row.transactionIds,
-      });
+  for (const { day, payments } of days) {
+    let last = suggestions.at(-1);
+    if (!last || differenceInCalendarDays(parseISO(day), parseISO(last.endDate)) > 2) {
+      last = { startDate: day, endDate: day, currencies: [], transactionIds: [], total: 0 };
+      suggestions.push(last);
+    }
+    last.endDate = day;
+    for (const payment of payments) {
+      if (!last.currencies.includes(payment.currency)) {
+        last.currencies.push(payment.currency);
+      }
+      last.transactionIds.push(payment.id);
+      last.total += toMainCurrency(payment, mapper);
     }
   }
   return suggestions.toReversed();

@@ -24,4 +24,6 @@ export interface TripSuggestion {
   currencies: string[];
   /** The payments in those currencies */
   transactionIds: string[];
+  /** Of the payments, in the main currency, negative */
+  total: number;
 }
