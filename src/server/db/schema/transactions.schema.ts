@@ -17,6 +17,7 @@ import { accounts } from './accounts.schema';
 import { categories } from './categories.schema';
 import { merchants } from './merchants.schema';
 import { subaccounts } from './subaccounts.schema';
+import { trips } from './trips.schema';
 import { numericCasted, authUid, authUidDefault } from './utils';
 
 export const transactions = pgTable(
@@ -45,6 +46,7 @@ export const transactions = pgTable(
     merchantId: uuid().references(() => merchants.id, { onDelete: 'set null' }),
     // The transaction's own category, which overrides the merchant's
     categoryId: uuid().references(() => categories.id, { onDelete: 'set null' }),
+    tripId: uuid().references(() => trips.id, { onDelete: 'set null' }),
     subaccountId: uuid()
       .notNull()
       .references(() => subaccounts.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
@@ -58,6 +60,7 @@ export const transactions = pgTable(
     index().on(table.userId, table.merchantKey),
     index().on(table.merchantId),
     index().on(table.categoryId),
+    index().on(table.tripId),
     // The sync skips known transactions with "on conflict do nothing". NULL references never conflict.
     uniqueIndex().on(table.subaccountId, table.externalRef),
     pgPolicy('transactions_allow_all_for_owner_policy', {
@@ -65,7 +68,7 @@ export const transactions = pgTable(
       for: 'all',
       to: authenticatedRole,
       using: eq(table.userId, authUid),
-      withCheck: sql`${eq(table.userId, authUid)} AND EXISTS (SELECT 1 FROM ${subaccounts} JOIN ${accounts} ON ${eq(accounts.id, subaccounts.accountId)} WHERE ${and(eq(subaccounts.id, table.subaccountId), eq(accounts.userId, authUid))}) AND (${table.categoryId} IS NULL OR EXISTS (SELECT 1 FROM ${categories} WHERE ${categories.id} = ${table.categoryId} AND ${categories.userId} = ${authUid})) AND (${table.merchantId} IS NULL OR EXISTS (SELECT 1 FROM ${merchants} WHERE ${merchants.id} = ${table.merchantId} AND ${merchants.userId} = ${authUid}))`,
+      withCheck: sql`${eq(table.userId, authUid)} AND EXISTS (SELECT 1 FROM ${subaccounts} JOIN ${accounts} ON ${eq(accounts.id, subaccounts.accountId)} WHERE ${and(eq(subaccounts.id, table.subaccountId), eq(accounts.userId, authUid))}) AND (${table.categoryId} IS NULL OR EXISTS (SELECT 1 FROM ${categories} WHERE ${categories.id} = ${table.categoryId} AND ${categories.userId} = ${authUid})) AND (${table.merchantId} IS NULL OR EXISTS (SELECT 1 FROM ${merchants} WHERE ${merchants.id} = ${table.merchantId} AND ${merchants.userId} = ${authUid})) AND (${table.tripId} IS NULL OR EXISTS (SELECT 1 FROM ${trips} WHERE ${trips.id} = ${table.tripId} AND ${trips.userId} = ${authUid}))`,
     }),
   ],
 );

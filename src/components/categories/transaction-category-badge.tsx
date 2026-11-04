@@ -22,6 +22,7 @@ export function TransactionCategoryBadge({ transaction }: TransactionCategoryBad
         className: 'border-foreground/40',
         title: 'Set for this transaction only',
       })}
+      {...(transaction.categorySource === 'trip' && { title: 'The category of its trip' })}
     />
   );
 

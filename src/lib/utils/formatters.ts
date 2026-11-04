@@ -1,4 +1,4 @@
-import { format, isThisYear, isToday, isYesterday } from 'date-fns';
+import { format, isThisYear, isToday, isYesterday, parseISO } from 'date-fns';
 
 import { Transaction } from '@/lib/types/transactions.types';
 
@@ -58,6 +58,21 @@ export function formatDay(date: string | Date) {
     : isYesterday(date)
       ? 'Yesterday'
       : formatDate(date, isThisYear(date) ? 'EEE, d MMM' : 'EEE, d MMM yyyy');
+}
+
+/** Days like "2026-09-04" as "4 – 7 Sep 2026", "30 Aug – 2 Sep 2026" or "30 Dec 2025 – 2 Jan 2026" */
+export function formatDateRange(start: string, end: string) {
+  const [from, to] = [parseISO(start), parseISO(end)];
+  if (start === end) {
+    return format(to, 'd MMM yyyy');
+  }
+  const fromPattern =
+    from.getFullYear() !== to.getFullYear()
+      ? 'd MMM yyyy'
+      : from.getMonth() !== to.getMonth()
+        ? 'd MMM'
+        : 'd';
+  return `${format(from, fromPattern)} – ${format(to, 'd MMM yyyy')}`;
 }
 
 export function formatTime(date: string | Date, options: Intl.DateTimeFormatOptions = {}) {

@@ -98,11 +98,12 @@ export const getCategoryMerchants = createApiQuery<
   const { db } = await createApiContext();
   const m = schema.merchants;
   const { start, end } = getPeriodRange(parsePeriod(period));
-  // Without the transactions that have a category of their own
+  // Without the transactions that have a category of their own or of their trip
+  const ownCategory = sql`coalesce(${t.categoryId}, ${schema.trips.categoryId})`;
   const inPeriod = and(
     gte(t.startedDate, start),
     lt(t.startedDate, end),
-    or(isNull(t.categoryId), eq(t.categoryId, m.categoryId)),
+    or(isNull(ownCategory), eq(ownCategory, m.categoryId)),
   );
 
   const [rows, { mapper }] = await Promise.all([
@@ -120,6 +121,7 @@ export const getCategoryMerchants = createApiQuery<
         .from(m)
         .innerJoin(t, eq(t.merchantId, m.id))
         .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+        .leftJoin(schema.trips, eq(schema.trips.id, t.tripId))
         .where(
           and(
             categoryId ? eq(m.categoryId, categoryId) : isNull(m.categoryId),

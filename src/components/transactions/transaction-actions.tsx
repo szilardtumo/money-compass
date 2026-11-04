@@ -1,9 +1,11 @@
 'use client';
 
+import { format } from 'date-fns';
 import { EllipsisVerticalIcon, Trash2Icon } from 'lucide-react';
 import { ReactNode, useRef, useState } from 'react';
 
 import { CATEGORY_TOASTS, CategoryPicker } from '@/components/categories/category-picker';
+import { useAddToTripDialog } from '@/components/dialogs/add-to-trip-dialog';
 import { useUpdateTransactionDialog } from '@/components/dialogs/update-transaction-dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +28,7 @@ interface TransactionActionsProps {
 }
 
 /**
- * The menu of a transaction, which edits it, changes its category or deletes it. When the merchant
+ * The menu of a transaction, which edits it, changes its category or trip, or deletes it. When the merchant
  * has other transactions, the new category can be for this transaction only or for the whole
  * merchant.
  */
@@ -34,6 +36,12 @@ export function TransactionActions({ transaction, categories, children }: Transa
   const [isPicking, setIsPicking] = useState(false);
   const pickOnClose = useRef(false);
   const { openDialog: openUpdateTransactionDialog } = useUpdateTransactionDialog();
+  const { openDialog: openAddToTripDialog } = useAddToTripDialog();
+  const { execute: setTransactionTrip } = useActionWithToast(apiActions.trips.setTransactionTrip, {
+    loadingToast: 'Removing from trip...',
+    successToast: 'Removed from trip!',
+    errorToast: 'Failed to remove from the trip. Please try again later.',
+  });
   const { merchant } = transaction;
   const { execute: setTransactionCategory } = useActionWithToast(
     apiActions.transactions.setTransactionCategory,
@@ -145,6 +153,25 @@ export function TransactionActions({ transaction, categories, children }: Transa
           <DropdownMenuItem onClick={() => (pickOnClose.current = true)}>
             Change category
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              const day = format(transaction.startedDate, 'yyyy-MM-dd');
+              openAddToTripDialog({
+                transactionIds: [transaction.id],
+                startDate: day,
+                endDate: day,
+              });
+            }}
+          >
+            {transaction.trip ? 'Move to another trip' : 'Add to trip'}
+          </DropdownMenuItem>
+          {transaction.trip && (
+            <DropdownMenuItem
+              onClick={() => setTransactionTrip({ transactionIds: [transaction.id], tripId: null })}
+            >
+              Remove from {transaction.trip.name}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => deleteTransaction(transaction.id)}>
             Delete
             <DropdownMenuShortcut>

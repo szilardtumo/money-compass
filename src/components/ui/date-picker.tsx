@@ -44,6 +44,7 @@ function DatePicker({
         <Calendar
           mode="single"
           selected={value}
+          defaultMonth={value}
           onSelect={onValueChange}
           disabled={(date) => disabledFn(date) || date < new Date('1900-01-01')}
         />

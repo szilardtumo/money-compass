@@ -1,5 +1,5 @@
 import { eq, relations } from 'drizzle-orm';
-import { pgPolicy, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { date, pgPolicy, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole, authUsers } from 'drizzle-orm/supabase';
 
 import { currencies } from './currencies.schema';
@@ -17,6 +17,8 @@ export const profiles = pgTable(
       .notNull()
       .default('eur')
       .references(() => currencies.id, { onUpdate: 'cascade', onDelete: 'set default' }),
+    // The trip suggestions up to this day are dismissed
+    tripSuggestionsDismissedUntil: date({ mode: 'string' }),
   },
   (table) => [
     pgPolicy('profiles_allow_all_for_owner_policy', {

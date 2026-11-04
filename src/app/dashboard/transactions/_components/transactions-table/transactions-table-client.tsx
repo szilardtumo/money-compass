@@ -1,12 +1,14 @@
 'use client';
 
 import { createColumnHelper } from '@tanstack/react-table';
-import { Trash2Icon } from 'lucide-react';
+import { format, max, min } from 'date-fns';
+import { PlaneIcon, Trash2Icon } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 
 import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
 import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
 import { TransactionCategoryBadge } from '@/components/categories/transaction-category-badge';
+import { useAddToTripDialog } from '@/components/dialogs/add-to-trip-dialog';
 import { DrawerLink } from '@/components/drawers/drawer-link';
 import { TransactionActions } from '@/components/transactions/transaction-actions';
 import { TransactionAmount, TransactionSummary } from '@/components/transactions/transaction-item';
@@ -206,6 +208,18 @@ export function TransactionsTableClient({
     [setTransactionCategory, table],
   );
 
+  const { openDialog: openAddToTripDialog } = useAddToTripDialog();
+  const addSelectedToTrip = () => {
+    const selected = table.getSelectedRowModel().rows.map((row) => row.original);
+    const dates = selected.map((transaction) => transaction.startedDate);
+    openAddToTripDialog({
+      transactionIds: selected.map((transaction) => transaction.id),
+      startDate: format(min(dates), 'yyyy-MM-dd'),
+      endDate: format(max(dates), 'yyyy-MM-dd'),
+    });
+    table.resetRowSelection();
+  };
+
   const deleteSelected = useCallback(async () => {
     const transactionIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
     await deleteTransactions({ transactionIds });
@@ -235,6 +249,15 @@ export function TransactionsTableClient({
           clearLabel="Remove their own category"
           onSelect={categorizeSelected}
         />
+        <Button
+          variant="outline"
+          icon={PlaneIcon}
+          className="h-8 px-2.5"
+          onClick={addSelectedToTrip}
+          disabled={selectedRowCount === 0}
+        >
+          Add to trip ({selectedRowCount})
+        </Button>
         <Button
           variant="destructive"
           icon={Trash2Icon}

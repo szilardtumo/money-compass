@@ -24,6 +24,7 @@ import { getMainCurrencyWithMapper } from '../currencies/queries';
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
   balance: number;
   subaccount: typeof schema.subaccounts.$inferSelect;
+  trip: { id: string; name: string; categoryId: string | null } | null;
 } & Pick<Transaction, 'linkedTransaction' | 'merchant' | 'category' | 'excluded'>;
 
 /**
@@ -69,7 +70,14 @@ const mapTransactionData = (
     linkedTransaction: data.linkedTransaction,
     merchant: data.merchant,
     category: data.category,
-    categorySource: data.categoryId ? 'transaction' : data.category ? 'merchant' : null,
+    trip: data.trip && { id: data.trip.id, name: data.trip.name },
+    categorySource: data.categoryId
+      ? 'transaction'
+      : data.trip?.categoryId
+        ? 'trip'
+        : data.category
+          ? 'merchant'
+          : null,
     excluded: data.excluded,
   };
 };
@@ -96,6 +104,8 @@ export const getTransactions = createApiQuery<
     categoryId?: string | null;
     /** The ID of the merchant to filter by */
     merchantId?: string;
+    /** The ID of the trip to filter by */
+    tripId?: string;
     /** Only the transactions that count in analytics */
     countedInAnalytics?: boolean;
     /** The page number to fetch */
@@ -113,6 +123,7 @@ export const getTransactions = createApiQuery<
       toDate,
       categoryId,
       merchantId,
+      tripId,
       countedInAnalytics,
       page = 0,
       pageSize = 20,
@@ -134,6 +145,11 @@ export const getTransactions = createApiQuery<
             linkedAmount: linked.amount,
             linkedCurrency: linkedSubaccount.currency,
             merchant: { id: schema.merchants.id, name: schema.merchants.name },
+            trip: {
+              id: schema.trips.id,
+              name: schema.trips.name,
+              categoryId: schema.trips.categoryId,
+            },
             category: categoryColumns,
             side: analyticsSide,
           })
@@ -164,6 +180,7 @@ export const getTransactions = createApiQuery<
                 ? eq(schema.categories.id, categoryId)
                 : undefined,
             merchantId ? eq(schema.merchants.id, merchantId) : undefined,
+            tripId ? eq(schema.transactions.tripId, tripId) : undefined,
             countedInAnalytics ? sql`${analyticsSide} <> 'excluded'` : undefined,
           ),
         )
@@ -210,6 +227,7 @@ export const getTransactions = createApiQuery<
                 ? { amount: item.linkedAmount, currency: item.linkedCurrency }
                 : null,
             merchant: item.merchant,
+            trip: item.trip,
             category: item.category,
             excluded: item.side === 'excluded',
           },

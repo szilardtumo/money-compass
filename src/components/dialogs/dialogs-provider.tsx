@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 
+import { AddToTripDialogProvider } from '@/components/dialogs/add-to-trip-dialog';
+import { AddToTripDialog } from '@/components/dialogs/add-to-trip-dialog/add-to-trip-dialog';
 import { CreateAccountDialogProvider } from '@/components/dialogs/create-account-dialog';
 import { CreateAccountDialog } from '@/components/dialogs/create-account-dialog/create-account-dialog';
 import { CreateTransactionDialogProvider } from '@/components/dialogs/create-transaction-dialog';
@@ -15,13 +17,16 @@ export function DialogsProvider({ children }: { children: React.ReactNode }) {
       <UpdateTransactionDialogProvider>
         <CreateAccountDialogProvider>
           <UpdateAccountDialogProvider>
-            {children}
-            <Suspense fallback={null}>
-              <CreateAccountDialog />
-              <UpdateAccountDialog />
-              <CreateTransactionDialog />
-              <UpdateTransactionDialog />
-            </Suspense>
+            <AddToTripDialogProvider>
+              {children}
+              <Suspense fallback={null}>
+                <CreateAccountDialog />
+                <UpdateAccountDialog />
+                <CreateTransactionDialog />
+                <UpdateTransactionDialog />
+                <AddToTripDialog />
+              </Suspense>
+            </AddToTripDialogProvider>
           </UpdateAccountDialogProvider>
         </CreateAccountDialogProvider>
       </UpdateTransactionDialogProvider>

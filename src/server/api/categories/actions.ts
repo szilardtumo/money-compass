@@ -55,7 +55,7 @@ export const saveCategory = authenticatedActionClient
   });
 
 /**
- * Deletes a category and moves its merchants and transactions to another category.
+ * Deletes a category and moves its merchants, trips and transactions to another category.
  */
 export const deleteCategory = authenticatedActionClient
   .inputSchema(deleteCategorySchema)
@@ -75,6 +75,10 @@ export const deleteCategory = authenticatedActionClient
         .update(schema.transactions)
         .set({ categoryId: replacementId })
         .where(eq(schema.transactions.categoryId, id));
+      await tx
+        .update(schema.trips)
+        .set({ categoryId: replacementId })
+        .where(eq(schema.trips.categoryId, id));
       await tx.delete(c).where(eq(c.id, id));
     });
 

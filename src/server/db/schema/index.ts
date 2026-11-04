@@ -11,3 +11,4 @@ export * from './integration-accounts.schema';
 export * from './integration-sync-logs.schema';
 export * from './categories.schema';
 export * from './merchants.schema';
+export * from './trips.schema';

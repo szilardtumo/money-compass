@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
+import { PlaneIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Fragment, ReactNode } from 'react';
 
@@ -34,6 +35,16 @@ export function TransactionSummary({
   const details = [
     transaction.description !== name && transaction.description,
     transaction.linkedTransaction && formatExchange(transaction, transaction.linkedTransaction),
+    transaction.trip && (
+      <DrawerLink
+        key="trip"
+        to={{ trip: transaction.trip.id }}
+        className="inline-flex items-center gap-1 align-bottom hover:underline"
+      >
+        <PlaneIcon className="size-3" />
+        {transaction.trip.name}
+      </DrawerLink>
+    ),
     ...extra,
   ].filter(Boolean);
 

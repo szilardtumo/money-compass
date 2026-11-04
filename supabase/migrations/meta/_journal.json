@@ -99,6 +99,13 @@
       "when": 1793208031455,
       "tag": "20261028172031_categories_and_merchants",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793821091892,
+      "tag": "20261104193811_trips",
+      "breakpoints": true
     }
   ]
 }

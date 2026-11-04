@@ -6,6 +6,7 @@ import * as integrations from './integrations/queries';
 import * as merchants from './merchants/queries';
 import * as profiles from './profiles/queries';
 import * as transactions from './transactions/queries';
+import * as trips from './trips/queries';
 
 type ApiQueries = Record<string, Record<string, (...args: never) => unknown>>;
 
@@ -17,5 +18,6 @@ export const apiQueries = {
   integrations,
   merchants,
   profiles,
+  trips,
   transactions,
 } satisfies ApiQueries;

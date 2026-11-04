@@ -10,15 +10,19 @@ import { schema } from '@/server/db';
 const t = schema.transactions;
 
 /**
- * Left joins the merchant of a transactions query and the transaction's category: its own, else
- * its merchant's.
+ * Left joins the merchant and trip of a transactions query and the transaction's category: its
+ * own, else its trip's, else its merchant's.
  */
 export function joinCategory<T extends PgSelect>(query: T) {
   return query
     .leftJoin(schema.merchants, eq(schema.merchants.id, t.merchantId))
+    .leftJoin(schema.trips, eq(schema.trips.id, t.tripId))
     .leftJoin(
       schema.categories,
-      eq(schema.categories.id, sql`coalesce(${t.categoryId}, ${schema.merchants.categoryId})`),
+      eq(
+        schema.categories.id,
+        sql`coalesce(${t.categoryId}, ${schema.trips.categoryId}, ${schema.merchants.categoryId})`,
+      ),
     );
 }
 
