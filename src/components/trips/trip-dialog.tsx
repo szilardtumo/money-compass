@@ -2,6 +2,8 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, parseISO } from 'date-fns';
+import { useAction } from 'next-safe-action/hooks';
+import { useEffect } from 'react';
 
 import { CategoryBadge } from '@/components/categories/category-badge';
 import { CategoryPicker } from '@/components/categories/category-picker';
@@ -36,8 +38,10 @@ export const ADD_TO_TRIP_TOASTS = {
   errorToast: 'Failed to add to the trip. Please try again later.',
 };
 
-/** The days and transactions a new trip starts with */
-export type NewTripValues = Pick<TripSuggestion, 'startDate' | 'endDate' | 'transactionIds'>;
+/** The days and transactions a new trip starts with, and its name if known */
+export type NewTripValues = Pick<TripSuggestion, 'startDate' | 'endDate' | 'transactionIds'> & {
+  name?: string;
+};
 
 interface TripDialogProps {
   open: boolean;
@@ -94,6 +98,23 @@ function TripForm({ trip, newTrip, categories, onClose, onSaved }: Omit<TripDial
     },
   );
 
+  // Names a new trip after where its payments were
+  const { execute: findPlace, isExecuting: isFindingPlace } = useAction(
+    apiActions.trips.getTripPlace,
+    {
+      onSuccess: ({ data }) => {
+        if (data && !form.getValues('name')) {
+          form.setValue('name', data);
+        }
+      },
+    },
+  );
+  useEffect(() => {
+    if (newTrip?.transactionIds.length && !newTrip.name) {
+      findPlace({ transactionIds: newTrip.transactionIds });
+    }
+  }, [findPlace, newTrip]);
+
   return (
     <Form {...form}>
       <form onSubmit={handleSubmitWithAction} className="flex flex-col gap-4">
@@ -113,7 +134,10 @@ function TripForm({ trip, newTrip, categories, onClose, onSaved }: Omit<TripDial
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="Athens" {...field} />
+                <Input
+                  placeholder={isFindingPlace ? 'Finding where you were...' : 'Athens'}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

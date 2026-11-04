@@ -23,23 +23,24 @@ import { apiActions } from '@/server/api/actions';
 
 import { TripDialog } from './trip-dialog';
 
-const SHOWN = 3;
-
 interface TripSuggestionsClientProps {
-  /** The latest first */
-  suggestions: TripSuggestion[];
+  /** The latest first, with where they were if known */
+  suggestions: (TripSuggestion & { name?: string })[];
+  /** The suggestions before these */
+  olderCount: number;
   categories: Category[];
   mainCurrency: string;
 }
 
 export function TripSuggestionsClient({
   suggestions,
+  olderCount,
   categories,
   mainCurrency,
 }: TripSuggestionsClientProps) {
   const navigate = useNavigate();
   const getDrawerHref = useDrawerHref();
-  const [creating, setCreating] = useState<TripSuggestion>();
+  const [creating, setCreating] = useState<(typeof suggestions)[number]>();
   const { execute: dismiss, isExecuting } = useActionWithToast(
     apiActions.trips.dismissTripSuggestions,
     {
@@ -79,7 +80,7 @@ export function TripSuggestionsClient({
 
       <CardContent className="px-4">
         <ul className="divide-y rounded-md border">
-          {suggestions.slice(0, SHOWN).map((suggestion) => {
+          {suggestions.map((suggestion) => {
             const days =
               differenceInCalendarDays(
                 parseISO(suggestion.endDate),
@@ -89,9 +90,11 @@ export function TripSuggestionsClient({
               <li key={suggestion.startDate} className="flex items-center gap-3 px-3 py-2">
                 <div className="mr-auto min-w-0">
                   <p className="text-sm font-medium">
-                    {formatDateRange(suggestion.startDate, suggestion.endDate)}
+                    {suggestion.name ?? formatDateRange(suggestion.startDate, suggestion.endDate)}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
+                    {suggestion.name &&
+                      `${formatDateRange(suggestion.startDate, suggestion.endDate)} · `}
                     {days} {days === 1 ? 'day' : 'days'} · {suggestion.transactionIds.length}{' '}
                     payments in{' '}
                     {suggestion.currencies.map((currency) => currency.toUpperCase()).join(', ')}
@@ -112,10 +115,8 @@ export function TripSuggestionsClient({
             );
           })}
         </ul>
-        {suggestions.length > SHOWN && (
-          <p className="pt-2 text-xs text-muted-foreground">
-            And {suggestions.length - SHOWN} older ones
-          </p>
+        {olderCount > 0 && (
+          <p className="pt-2 text-xs text-muted-foreground">And {olderCount} older ones</p>
         )}
       </CardContent>
 

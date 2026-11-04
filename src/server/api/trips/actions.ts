@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
 import { saveTripSchema, setTransactionTripSchema } from '@/lib/validation/trips';
+import { apiQueries } from '@/server/api/queries';
 import { schema } from '@/server/db';
 
 /**
@@ -65,6 +66,13 @@ export const setTransactionTrip = authenticatedActionClient
 
     revalidatePath('/dashboard', 'layout');
   });
+
+/**
+ * Returns where the transactions' card payments were, like "Athens, Greece", for a new trip's name.
+ */
+export const getTripPlace = authenticatedActionClient
+  .inputSchema(z.object({ transactionIds: z.array(z.uuid()).min(1).max(1000) }))
+  .action(({ parsedInput }) => apiQueries.trips.getTripPlace(parsedInput));
 
 /**
  * Hides the trip suggestions up to the day.

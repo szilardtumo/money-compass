@@ -1,17 +1,34 @@
 import 'server-only';
 
-import { addDays, differenceInCalendarDays, parseISO, subDays } from 'date-fns';
-import { and, count, desc, eq, gt, gte, isNotNull, isNull, lt, ne, sql, sum } from 'drizzle-orm';
+import { addDays, differenceInCalendarDays, parseISO, subDays, subMonths } from 'date-fns';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  ne,
+  sql,
+  sum,
+} from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
+import { env } from '@/lib/env';
 import { Transaction } from '@/lib/types/transactions.types';
 import { Trip, TripSuggestion } from '@/lib/types/trips.types';
 import { toMainCurrency } from '@/lib/utils/currencies';
 import { schema } from '@/server/db';
 
+import { askTripPlace } from './place';
 import { analyticsSide, categoryColumns, joinCategory } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
+import { isCardTransaction } from '../merchants/categorize';
 import { getTransactions } from '../transactions/queries';
 
 const t = schema.transactions;
@@ -106,9 +123,9 @@ export const getTrips = createApiQuery<void, Trip[]>(async () => {
 });
 
 /**
- * Returns the days that look like a trip without one, the latest first: days outside every trip
- * with at least 3 card payments without a trip in other currencies than most payments of the last
- * 90 days. Days with at most one day between them make one suggestion. The ones the user dismissed
+ * Returns the days of the last 12 months that look like a trip without one, the latest first: days
+ * outside every trip with at least 3 card payments without a trip in other currencies than most
+ * payments of the last 90 days. Days with at most one day between them make one suggestion. The ones the user dismissed
  * are left out.
  */
 export const getTripSuggestions = createApiQuery<void, TripSuggestion[]>(async () => {
@@ -148,6 +165,8 @@ export const getTripSuggestions = createApiQuery<void, TripSuggestion[]>(async (
           and(
             isPayment,
             isNull(t.tripId),
+            // Older ones would be years of trips to go through
+            gte(t.startedDate, subMonths(new Date(), 12)),
             sql`not exists (select 1 from ${schema.trips} where ${day}::date between ${schema.trips.startDate} and ${schema.trips.endDate})`,
             ne(currency, home.currency),
             dismissedUntil ? gt(day, dismissedUntil) : undefined,
@@ -230,5 +249,42 @@ export const getTripSuggestedTransactions = createApiQuery<{ tripId: string }, T
         .filter((transaction) => transaction.category?.kind !== 'income')
         .toSorted((a, b) => +new Date(b.startedDate) - +new Date(a.startedDate))
     );
+  },
+);
+
+/**
+ * Returns where the card payments among the transactions were, like "Athens, Greece", or null
+ * without ANTHROPIC_API_KEY, on failure, or when the names don't show a place. Like the merchant
+ * categorization, it sends only the names the bank wrote for card payments, with their currencies.
+ */
+export const getTripPlace = createApiQuery<{ transactionIds: string[] }, string | null>(
+  async ({ input: { transactionIds } }) => {
+    'use cache: private';
+    if (!env.ANTHROPIC_API_KEY) {
+      return null;
+    }
+    const { db } = await createApiContext();
+    const payments = await db.rls((tx) =>
+      tx
+        .selectDistinct({
+          name: sql<string>`coalesce(nullif(${t.counterpartyName}, ''), ${t.description})`,
+          currency: sql<string>`upper(${schema.subaccounts.currency})`,
+        })
+        .from(t)
+        .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+        .where(and(inArray(t.id, transactionIds), isCardTransaction))
+        .orderBy(sql`1`, sql`2`)
+        .limit(100),
+    );
+    if (!payments.length) {
+      return null;
+    }
+
+    try {
+      return await askTripPlace(payments);
+    } catch (error) {
+      console.error('Failed to find the place of a trip:', error);
+      return null;
+    }
   },
 );

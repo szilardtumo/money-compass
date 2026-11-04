@@ -14,10 +14,20 @@ export async function TripSuggestions() {
   if (!suggestions.length) {
     return null;
   }
+  const shown = suggestions.slice(0, 3);
+  const places = await Promise.all(
+    shown.map((suggestion) =>
+      apiQueries.trips.getTripPlace({ transactionIds: suggestion.transactionIds }),
+    ),
+  );
 
   return (
     <TripSuggestionsClient
-      suggestions={suggestions}
+      suggestions={shown.map((suggestion, index) => ({
+        ...suggestion,
+        name: places[index] ?? undefined,
+      }))}
+      olderCount={suggestions.length - shown.length}
       categories={categories}
       mainCurrency={profile.mainCurrency}
     />
