@@ -3,6 +3,7 @@ import {
   HistoryIcon,
   LayoutDashboardIcon,
   MenuIcon,
+  PlaneIcon,
   PlugIcon,
   StoreIcon,
   TagsIcon,
@@ -65,6 +66,9 @@ function NavbarContent() {
             icon={<TagsIcon className="size-4 mr-2" />}
           >
             Categories
+          </NavItem>
+          <NavItem href="/dashboard/analytics/trips" icon={<PlaneIcon className="size-4 mr-2" />}>
+            Trips
           </NavItem>
         </div>
         <NavItem href="/dashboard/integrations" icon={<PlugIcon className="size-4 mr-2" />}>

@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
+import { PlaneIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Fragment, ReactNode } from 'react';
 
@@ -34,6 +35,16 @@ export function TransactionSummary({
   const details = [
     transaction.description !== name && transaction.description,
     transaction.linkedTransaction && formatExchange(transaction, transaction.linkedTransaction),
+    transaction.trip && (
+      <DrawerLink
+        key="trip"
+        to={{ trip: transaction.trip.id }}
+        className="inline-flex items-center gap-1 align-bottom hover:underline"
+      >
+        <PlaneIcon className="size-3" />
+        {transaction.trip.name}
+      </DrawerLink>
+    ),
     ...extra,
   ].filter(Boolean);
 
@@ -99,9 +110,11 @@ interface TransactionItemProps {
   transaction: TransactionWithAccount;
   /** For changing the category */
   categories: Category[];
+  /** A button after the amount */
+  action?: ReactNode;
 }
 
-export function TransactionItem({ transaction, categories }: TransactionItemProps) {
+export function TransactionItem({ transaction, categories, action }: TransactionItemProps) {
   return (
     <div className="flex items-center gap-3">
       <TransactionSummary
@@ -122,6 +135,7 @@ export function TransactionItem({ transaction, categories }: TransactionItemProp
         <TransactionAmount transaction={transaction} />
         <TransactionCategoryBadge transaction={transaction} />
       </div>
+      {action}
       <TransactionActions transaction={transaction} categories={categories}>
         <DropdownMenuItem asChild>
           <Link href="/dashboard/transactions">Details</Link>

@@ -1,12 +1,13 @@
 'use client';
 
 import { createColumnHelper } from '@tanstack/react-table';
-import { Trash2Icon } from 'lucide-react';
+import { PlaneIcon, Trash2Icon } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 
 import { BulkCategoryPicker } from '@/components/categories/bulk-category-picker';
 import { CATEGORY_TOASTS } from '@/components/categories/category-picker';
 import { TransactionCategoryBadge } from '@/components/categories/transaction-category-badge';
+import { useAddToTripDialog } from '@/components/dialogs/add-to-trip-dialog';
 import { DrawerLink } from '@/components/drawers/drawer-link';
 import { TransactionActions } from '@/components/transactions/transaction-actions';
 import { TransactionAmount, TransactionSummary } from '@/components/transactions/transaction-item';
@@ -27,7 +28,7 @@ import { Account } from '@/lib/types/accounts.types';
 import { Category } from '@/lib/types/categories.types';
 import { Transaction, TransactionWithAccount } from '@/lib/types/transactions.types';
 import { Paginated } from '@/lib/types/transport.types';
-import { formatCurrency, formatDay, formatTime } from '@/lib/utils/formatters';
+import { formatCurrency, formatDay, formatTime, formatUtcDay } from '@/lib/utils/formatters';
 import { apiActions } from '@/server/api/actions';
 
 const columnHelper = createColumnHelper<DataTableFeatures, TransactionWithAccount>();
@@ -206,6 +207,17 @@ export function TransactionsTableClient({
     [setTransactionCategory, table],
   );
 
+  const { openDialog: openAddToTripDialog } = useAddToTripDialog();
+  const addSelectedToTrip = () => {
+    const selected = table.getSelectedRowModel().rows.map((row) => row.original);
+    const days = selected.map((transaction) => formatUtcDay(transaction.startedDate)).toSorted();
+    openAddToTripDialog({
+      transactionIds: selected.map((transaction) => transaction.id),
+      startDate: days[0],
+      endDate: days.at(-1)!,
+    });
+  };
+
   const deleteSelected = useCallback(async () => {
     const transactionIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
     await deleteTransactions({ transactionIds });
@@ -235,6 +247,15 @@ export function TransactionsTableClient({
           clearLabel="Remove their own category"
           onSelect={categorizeSelected}
         />
+        <Button
+          variant="outline"
+          icon={PlaneIcon}
+          className="h-8 px-2.5"
+          onClick={addSelectedToTrip}
+          disabled={selectedRowCount === 0}
+        >
+          Add to trip ({selectedRowCount})
+        </Button>
         <Button
           variant="destructive"
           icon={Trash2Icon}

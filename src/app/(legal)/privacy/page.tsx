@@ -47,6 +47,10 @@ export default function PrivacyPage() {
         Claude. It sends no amounts, dates or account details, and no names from transfers, which
         are usually people.
       </p>
+      <p>
+        To name a new trip after where it was, the app sends the same kind of merchant names of the
+        trip&apos;s card payments, with their currencies.
+      </p>
 
       <h2>Questions</h2>
       <p>

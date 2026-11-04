@@ -12,7 +12,7 @@ import { DbClient, DbTx, schema } from '@/server/db';
 
 // Bank card types. Their names are businesses, while transfers name people, which never go to the
 // LLM. Neither do the descriptions the user typed for manual transactions.
-const isCardTransaction = and(
+export const isCardTransaction = and(
   inArray(schema.transactions.type, ['card_payment', 'refund', 'atm', 'fee', 'reward']),
   eq(schema.transactions.dataSource, 'integration'),
 )!;

@@ -4,6 +4,7 @@ import * as integrations from './integrations/actions';
 import * as merchants from './merchants/actions';
 import * as profiles from './profiles/actions';
 import * as transactions from './transactions/actions';
+import * as trips from './trips/actions';
 
 type ApiActions = Record<string, Record<string, (...args: never) => unknown>>;
 
@@ -13,5 +14,6 @@ export const apiActions = {
   integrations,
   merchants,
   profiles,
+  trips,
   transactions,
 } satisfies ApiActions;

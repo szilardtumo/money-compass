@@ -1,6 +1,18 @@
 import 'server-only';
 
-import { and, asc, count, countDistinct, eq, gte, inArray, isNull, lt, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  countDistinct,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  sql,
+} from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { Category, CategoryMerchant, CategoryWithStats } from '@/lib/types/categories.types';
@@ -98,30 +110,33 @@ export const getCategoryMerchants = createApiQuery<
   const { db } = await createApiContext();
   const m = schema.merchants;
   const { start, end } = getPeriodRange(parsePeriod(period));
-  // Without the transactions that have a category of their own
   const inPeriod = and(
     gte(t.startedDate, start),
     lt(t.startedDate, end),
-    or(isNull(t.categoryId), eq(t.categoryId, m.categoryId)),
+    // Without the transactions that count in another category, like their own or their trip's
+    sql`${schema.categories.id} is not distinct from ${m.categoryId}`,
   );
 
   const [rows, { mapper }] = await Promise.all([
     db.rls((tx) =>
-      tx
-        .select({
-          id: m.id,
-          name: m.name,
-          currency: schema.subaccounts.currency,
-          transactionCount: sql<number>`count(*) filter (where ${inPeriod})`.mapWith(Number),
-          amount: sql<number>`coalesce(sum(${t.amount}) filter (where ${inPeriod}), 0)`.mapWith(
-            Number,
-          ),
-        })
-        .from(m)
-        .innerJoin(t, eq(t.merchantId, m.id))
-        .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+      joinCategory(
+        tx
+          .select({
+            id: sql<string>`${m.id}`,
+            name: sql<string>`${m.name}`,
+            currency: schema.subaccounts.currency,
+            transactionCount: sql<number>`count(*) filter (where ${inPeriod})`.mapWith(Number),
+            amount: sql<number>`coalesce(sum(${t.amount}) filter (where ${inPeriod}), 0)`.mapWith(
+              Number,
+            ),
+          })
+          .from(t)
+          .innerJoin(schema.subaccounts, eq(schema.subaccounts.id, t.subaccountId))
+          .$dynamic(),
+      )
         .where(
           and(
+            isNotNull(m.id),
             categoryId ? eq(m.categoryId, categoryId) : isNull(m.categoryId),
             subaccountIds?.length ? inArray(t.subaccountId, subaccountIds) : undefined,
           ),

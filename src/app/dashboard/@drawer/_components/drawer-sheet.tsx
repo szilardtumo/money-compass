@@ -27,19 +27,19 @@ interface DrawerSheetProps {
   description: ReactNode;
   /** Usually a menu, next to the title */
   actions?: ReactNode;
-  /** Like "2026-10" or "2026" */
-  period: string;
+  /** Like "2026-10" or "2026", for a drawer that follows a period */
+  period?: string;
   /** The figures under the period picker, in the main currency */
   stats: { label: string; value: number }[];
   /** A bar per month of the period's year, in the main currency */
-  chart: number[];
+  chart?: number[];
   mainCurrency: string;
   children: ReactNode;
 }
 
 /**
- * The layout of the category and merchant drawers: the header with the period and its totals, then
- * the content. Closing it removes the drawer from the URL.
+ * The layout of the drawers: the header with the period and its totals, then the content. Closing
+ * it removes the drawer from the URL.
  */
 export function DrawerSheet({
   icon,
@@ -61,7 +61,7 @@ export function DrawerSheet({
   const [closedAt, setClosedAt] = useState<string>();
   const format = (value: number) =>
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0 });
-  const selected = parsePeriod(period);
+  const selected = period && parsePeriod(period);
 
   return (
     <Sheet
@@ -88,7 +88,7 @@ export function DrawerSheet({
             </div>
             {actions}
           </div>
-          <PeriodPicker period={period} className="justify-between" />
+          {period && <PeriodPicker period={period} className="justify-between" />}
           <div className="flex items-end gap-6">
             {stats.map((stat) => (
               <div key={stat.label}>
@@ -96,16 +96,18 @@ export function DrawerSheet({
                 <p className="text-xl font-semibold">{format(stat.value)}</p>
               </div>
             ))}
-            <div className="ml-auto">
-              <Sparkline
-                values={chart}
-                color={color}
-                width={168}
-                height={40}
-                // The month in its year, else the whole year
-                highlight={selected.unit === 'month' ? selected.month : null}
-              />
-            </div>
+            {chart && selected && (
+              <div className="ml-auto">
+                <Sparkline
+                  values={chart}
+                  color={color}
+                  width={168}
+                  height={40}
+                  // The month in its year, else the whole year
+                  highlight={selected.unit === 'month' ? selected.month : null}
+                />
+              </div>
+            )}
           </div>
         </SheetHeader>
 
