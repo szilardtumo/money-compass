@@ -2,12 +2,13 @@
 
 import { format, parseISO } from 'date-fns';
 import { ChartCandlestickIcon } from 'lucide-react';
-import { useId } from 'react';
+import { Suspense, use, useId } from 'react';
 import { Area, CartesianGrid, ComposedChart, Line, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { TransactionDayList } from '@/components/transactions/transaction-day-list';
 import { Badge } from '@/components/ui/badge';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Account } from '@/lib/types/accounts.types';
 import { Category } from '@/lib/types/categories.types';
@@ -27,7 +28,7 @@ type PricePoint = { date: string; Price: number | null; Buy: number | null; Sell
 
 interface HoldingDrawerClientProps {
   holding: HoldingDetail;
-  transactions: Transaction[];
+  transactions: Promise<Transaction[]>;
   accounts: Account[];
   categories: Category[];
   mainCurrency: string;
@@ -79,7 +80,9 @@ export function HoldingDrawerClient({
       <Tabs defaultValue="overview" className="min-h-0 flex-1">
         <TabsList className="mx-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions {transactions.length}</TabsTrigger>
+          <TabsTrigger value="transactions">
+            Transactions {holding.transactionIds.length}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className={TAB_CONTENT}>
           <PriceChart holding={holding} />
@@ -93,15 +96,24 @@ export function HoldingDrawerClient({
           </dl>
         </TabsContent>
         <TabsContent value="transactions" className={TAB_CONTENT}>
-          <TransactionDayList
-            transactions={transactions}
-            accounts={accounts}
-            categories={categories}
-          />
+          <Suspense fallback={<Skeleton className="h-40" />}>
+            <HoldingTransactions
+              transactions={transactions}
+              accounts={accounts}
+              categories={categories}
+            />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </DrawerSheet>
   );
+}
+
+function HoldingTransactions({
+  transactions,
+  ...props
+}: Pick<HoldingDrawerClientProps, 'transactions' | 'accounts' | 'categories'>) {
+  return <TransactionDayList transactions={use(transactions)} {...props} />;
 }
 
 /** The daily closes with a dot at each buy and sell, at its price */

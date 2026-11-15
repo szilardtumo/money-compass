@@ -18,16 +18,16 @@ export async function HoldingDrawer({ securityId }: { securityId: string }) {
     return null;
   }
 
-  const { data: transactions } = await apiQueries.transactions.getTransactions({
-    subaccountIds: holding.subaccountIds,
-    pageSize: 10_000,
-  });
   const transactionIds = new Set(holding.transactionIds);
+  // Streams in, so the chart doesn't wait for the list
+  const transactions = apiQueries.transactions
+    .getTransactions({ subaccountIds: holding.subaccountIds, pageSize: 10_000 })
+    .then(({ data }) => data.filter((transaction) => transactionIds.has(transaction.id)));
 
   return (
     <HoldingDrawerClient
       holding={holding}
-      transactions={transactions.filter((transaction) => transactionIds.has(transaction.id))}
+      transactions={transactions}
       accounts={accounts}
       categories={categories}
       mainCurrency={mainCurrency}
