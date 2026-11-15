@@ -73,12 +73,11 @@ export async function fetchDailyCloses(
     if (close == null) {
       return [];
     }
-    // Yahoo sends 32-bit floats, so 168.06 arrives as 168.05999755859375
-    const value = Number(close.toPrecision(7));
     return {
       // The timestamp is the session's start, so the exchange's offset gives its local date
       date: new Date((timestamp + gmtoffset) * 1000).toISOString().slice(0, 10),
-      close: isPence ? value / 100 : value,
+      // Yahoo sends 32-bit floats, so 168.06 arrives as 168.05999755859375
+      close: Number((isPence ? close / 100 : close).toPrecision(7)),
       currency: isPence ? 'gbp' : currency.toLowerCase(),
     };
   });
