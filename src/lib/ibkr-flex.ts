@@ -85,6 +85,8 @@ export interface FlexEntry {
   date: Date;
   description: string;
   trade: { security: FlexSecurity; quantity: number; price: number } | null;
+  /** The security a cash row is about, like a dividend's */
+  isin?: string | null;
 }
 
 export interface FlexStatement {
@@ -209,6 +211,7 @@ function readStatement(statement: Record<string, unknown>): FlexStatement {
       date: toDate(row.reportDate || row.dateTime),
       description: row.description || row.type,
       trade: null,
+      isin: row.conid ? toSecurity(row).isin : null,
     });
   }
 

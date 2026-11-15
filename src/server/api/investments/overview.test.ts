@@ -116,31 +116,31 @@ describe('summarizePortfolio', () => {
 });
 
 describe('groupDividends', () => {
-  const payment = (date: string, amount: number, description: string): DividendPayment => ({
+  const payment = (date: string, amount: number, isin: string | null): DividendPayment => ({
     transactionId: `${date}-${amount}`,
     subaccountId: 'usd',
     date: new Date(date),
     amount,
-    description,
+    isin,
   });
-  const aapl = 'AAPL(US0378331005) CASH DIVIDEND USD 0.26 PER SHARE';
-  const ko = 'KO(US1912161007) CASH DIVIDEND USD 0.51 PER SHARE';
+  const aapl = 'US0378331005';
+  const ko = 'US1912161007';
 
   it('sums each month after withholding tax and groups the last 12 months by security', () => {
     const dividends = groupDividends({
       payments: [
-        payment('2024-11-14', 99, `${aapl} (Ordinary Dividend)`),
-        payment('2025-02-13', 10, `${aapl} (Ordinary Dividend)`),
-        payment('2025-02-13', -1.5, `${aapl} - US TAX`),
-        payment('2026-08-14', 20, `${aapl} (Ordinary Dividend)`),
-        payment('2026-08-14', -3, `${aapl} - US TAX`),
-        payment('2026-08-28', 8, `${ko} (Ordinary Dividend)`),
-        payment('2026-08-28', -1.2, `${ko} - US TAX`),
-        payment('2026-11-02', 4, 'Payment in lieu of a dividend'),
+        payment('2024-11-14', 99, aapl),
+        payment('2025-02-13', 10, aapl),
+        payment('2025-02-13', -1.5, aapl),
+        payment('2026-08-14', 20, aapl),
+        payment('2026-08-14', -3, aapl),
+        payment('2026-08-28', 8, ko),
+        payment('2026-08-28', -1.2, ko),
+        payment('2026-11-02', 4, null),
       ],
       securities: [
-        { id: 'aapl', symbol: 'AAPL', name: 'APPLE INC' },
-        { id: 'ko', symbol: 'KO', name: 'COCA-COLA CO' },
+        { id: 'aapl', symbol: 'AAPL', name: 'APPLE INC', isin: aapl },
+        { id: 'ko', symbol: 'KO', name: 'COCA-COLA CO', isin: ko },
       ],
       now: new Date('2026-11-15'),
     });
@@ -157,8 +157,11 @@ describe('groupDividends', () => {
     // 2025-02 is more than 12 months back
     expect(dividends.total).toBeCloseTo(27.8, 10);
     expect(dividends.bySecurity).toEqual([
-      { security: { id: 'aapl', symbol: 'AAPL', name: 'APPLE INC' }, amount: 17 },
-      { security: { id: 'ko', symbol: 'KO', name: 'COCA-COLA CO' }, amount: expect.closeTo(6.8) },
+      { security: { id: 'aapl', symbol: 'AAPL', name: 'APPLE INC', isin: aapl }, amount: 17 },
+      {
+        security: { id: 'ko', symbol: 'KO', name: 'COCA-COLA CO', isin: ko },
+        amount: expect.closeTo(6.8),
+      },
       { security: null, amount: 4 },
     ]);
   });

@@ -245,6 +245,7 @@ export const ibkrFlexProvider = {
               completedDate: entry.date,
               description: entry.description,
               type: entry.type,
+              bankData: entry.isin ? { isin: entry.isin } : null,
               dataSource: 'integration' as const,
               subaccountId,
               userId,

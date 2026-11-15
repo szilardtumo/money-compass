@@ -268,7 +268,7 @@ const getDividendPayments = createApiQuery<void, DividendPayment[]>(async () => 
         subaccountId: t.subaccountId,
         date: t.startedDate,
         amount: t.amount,
-        description: t.description,
+        isin: sql<string | null>`${t.bankData}->>'isin'`,
       })
       .from(t)
       .where(
@@ -309,7 +309,7 @@ export const getDividends = createApiQuery<void, DividendSummary>(async () => {
   const securities = securityIds.length
     ? await db.rls((tx) =>
         tx
-          .select({ id: s.id, symbol: s.symbol, name: s.name })
+          .select({ id: s.id, symbol: s.symbol, name: s.name, isin: s.isin })
           .from(s)
           .where(inArray(s.id, securityIds)),
       )

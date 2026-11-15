@@ -221,13 +221,15 @@ export interface DividendPayment {
   subaccountId: string;
   date: Date;
   amount: number;
-  description: string;
+  /** Of the security the payment is about, from the broker */
+  isin: string | null;
 }
 
 export interface SecurityName {
   id: string;
   symbol: string;
   name: string;
+  isin: string | null;
 }
 
 /** Dividends after withholding tax, in the main currency */
@@ -251,8 +253,8 @@ export interface PortfolioReturns {
 }
 
 /** IBKR starts a dividend's description with the security, like "AAPL(US0378331005) CASH DIVIDEND" */
-export const isPaymentOf = (payment: DividendPayment, security: Pick<SecurityName, 'symbol'>) =>
-  payment.description.startsWith(`${security.symbol}(`);
+export const isPaymentOf = (payment: DividendPayment, security: Pick<SecurityName, 'isin'>) =>
+  !!payment.isin && payment.isin === security.isin;
 
 export function groupDividends({
   payments,

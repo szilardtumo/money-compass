@@ -30,6 +30,13 @@ describe('parseFlexStatement', () => {
     expect(count('split')).toBe(1);
   });
 
+  it('tags a dividend and its tax with the security they are about', () => {
+    const isins = statement.entries
+      .filter((entry) => entry.type === 'dividend' || entry.type === 'withholding_tax')
+      .map((entry) => entry.isin);
+    expect(isins).toEqual(['US0378331005', 'US0378331005']);
+  });
+
   it('maps the first trade to a buy with its trade row', () => {
     expect(statement.entries[0]).toEqual({
       externalRef: 'ibkr_trade_700001',
