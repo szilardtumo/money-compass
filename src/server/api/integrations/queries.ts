@@ -8,6 +8,7 @@ import * as enableBanking from '@/lib/enable-banking';
 import { Institution, Integration } from '@/lib/types/integrations.types';
 import { schema } from '@/server/db';
 
+import { integrationProviders } from './providers';
 import { getIntegrationStatus } from './status';
 import { getTodaySyncCount } from './sync';
 
@@ -36,7 +37,11 @@ export const getIntegrations = createApiQuery<void, Integration[]>(async () => {
   // Pages can't read the current time while they are prerendered, so the query computes these
   return integrations.map(({ accounts, ...integration }) => ({
     ...integration,
-    status: getIntegrationStatus(integration, new Date()),
+    status: getIntegrationStatus(
+      integration,
+      new Date(),
+      integrationProviders[integration.provider].expiryWarningDays,
+    ),
     accounts: accounts.map((account) => ({ ...account, syncsToday: getTodaySyncCount(account) })),
   }));
 });

@@ -93,6 +93,8 @@ export const ibkrFlexProvider = {
   label: 'Interactive Brokers',
   // A first sync takes up to 4 statements, and IBKR allows 10 requests a minute
   dailySyncLimit: 3,
+  // A new token takes a few steps in IBKR's Client Portal
+  expiryWarningDays: 14,
   isRevokedError: (error) => error instanceof IbkrFlexError && error.revoked,
 
   /**

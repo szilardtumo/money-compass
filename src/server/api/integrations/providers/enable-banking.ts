@@ -15,6 +15,7 @@ export const enableBankingProvider = {
   label: 'Enable Banking',
   // PSD2 lets banks refuse more than 4 requests a day made without the user, and a sync makes 2
   dailySyncLimit: 2,
+  expiryWarningDays: 7,
   isRevokedError: (error) =>
     error instanceof enableBanking.EnableBankingError &&
     ['EXPIRED_SESSION', 'CLOSED_SESSION', 'REVOKED_SESSION', 'SESSION_DOES_NOT_EXIST'].includes(

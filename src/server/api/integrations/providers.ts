@@ -15,6 +15,8 @@ export type LinkedIntegrationAccount = IntegrationAccount & {
 export interface ProviderEntry {
   label: string;
   dailySyncLimit: number;
+  /** How many days before the access expires the integration shows as expiring */
+  expiryWarningDays: number;
   isRevokedError: (error: unknown) => boolean;
   /** Fetches from the provider, then returns the writes, which run inside the sync's transaction */
   sync: (account: LinkedIntegrationAccount) => Promise<
