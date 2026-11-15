@@ -4,10 +4,14 @@ import { apiQueries } from '@/server/api/queries';
 import { NetWorthChangesCardClient } from './net-worth-changes-card-client';
 
 /**
- * The change of the net worth in each month, split into what was saved and the rest.
+ * The change of the net worth in each month, split into what was saved, the market gains of the
+ * investments and the rest.
  */
 export async function NetWorthChangesCard({ className }: { className?: string }) {
-  const history = await apiQueries.transactions.getTransactionHistory();
+  const [history, marketGains] = await Promise.all([
+    apiQueries.transactions.getTransactionHistory(),
+    apiQueries.investments.getMarketGains(),
+  ]);
   if (!history.length) {
     return null;
   }
@@ -30,10 +34,17 @@ export async function NetWorthChangesCard({ className }: { className?: string })
       className={className}
       mainCurrency={mainCurrency}
       firstDate={history[0].date}
+      hasInvestments={Object.keys(marketGains).length > 0}
       months={history.map((item, index) => {
         const monthSaved = saved.get(months[index]) ?? 0;
+        const monthGains = marketGains[months[index]] ?? 0;
         const change = item.totalBalance - (history[index - 1]?.totalBalance ?? 0);
-        return { month: months[index], saved: monthSaved, other: change - monthSaved };
+        return {
+          month: months[index],
+          saved: monthSaved,
+          marketGains: monthGains,
+          other: change - monthSaved - monthGains,
+        };
       })}
     />
   );

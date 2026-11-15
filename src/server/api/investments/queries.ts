@@ -23,6 +23,7 @@ import {
   PortfolioReturns,
   PortfolioSummary,
   summarizePortfolio,
+  sumMarketGains,
   toPortfolioHistory,
 } from './overview';
 import { getInvestmentEntries } from './valuation';
@@ -244,6 +245,20 @@ export const getPortfolioReturns = createApiQuery<void, PortfolioReturns>(async 
       },
     ),
   };
+});
+
+/**
+ * Returns the market gains of the broker accounts by month, like "2026-10", in the main currency.
+ */
+export const getMarketGains = createApiQuery<void, Record<string, number>>(async () => {
+  'use cache: private';
+  const [subaccounts, { valuations }, { mapper }] = await Promise.all([
+    getBrokerSubaccounts(),
+    getDailyRows(),
+    getMainCurrencyWithMapper(),
+  ]);
+
+  return sumMarketGains({ subaccounts, valuations, mapper });
 });
 
 /**

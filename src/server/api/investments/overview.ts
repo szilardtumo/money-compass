@@ -196,6 +196,44 @@ export function toPortfolioHistory({
   return points;
 }
 
+/**
+ * Returns the market gains of the subaccounts by month, like "2026-10", in the main currency: the
+ * change in their market value plus their buys and sells, so buying shares with cash gains nothing.
+ */
+export function sumMarketGains({
+  subaccounts,
+  valuations,
+  mapper,
+}: {
+  subaccounts: Pick<BrokerSubaccount, 'id' | 'currency' | 'entries'>[];
+  valuations: { subaccountId: string; date: string; marketValue: number }[];
+  mapper: CurrencyMapper;
+}): Record<string, number> {
+  const gains: Record<string, number> = {};
+  const valuationsBySubaccount = groupBy(valuations, (item) => item.subaccountId);
+
+  for (const { id, currency, entries } of subaccounts) {
+    const add = (date: string, amount: number) => {
+      const month = date.slice(0, 7);
+      gains[month] = (gains[month] ?? 0) + toMainCurrency({ amount, currency }, mapper);
+    };
+    let previous = 0;
+    for (const { date, marketValue } of (valuationsBySubaccount[id] ?? []).toSorted((a, b) =>
+      a.date.localeCompare(b.date),
+    )) {
+      add(date, marketValue - previous);
+      previous = marketValue;
+    }
+    for (const entry of entries) {
+      if (entry.type === 'buy' || entry.type === 'sell') {
+        add(formatUtcDay(entry.startedDate), entry.amount);
+      }
+    }
+  }
+
+  return gains;
+}
+
 /** A security's position in the broker accounts, open or sold, with its trades and prices */
 export interface HoldingDetail {
   securityId: string;

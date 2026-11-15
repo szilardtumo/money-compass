@@ -9,6 +9,7 @@ import {
   Holding,
   isPriceStale,
   summarizePortfolio,
+  sumMarketGains,
   toReturnFlows,
 } from './overview';
 
@@ -216,5 +217,48 @@ describe('isPriceStale', () => {
 
   it('is stale without a price in the last 30 days', () => {
     expect(isPriceStale(null, now)).toBe(true);
+  });
+});
+
+describe('sumMarketGains', () => {
+  it('counts price moves, not buys and sells, by month in the main currency', () => {
+    const trade = (type: 'buy' | 'sell', date: string, amount: number): InvestmentEntry => ({
+      type,
+      amount,
+      subaccountId: 'usd',
+      startedDate: new Date(date),
+      sequence: 1,
+      trade: { securityId: 'aapl', quantity: type === 'buy' ? 10 : -5, price: 100 },
+    });
+    const valuation = (date: string, marketValue: number) => ({
+      subaccountId: 'usd',
+      date,
+      marketValue,
+    });
+
+    const gains = sumMarketGains({
+      subaccounts: [
+        {
+          id: 'usd',
+          currency: 'usd',
+          entries: [
+            trade('buy', '2026-01-15', -1000),
+            cash('usd', 'dividend', '2026-02-10', 20),
+            trade('sell', '2026-03-10', 525),
+          ],
+        },
+      ],
+      valuations: [
+        valuation('2026-01-15', 1000),
+        valuation('2026-01-31', 1100),
+        valuation('2026-02-28', 1050),
+        valuation('2026-03-10', 525),
+        valuation('2026-03-31', 600),
+      ],
+      mapper: { eur: 1, usd: 0.5 },
+    });
+
+    // January: 1100 - 0 - 1000. February: 1050 - 1100. March: 600 - 1050 + 525. Halved to euros.
+    expect(gains).toEqual({ '2026-01': 50, '2026-02': -25, '2026-03': 37.5 });
   });
 });
