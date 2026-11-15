@@ -22,6 +22,18 @@ const serverEnvSchema = z.object({
   ENABLE_BANKING_APP_ID: z.string().min(1),
   ENABLE_BANKING_PRIVATE_KEY: z.string().min(1),
 
+  // Interactive Brokers, optional: only IBKR integrations need them. The key encrypts the
+  // integrations' credentials, 32 bytes in base64 like `openssl rand -base64 32`.
+  INTEGRATION_SECRET_KEY: z.preprocess(
+    (value) => value || undefined,
+    z
+      .string()
+      .refine((value) => Buffer.from(value, 'base64').length === 32, 'Must be 32 bytes in base64.')
+      .optional(),
+  ),
+  // Points the Flex Web Service at another host, like scripts/flex-stub.mjs
+  IBKR_FLEX_BASE_URL: z.preprocess((value) => value || undefined, z.url().optional()),
+
   // Anthropic, optional: merchants stay uncategorized without it
   ANTHROPIC_API_KEY: z.string().optional(),
 
