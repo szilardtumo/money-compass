@@ -59,6 +59,9 @@ export function SyncHistoryDialog({ open, onOpenChange, logs, currency }: SyncHi
                         {log.importedCount} new transaction{log.importedCount === 1 ? '' : 's'}
                         {log.correctionAmount !== null &&
                           `, correction of ${formatCurrency(log.correctionAmount, currency)}`}
+                        {log.warning && (
+                          <p className="text-amber-600 dark:text-amber-500">{log.warning}</p>
+                        )}
                       </>
                     )}
                   </TableCell>

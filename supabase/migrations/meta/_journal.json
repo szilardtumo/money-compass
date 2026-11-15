@@ -120,6 +120,13 @@
       "when": 1794743033873,
       "tag": "20261115114353_ibkr_flex",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794754341801,
+      "tag": "20261115145221_sync_log_warnings",
+      "breakpoints": true
     }
   ]
 }

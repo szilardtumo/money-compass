@@ -21,8 +21,7 @@ export interface ProviderEntry {
     (tx: DbTx) => Promise<{
       importedCount: number;
       correctionAmount: number | null;
-      /** A warning about a sync that succeeded, which the sync log shows */
-      error?: string | null;
+      warning?: string | null;
     }>
   >;
 }

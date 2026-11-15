@@ -329,7 +329,7 @@ export const ibkrFlexProvider = {
       return {
         importedCount: imported.length,
         correctionAmount,
-        error: warnings.join(' ') || null,
+        warning: warnings.join(' ') || null,
       };
     };
   },

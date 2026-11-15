@@ -17,6 +17,8 @@ export const integrationSyncLogs = pgTable(
     importedCount: integer().notNull().default(0),
     correctionAmount: numericCasted(),
     error: text(),
+    // About a sync that succeeded, like a position that differs from the provider's
+    warning: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
