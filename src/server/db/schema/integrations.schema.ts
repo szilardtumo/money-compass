@@ -14,13 +14,15 @@ export const integrations = pgTable(
       .notNull()
       .default(authUidDefault)
       .references(() => authUsers.id, { onDelete: 'cascade' }),
-    provider: text({ enum: ['enable_banking'] }).notNull(),
+    provider: text({ enum: ['enable_banking', 'ibkr_flex'] }).notNull(),
     externalId: text().notNull().unique(),
     institutionName: text().notNull(),
     institutionCountry: text().notNull(),
     institutionLogoUrl: text().notNull(),
     expiresAt: timestamp({ withTimezone: true }).notNull(),
     revokedAt: timestamp({ withTimezone: true }),
+    // Encrypted with encryptSecret, for providers that sync with a stored secret like a token
+    credentials: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

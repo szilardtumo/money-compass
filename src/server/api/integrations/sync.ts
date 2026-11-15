@@ -5,7 +5,7 @@ import { and, eq, isNull, ne } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 import { UserError } from '@/lib/api/errors';
-import { Integration, IntegrationAccount } from '@/lib/types/integrations.types';
+import { IntegrationAccount } from '@/lib/types/integrations.types';
 import { DbClient, DbTx, schema } from '@/server/db';
 
 import { integrationProviders } from './providers';
@@ -85,7 +85,10 @@ export function getTodaySyncCount(account: IntegrationAccount) {
  */
 export async function syncAccount(
   account: IntegrationAccount & {
-    integration: Pick<Integration, 'provider' | 'revokedAt' | 'expiresAt'>;
+    integration: Pick<
+      typeof schema.integrations.$inferSelect,
+      'provider' | 'revokedAt' | 'expiresAt' | 'credentials'
+    >;
   },
   transaction: DbClient['rls'],
   trigger: 'manual' | 'cron',

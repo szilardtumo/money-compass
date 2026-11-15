@@ -7,6 +7,9 @@ import { syncAccount } from '@/server/api/integrations/sync';
 import { enrichMerchants } from '@/server/api/merchants/categorize';
 import { getAdminDb, schema } from '@/server/db';
 
+// IBKR statements take a minute each to generate. 300 seconds is the most the Hobby plan allows.
+export const maxDuration = 300;
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${env.CRON_SECRET}`) {

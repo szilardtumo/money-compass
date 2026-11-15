@@ -1,5 +1,6 @@
 import { eq, relations } from 'drizzle-orm';
 import {
+  date,
   index,
   integer,
   pgPolicy,
@@ -36,6 +37,9 @@ export const integrationAccounts = pgTable(
     linkedAt: timestamp({ withTimezone: true }),
     lastSyncedAt: timestamp({ withTimezone: true }),
     syncCount: integer().notNull().default(0),
+    // The start of the synced history, for providers that import it back to the account's opening.
+    // Null until the first sync after linking.
+    syncedFrom: date({ mode: 'string' }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
