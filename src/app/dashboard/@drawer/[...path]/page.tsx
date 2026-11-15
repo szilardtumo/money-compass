@@ -7,11 +7,12 @@ import { formatPeriodParam, isPeriodParam, parsePeriod } from '@/lib/utils/perio
 
 import { AccountDrawer } from '../_components/account-drawer';
 import { CategoryDrawer } from '../_components/category-drawer';
+import { HoldingDrawer } from '../_components/holding-drawer';
 import { MerchantDrawer } from '../_components/merchant-drawer';
 import { TripDrawer } from '../_components/trip-drawer';
 
 /**
- * The drawer of the category, merchant, account or trip in the URL, for its period, on every dashboard page. It
+ * The drawer of the category, merchant, account, trip or holding in the URL, for its period, on every dashboard page. It
  * matches every path, so it renders again on each navigation and closes when the param is gone.
  */
 export default function DrawerPage({ searchParams }: PageProps<'/dashboard/[...path]'>) {
@@ -41,6 +42,10 @@ async function Drawer({
   const tripId = z.uuid().safeParse(query.trip).data;
   if (tripId) {
     return <TripDrawer tripId={tripId} />;
+  }
+  const securityId = z.uuid().safeParse(query.holding).data;
+  if (securityId) {
+    return <HoldingDrawer securityId={securityId} />;
   }
   const merchantId = z.uuid().safeParse(query.merchant).data;
   if (merchantId) {

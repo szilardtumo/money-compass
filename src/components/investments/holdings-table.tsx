@@ -3,6 +3,8 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
+import { useDrawerHref } from '@/components/drawers/drawer-link';
+import { useNavigate } from '@/components/navigation-progress';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, useDataTable, type DataTableFeatures } from '@/components/ui/data-table';
 import { TrendLine } from '@/components/ui/trend-line';
@@ -17,6 +19,8 @@ interface HoldingsTableProps {
 }
 
 export function HoldingsTable({ holdings, mainCurrency }: HoldingsTableProps) {
+  const navigate = useNavigate();
+  const getDrawerHref = useDrawerHref();
   const columns = useMemo(() => {
     const total = holdings.reduce((sum, holding) => sum + holding.value, 0);
     const format = (value: number, options: Intl.NumberFormatOptions = {}) =>
@@ -131,5 +135,11 @@ export function HoldingsTable({ holdings, mainCurrency }: HoldingsTableProps) {
     initialSorting: [{ id: 'value', desc: true }],
   });
 
-  return <DataTable table={table} emptyMessage="No open positions." />;
+  return (
+    <DataTable
+      table={table}
+      emptyMessage="No open positions."
+      onRowClick={(holding) => navigate(getDrawerHref({ holding: holding.securityId }))}
+    />
+  );
 }
