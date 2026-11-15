@@ -88,7 +88,7 @@ export const getHoldings = createApiQuery<void, Holding[]>(async () => {
     Promise.all([
       tx.select().from(s).where(inArray(s.id, securityIds)),
       tx
-        .select({ securityId: p.securityId, close: p.close, currency: p.currency })
+        .select({ securityId: p.securityId, date: p.date, close: p.close, currency: p.currency })
         .from(p)
         .innerJoin(s, eq(s.id, p.securityId))
         .where(
@@ -133,6 +133,7 @@ export const getHoldings = createApiQuery<void, Holding[]>(async () => {
         value - toMainCurrency({ amount: costBasis, currency: subaccount.currency }, mapper),
       dayChange: last === undefined ? 0 : inMain(quantity * (last - previous)),
       closes: securityCloses.map((item) => item.close),
+      lastPriceDate: securityCloses.at(-1)?.date ?? null,
     };
   });
 });

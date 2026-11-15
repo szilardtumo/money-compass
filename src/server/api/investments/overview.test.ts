@@ -7,6 +7,7 @@ import {
   DividendPayment,
   groupDividends,
   Holding,
+  isPriceStale,
   summarizePortfolio,
   toReturnFlows,
 } from './overview';
@@ -45,6 +46,7 @@ const holding = (
   unrealizedGain,
   dayChange,
   closes: [],
+  lastPriceDate: null,
 });
 
 describe('summarizePortfolio', () => {
@@ -198,5 +200,21 @@ describe('toReturnFlows', () => {
     expect(toReturnFlows([{ date: '2026-11-15', value: 0, netInvested: 0 }], '2026-01-01')).toEqual(
       [{ date: new Date('2026-11-15'), amount: 0 }],
     );
+  });
+});
+
+describe('isPriceStale', () => {
+  const now = new Date('2026-11-15T12:00:00Z');
+
+  it('is not stale 4 days after the last price', () => {
+    expect(isPriceStale('2026-11-11', now)).toBe(false);
+  });
+
+  it('is stale 6 days after the last price', () => {
+    expect(isPriceStale('2026-11-09', now)).toBe(true);
+  });
+
+  it('is stale without a price in the last 30 days', () => {
+    expect(isPriceStale(null, now)).toBe(true);
   });
 });

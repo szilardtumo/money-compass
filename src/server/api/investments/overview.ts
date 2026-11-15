@@ -1,4 +1,4 @@
-import { subYears } from 'date-fns';
+import { differenceInDays, subYears } from 'date-fns';
 
 import { CashFlow, xirr } from '@/lib/investments/xirr';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
@@ -46,7 +46,16 @@ export interface Holding {
   dayChange: number;
   /** The closes of the last 30 days, oldest first */
   closes: number[];
+  /** Of the last close, or null without one in the last 30 days */
+  lastPriceDate: string | null;
 }
+
+/**
+ * Whether a held security's last price is too old to value it. The price source skips weekends
+ * and holidays, which leave a gap of up to 5 days.
+ */
+export const isPriceStale = (lastPriceDate: string | null, now: Date) =>
+  !lastPriceDate || differenceInDays(now, lastPriceDate) > 5;
 
 /** Amounts are in the main currency */
 export interface PortfolioSummary {
