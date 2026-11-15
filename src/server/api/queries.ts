@@ -3,6 +3,7 @@ import * as analytics from './analytics/queries';
 import * as categories from './categories/queries';
 import * as currencies from './currencies/queries';
 import * as integrations from './integrations/queries';
+import * as investments from './investments/queries';
 import * as merchants from './merchants/queries';
 import * as profiles from './profiles/queries';
 import * as transactions from './transactions/queries';
@@ -16,6 +17,7 @@ export const apiQueries = {
   categories,
   currencies,
   integrations,
+  investments,
   merchants,
   profiles,
   trips,

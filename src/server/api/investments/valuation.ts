@@ -44,7 +44,7 @@ export interface MonthlyBalances {
 }
 
 const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
-const nextDay = (date: string) => toIsoDate(new Date(Date.parse(date) + 86_400_000));
+export const nextDay = (date: string) => toIsoDate(new Date(Date.parse(date) + 86_400_000));
 const round = (value: number) => Number(value.toFixed(2));
 const sumOf = (positions: Position[], value: (position: Position) => number) =>
   positions.reduce((total, position) => total + value(position), 0);
