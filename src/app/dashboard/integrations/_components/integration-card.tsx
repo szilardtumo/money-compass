@@ -23,7 +23,7 @@ import {
 import { Account } from '@/lib/types/accounts.types';
 import { Integration } from '@/lib/types/integrations.types';
 import { formatDate } from '@/lib/utils/formatters';
-import { DAILY_SYNC_LIMIT } from '@/server/api/integrations/sync';
+import { integrationProviders } from '@/server/api/integrations/providers';
 
 import { IntegrationAccountActions } from './integration-account-actions';
 import { IntegrationCardActions } from './integration-card-actions';
@@ -48,6 +48,7 @@ export function IntegrationCard({
   accounts,
   linkedSubaccountIds,
 }: IntegrationCardProps) {
+  const { dailySyncLimit } = integrationProviders[integration.provider];
   const subaccounts = new Map(
     accounts.flatMap((item) =>
       item.subaccounts.map((subaccount) => [
@@ -137,7 +138,7 @@ export function IntegrationCard({
                             <RelativeTime date={account.lastSyncedAt} />
                           </p>
                           <p className="text-muted-foreground">
-                            {account.syncsToday} of {DAILY_SYNC_LIMIT} syncs used today
+                            {account.syncsToday} of {dailySyncLimit} syncs used today
                           </p>
                         </>
                       ) : (
@@ -161,7 +162,7 @@ export function IntegrationCard({
                           .map(([id, subaccount]) => ({ label: subaccount.label, value: id }))}
                         canSync={
                           (integration.status === 'active' || integration.status === 'expiring') &&
-                          account.syncsToday < DAILY_SYNC_LIMIT
+                          account.syncsToday < dailySyncLimit
                         }
                         syncLogs={account.syncLogs}
                       />
