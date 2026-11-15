@@ -2,7 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { InvestmentEntry } from '@/lib/types/investments.types';
 
-import { BrokerSubaccount, Holding, summarizePortfolio } from './overview';
+import {
+  BrokerSubaccount,
+  DividendPayment,
+  groupDividends,
+  Holding,
+  summarizePortfolio,
+  toReturnFlows,
+} from './overview';
 
 vi.mock('@/server/db', () => ({}));
 
@@ -45,6 +52,7 @@ describe('summarizePortfolio', () => {
     const subaccounts: BrokerSubaccount[] = [
       {
         id: 'eur',
+        accountId: 'ibkr',
         accountName: 'IBKR',
         currency: 'eur',
         cash: 200,
@@ -61,6 +69,7 @@ describe('summarizePortfolio', () => {
       },
       {
         id: 'usd',
+        accountId: 'broker',
         accountName: 'Broker',
         currency: 'usd',
         cash: 100,
@@ -103,5 +112,88 @@ describe('summarizePortfolio', () => {
         { account: 'Broker', currency: 'usd', kind: 'cash', value: 50 },
       ],
     });
+  });
+});
+
+describe('groupDividends', () => {
+  const payment = (date: string, amount: number, description: string): DividendPayment => ({
+    transactionId: `${date}-${amount}`,
+    subaccountId: 'usd',
+    date: new Date(date),
+    amount,
+    description,
+  });
+  const aapl = 'AAPL(US0378331005) CASH DIVIDEND USD 0.26 PER SHARE';
+  const ko = 'KO(US1912161007) CASH DIVIDEND USD 0.51 PER SHARE';
+
+  it('sums each month after withholding tax and groups the last 12 months by security', () => {
+    const dividends = groupDividends({
+      payments: [
+        payment('2024-11-14', 99, `${aapl} (Ordinary Dividend)`),
+        payment('2025-02-13', 10, `${aapl} (Ordinary Dividend)`),
+        payment('2025-02-13', -1.5, `${aapl} - US TAX`),
+        payment('2026-08-14', 20, `${aapl} (Ordinary Dividend)`),
+        payment('2026-08-14', -3, `${aapl} - US TAX`),
+        payment('2026-08-28', 8, `${ko} (Ordinary Dividend)`),
+        payment('2026-08-28', -1.2, `${ko} - US TAX`),
+        payment('2026-11-02', 4, 'Payment in lieu of a dividend'),
+      ],
+      securities: [
+        { id: 'aapl', symbol: 'AAPL', name: 'APPLE INC' },
+        { id: 'ko', symbol: 'KO', name: 'COCA-COLA CO' },
+      ],
+      now: new Date('2026-11-15'),
+    });
+
+    // 2024-11 is 24 months back, one month too old
+    expect(dividends.months).toHaveLength(24);
+    expect(dividends.months[0]).toEqual({ month: '2024-12', amount: 0 });
+    expect(dividends.months.at(-1)).toEqual({ month: '2026-11', amount: 4 });
+    expect(dividends.months.filter((item) => item.amount)).toEqual([
+      { month: '2025-02', amount: 8.5 },
+      { month: '2026-08', amount: 23.8 },
+      { month: '2026-11', amount: 4 },
+    ]);
+    // 2025-02 is more than 12 months back
+    expect(dividends.total).toBeCloseTo(27.8, 10);
+    expect(dividends.bySecurity).toEqual([
+      { security: { id: 'aapl', symbol: 'AAPL', name: 'APPLE INC' }, amount: 17 },
+      { security: { id: 'ko', symbol: 'KO', name: 'COCA-COLA CO' }, amount: expect.closeTo(6.8) },
+      { security: null, amount: 4 },
+    ]);
+  });
+});
+
+describe('toReturnFlows', () => {
+  const history = [
+    { date: '2025-01-01', value: 1000, netInvested: 1000 },
+    { date: '2025-06-30', value: 1050, netInvested: 1000 },
+    { date: '2025-07-01', value: 1550, netInvested: 1500 },
+    { date: '2026-01-01', value: 1400, netInvested: 1300 },
+    { date: '2026-11-15', value: 1700, netInvested: 1300 },
+  ];
+
+  it('counts the deposits as money put in and the last value as money taken out', () => {
+    expect(toReturnFlows(history)).toEqual([
+      { date: new Date('2025-01-01'), amount: -1000 },
+      { date: new Date('2025-07-01'), amount: -500 },
+      { date: new Date('2026-01-01'), amount: 200 },
+      { date: new Date('2026-11-15'), amount: 1700 },
+    ]);
+  });
+
+  it('counts the value before the start as money put in at the start', () => {
+    expect(toReturnFlows(history, '2025-07-01')).toEqual([
+      { date: new Date('2025-07-01'), amount: -1050 },
+      { date: new Date('2025-07-01'), amount: -500 },
+      { date: new Date('2026-01-01'), amount: 200 },
+      { date: new Date('2026-11-15'), amount: 1700 },
+    ]);
+  });
+
+  it('leaves only the last value without a start value or deposits, so xirr finds none', () => {
+    expect(toReturnFlows([{ date: '2026-11-15', value: 0, netInvested: 0 }], '2026-01-01')).toEqual(
+      [{ date: new Date('2026-11-15'), amount: 0 }],
+    );
   });
 });

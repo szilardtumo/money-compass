@@ -1,8 +1,10 @@
 import { subYears } from 'date-fns';
 
+import { CashFlow, xirr } from '@/lib/investments/xirr';
 import { CurrencyMapper } from '@/lib/types/currencies.types';
 import { InvestmentEntry } from '@/lib/types/investments.types';
 import { toMainCurrency } from '@/lib/utils/currencies';
+import { formatUtcDay } from '@/lib/utils/formatters';
 import { groupBy } from '@/lib/utils/group-by';
 
 import { nextDay } from './valuation';
@@ -10,6 +12,7 @@ import { nextDay } from './valuation';
 /** A subaccount of an investment account with broker transactions */
 export interface BrokerSubaccount {
   id: string;
+  accountId: string;
   accountName: string;
   currency: string;
   /** In the subaccount's currency */
@@ -182,4 +185,135 @@ export function toPortfolioHistory({
   }
 
   return points;
+}
+
+/** A security's position in the broker accounts, open or sold, with its trades and prices */
+export interface HoldingDetail {
+  securityId: string;
+  symbol: string;
+  name: string;
+  isUnpriced: boolean;
+  accountNames: string[];
+  /** The subaccount's currency, which paid for the shares */
+  currency: string;
+  quantity: number;
+  /** Per share, in `currency`, or null without shares */
+  averageCost: number | null;
+  /** In the main currency, like the gains and the dividends */
+  value: number;
+  unrealizedGain: number;
+  realizedGain: number;
+  /** After withholding tax */
+  dividends: number;
+  /** The daily closes from the first trade on, in `priceCurrency` */
+  prices: { date: string; close: number }[];
+  priceCurrency: string;
+  trades: { date: string; type: 'buy' | 'sell'; quantity: number; price: number }[];
+  /** The subaccounts of its trades and dividends */
+  subaccountIds: string[];
+  /** Its trades, dividends and their withholding taxes */
+  transactionIds: string[];
+}
+
+/** A dividend or its withholding tax, in the main currency */
+export interface DividendPayment {
+  transactionId: string;
+  subaccountId: string;
+  date: Date;
+  amount: number;
+  description: string;
+}
+
+export interface SecurityName {
+  id: string;
+  symbol: string;
+  name: string;
+}
+
+/** Dividends after withholding tax, in the main currency */
+export interface DividendSummary {
+  /** The last 24 months, oldest first, like "2026-11" */
+  months: { month: string; amount: number }[];
+  /** Of the last 12 months, like the summary's dividends */
+  total: number;
+  /** Of the last 12 months, the largest first. A payment of an unknown security has none. */
+  bySecurity: { security: SecurityName | null; amount: number }[];
+}
+
+export const RETURN_RANGES = ['1Y', 'YTD', 'All'] as const;
+
+/** Annual money-weighted returns, like 0.1 for 10%, or null when the flows have none */
+export type Returns = Record<(typeof RETURN_RANGES)[number], number | null>;
+
+export interface PortfolioReturns {
+  total: Returns;
+  accounts: { id: string; name: string; returns: Returns }[];
+}
+
+/** IBKR starts a dividend's description with the security, like "AAPL(US0378331005) CASH DIVIDEND" */
+export const isPaymentOf = (payment: DividendPayment, security: Pick<SecurityName, 'symbol'>) =>
+  payment.description.startsWith(`${security.symbol}(`);
+
+export function groupDividends({
+  payments,
+  securities,
+  now,
+}: {
+  payments: DividendPayment[];
+  securities: SecurityName[];
+  now: Date;
+}): DividendSummary {
+  const sum = (items: DividendPayment[]) => items.reduce((total, item) => total + item.amount, 0);
+  const byMonth = groupBy(payments, (payment) => payment.date.toISOString().slice(0, 7));
+  const lastYear = payments.filter((payment) => payment.date >= subYears(now, 1));
+  const bySecurity = groupBy(
+    lastYear,
+    (payment) => securities.find((security) => isPaymentOf(payment, security))?.id ?? '',
+  );
+
+  return {
+    months: Array.from({ length: 24 }, (_, index) => {
+      const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 23 + index))
+        .toISOString()
+        .slice(0, 7);
+      return { month, amount: sum(byMonth[month] ?? []) };
+    }),
+    total: sum(lastYear),
+    bySecurity: Object.entries(bySecurity)
+      .map(([id, items]) => ({
+        security: securities.find((security) => security.id === id) ?? null,
+        amount: sum(items),
+      }))
+      .toSorted((a, b) => b.amount - a.amount),
+  };
+}
+
+/**
+ * The investor's cash flows from `from` on: the value before it as money put in, the deposits and
+ * withdrawals, and the last value as money taken out.
+ */
+export function toReturnFlows(history: PortfolioHistoryPoint[], from?: string): CashFlow[] {
+  const before = from ? history.findLast((point) => point.date < from) : undefined;
+  const flows: CashFlow[] = before?.value ? [{ date: new Date(from!), amount: -before.value }] : [];
+  let netInvested = before?.netInvested ?? 0;
+  for (const point of history) {
+    if (from && point.date < from) continue;
+    if (point.netInvested !== netInvested) {
+      flows.push({ date: new Date(point.date), amount: netInvested - point.netInvested });
+      netInvested = point.netInvested;
+    }
+  }
+  const last = history.at(-1);
+  if (last) {
+    flows.push({ date: new Date(last.date), amount: last.value });
+  }
+  return flows;
+}
+
+export function getReturns(history: PortfolioHistoryPoint[], now: Date): Returns {
+  return {
+    '1Y': xirr(toReturnFlows(history, formatUtcDay(subYears(now, 1)))),
+    YTD: xirr(toReturnFlows(history, `${now.getUTCFullYear()}-01-01`)),
+    All: xirr(toReturnFlows(history)),
+  };
 }

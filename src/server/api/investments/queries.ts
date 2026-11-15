@@ -12,8 +12,15 @@ import { schema } from '@/server/db';
 
 import {
   BrokerSubaccount,
+  DividendPayment,
+  DividendSummary,
+  getReturns,
+  groupDividends,
   Holding,
+  HoldingDetail,
+  isPaymentOf,
   PortfolioHistoryPoint,
+  PortfolioReturns,
   PortfolioSummary,
   summarizePortfolio,
   toPortfolioHistory,
@@ -43,6 +50,7 @@ const getBrokerSubaccounts = createApiQuery<void, BrokerSubaccount[]>(async () =
     brokerAccountIds.has(account.id)
       ? {
           id: subaccount.id,
+          accountId: account.id,
           accountName: account.name,
           currency: subaccount.originalCurrency,
           cash: subaccount.cash,
@@ -146,18 +154,18 @@ export const getPortfolioSummary = createApiQuery<void, PortfolioSummary | null>
 });
 
 /**
- * Returns the daily value and net invested of the broker accounts, from their first transaction.
+ * Returns the sum of each broker subaccount's transactions per day, and of its deposits and
+ * withdrawals, with its daily valuations.
  */
-export const getPortfolioHistory = createApiQuery<void, PortfolioHistoryPoint[]>(async () => {
+const getDailyRows = createApiQuery<
+  void,
+  Pick<Parameters<typeof toPortfolioHistory>[0], 'days' | 'valuations'>
+>(async () => {
   'use cache: private';
   const { db } = await createApiContext();
-  const [subaccounts, { mapper }] = await Promise.all([
-    getBrokerSubaccounts(),
-    getMainCurrencyWithMapper(),
-  ]);
-  const ids = subaccounts.map((subaccount) => subaccount.id);
+  const ids = (await getBrokerSubaccounts()).map((subaccount) => subaccount.id);
   if (!ids.length) {
-    return [];
+    return { days: [], valuations: [] };
   }
 
   const t = schema.transactions;
@@ -184,11 +192,241 @@ export const getPortfolioHistory = createApiQuery<void, PortfolioHistoryPoint[]>
     ]),
   );
 
-  return toPortfolioHistory({
-    subaccounts,
-    days,
-    valuations,
-    mapper,
-    to: formatUtcDay(new Date()),
-  });
+  return { days, valuations };
 });
+
+/**
+ * Returns the daily value and net invested of the broker accounts, from their first transaction.
+ */
+export const getPortfolioHistory = createApiQuery<void, PortfolioHistoryPoint[]>(async () => {
+  'use cache: private';
+  const [subaccounts, rows, { mapper }] = await Promise.all([
+    getBrokerSubaccounts(),
+    getDailyRows(),
+    getMainCurrencyWithMapper(),
+  ]);
+
+  return toPortfolioHistory({ subaccounts, ...rows, mapper, to: formatUtcDay(new Date()) });
+});
+
+/**
+ * Returns the money-weighted return of each broker account and of all of them, over the last year,
+ * this year and all time.
+ */
+export const getPortfolioReturns = createApiQuery<void, PortfolioReturns>(async () => {
+  'use cache: private';
+  const [subaccounts, history, { days, valuations }, { mapper }] = await Promise.all([
+    getBrokerSubaccounts(),
+    getPortfolioHistory(),
+    getDailyRows(),
+    getMainCurrencyWithMapper(),
+  ]);
+  const now = new Date();
+
+  return {
+    total: getReturns(history, now),
+    accounts: Object.values(groupBy(subaccounts, (subaccount) => subaccount.accountId)).map(
+      (accountSubaccounts) => {
+        const ids = new Set(accountSubaccounts.map((subaccount) => subaccount.id));
+        const accountHistory = toPortfolioHistory({
+          subaccounts: accountSubaccounts,
+          days: days.filter((item) => ids.has(item.subaccountId)),
+          valuations: valuations.filter((item) => ids.has(item.subaccountId)),
+          mapper,
+          to: formatUtcDay(now),
+        });
+        return {
+          id: accountSubaccounts[0].accountId,
+          name: accountSubaccounts[0].accountName,
+          returns: getReturns(accountHistory, now),
+        };
+      },
+    ),
+  };
+});
+
+/**
+ * Returns the dividends and withholding taxes of the broker accounts.
+ */
+const getDividendPayments = createApiQuery<void, DividendPayment[]>(async () => {
+  'use cache: private';
+  const { db } = await createApiContext();
+  const [subaccounts, { mapper }] = await Promise.all([
+    getBrokerSubaccounts(),
+    getMainCurrencyWithMapper(),
+  ]);
+  const currencies = new Map(subaccounts.map((subaccount) => [subaccount.id, subaccount.currency]));
+  if (!currencies.size) {
+    return [];
+  }
+
+  const t = schema.transactions;
+  const rows = await db.rls((tx) =>
+    tx
+      .select({
+        transactionId: t.id,
+        subaccountId: t.subaccountId,
+        date: t.startedDate,
+        amount: t.amount,
+        description: t.description,
+      })
+      .from(t)
+      .where(
+        and(
+          inArray(t.subaccountId, [...currencies.keys()]),
+          inArray(t.type, ['dividend', 'withholding_tax']),
+        ),
+      ),
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    amount: toMainCurrency(
+      { amount: row.amount, currency: currencies.get(row.subaccountId)! },
+      mapper,
+    ),
+  }));
+});
+
+/**
+ * Returns the dividends after withholding tax by month and by security.
+ */
+export const getDividends = createApiQuery<void, DividendSummary>(async () => {
+  'use cache: private';
+  const { db } = await createApiContext();
+  const [subaccounts, payments] = await Promise.all([
+    getBrokerSubaccounts(),
+    getDividendPayments(),
+  ]);
+  const securityIds = [
+    ...new Set(
+      subaccounts.flatMap((subaccount) =>
+        subaccount.entries.flatMap((entry) => ('trade' in entry ? entry.trade.securityId : [])),
+      ),
+    ),
+  ];
+  const s = schema.securities;
+  const securities = securityIds.length
+    ? await db.rls((tx) =>
+        tx
+          .select({ id: s.id, symbol: s.symbol, name: s.name })
+          .from(s)
+          .where(inArray(s.id, securityIds)),
+      )
+    : [];
+
+  return groupDividends({ payments, securities, now: new Date() });
+});
+
+/**
+ * Returns a security's position, open or sold, with its trades and prices, or null when the broker
+ * accounts never traded it.
+ */
+export const getHoldingDetail = createApiQuery<string, HoldingDetail | null>(
+  async ({ input: securityId }) => {
+    'use cache: private';
+    const { db } = await createApiContext();
+    const s = schema.securities;
+    const p = schema.securityPrices;
+    const t = schema.transactions;
+    const it = schema.investmentTrades;
+    const [subaccounts, holdings, payments, { mapper }, [[security], trades, prices]] =
+      await Promise.all([
+        getBrokerSubaccounts(),
+        getHoldings(),
+        getDividendPayments(),
+        getMainCurrencyWithMapper(),
+        db.rls((tx) =>
+          Promise.all([
+            tx.select().from(s).where(eq(s.id, securityId)),
+            tx
+              .select({
+                transactionId: t.id,
+                subaccountId: t.subaccountId,
+                type: t.type,
+                date: t.startedDate,
+                quantity: it.quantity,
+                price: it.price,
+              })
+              .from(it)
+              .innerJoin(t, eq(t.id, it.transactionId))
+              .where(eq(it.securityId, securityId))
+              .orderBy(asc(t.startedDate)),
+            tx
+              .select({ date: p.date, close: p.close, currency: p.currency })
+              .from(p)
+              .innerJoin(s, eq(s.id, p.securityId))
+              .where(
+                and(
+                  eq(p.securityId, securityId),
+                  // Like the valuation, unpriced securities count only the broker's prices
+                  or(eq(s.priceStatus, 'priced'), ne(p.source, 'yahoo')),
+                ),
+              )
+              .orderBy(asc(p.date)),
+          ]),
+        ),
+      ]);
+    const positions = subaccounts.flatMap((subaccount) =>
+      reducePortfolio(subaccount.entries)
+        .positions.filter((position) => position.securityId === securityId)
+        .map((position) => ({ ...position, subaccount })),
+    );
+    if (!security || !positions.length) {
+      return null;
+    }
+
+    const sumOf = (values: number[]) => values.reduce((total, value) => total + value, 0);
+    const held = holdings.filter((holding) => holding.securityId === securityId);
+    const quantity = sumOf(held.map((holding) => holding.quantity));
+    const dividends = payments.filter((payment) => isPaymentOf(payment, security));
+    const subaccountIds = [...new Set([...trades, ...dividends].map((item) => item.subaccountId))];
+    const firstTrade = formatUtcDay(trades[0].date);
+
+    return {
+      securityId,
+      symbol: security.symbol,
+      name: security.name,
+      isUnpriced: security.priceStatus === 'unpriced',
+      accountNames: [
+        ...new Set(
+          subaccounts
+            .filter((subaccount) => subaccountIds.includes(subaccount.id))
+            .map((subaccount) => subaccount.accountName),
+        ),
+      ],
+      currency: positions[0].subaccount.currency,
+      quantity,
+      averageCost: held.length
+        ? sumOf(held.map((holding) => holding.averageCost * holding.quantity)) / quantity
+        : null,
+      value: sumOf(held.map((holding) => holding.value)),
+      unrealizedGain: sumOf(held.map((holding) => holding.unrealizedGain)),
+      realizedGain: sumOf(
+        positions.map((position) =>
+          toMainCurrency(
+            { amount: position.realizedGain, currency: position.subaccount.currency },
+            mapper,
+          ),
+        ),
+      ),
+      dividends: sumOf(dividends.map((payment) => payment.amount)),
+      prices: prices
+        .filter((price) => price.date >= firstTrade)
+        .map(({ date, close }) => ({ date, close })),
+      priceCurrency: prices.at(-1)?.currency ?? positions[0].subaccount.currency,
+      trades: trades.flatMap((trade) =>
+        trade.type === 'buy' || trade.type === 'sell'
+          ? {
+              date: formatUtcDay(trade.date),
+              type: trade.type,
+              quantity: Math.abs(trade.quantity),
+              price: trade.price,
+            }
+          : [],
+      ),
+      subaccountIds,
+      transactionIds: [...trades, ...dividends].map((item) => item.transactionId),
+    };
+  },
+);
