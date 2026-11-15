@@ -1,38 +1,15 @@
 import 'server-only';
 
 import { max, min, startOfDay, subDays } from 'date-fns';
-import { and, eq, gte, inArray, isNull, ne, notInArray, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { and, eq, gte, inArray, notInArray, sql } from 'drizzle-orm';
 
 import * as enableBanking from '@/lib/enable-banking';
 import { getMerchantKey } from '@/lib/utils/merchants';
 import { assignMerchants } from '@/server/api/merchants/categorize';
-import { DbTx, schema } from '@/server/db';
+import { schema } from '@/server/db';
 
 import type { ProviderEntry } from '../providers';
-
-/**
- * Links the two legs of each exchange between the user's subaccounts. The bank gives both legs the
- * same reference, and they can arrive in the syncs of different accounts, so every sync links all
- * unlinked legs.
- */
-async function linkTransactions(tx: DbTx, userId: string) {
-  const other = alias(schema.transactions, 'other');
-
-  await tx
-    .update(schema.transactions)
-    .set({ linkedTransactionId: other.id })
-    .from(other)
-    .where(
-      and(
-        eq(schema.transactions.userId, userId),
-        isNull(schema.transactions.linkedTransactionId),
-        eq(other.userId, userId),
-        eq(other.externalRef, schema.transactions.externalRef),
-        ne(other.subaccountId, schema.transactions.subaccountId),
-      ),
-    );
-}
+import { insertBalanceCorrection, linkTransactions } from '../sync';
 
 export const enableBankingProvider = {
   label: 'Enable Banking',
@@ -80,28 +57,22 @@ export const enableBankingProvider = {
           ),
         );
 
-      const [known, [current]] = await Promise.all([
-        refs.length
-          ? tx
-              .select({
-                id: schema.transactions.id,
-                externalRef: schema.transactions.externalRef,
-                amount: schema.transactions.amount,
-                isPending,
-              })
-              .from(schema.transactions)
-              .where(
-                and(
-                  eq(schema.transactions.subaccountId, subaccountId),
-                  inArray(schema.transactions.externalRef, refs),
-                ),
-              )
-          : [],
-        tx
-          .select({ balance: schema.balances.balance })
-          .from(schema.balances)
-          .where(eq(schema.balances.subaccountId, subaccountId)),
-      ]);
+      const known = refs.length
+        ? await tx
+            .select({
+              id: schema.transactions.id,
+              externalRef: schema.transactions.externalRef,
+              amount: schema.transactions.amount,
+              isPending,
+            })
+            .from(schema.transactions)
+            .where(
+              and(
+                eq(schema.transactions.subaccountId, subaccountId),
+                inArray(schema.transactions.externalRef, refs),
+              ),
+            )
+        : [];
       const knownByRef = new Map(known.map((row) => [row.externalRef, row]));
       const imported = bankTransactions.filter((item) => !knownByRef.has(item.externalRef));
       // Known pending transactions take the bank's latest data, like the final amount once booked
@@ -109,29 +80,16 @@ export const enableBankingProvider = {
         const row = knownByRef.get(item.externalRef);
         return row?.isPending ? [{ ...item, id: row.id, change: item.amount - row.amount }] : [];
       });
-      const correction = Number(
-        (
-          bankBalance -
-          (current?.balance ?? 0) -
-          imported.reduce((sum, item) => sum + item.amount, 0) -
-          updated.reduce((sum, item) => sum + item.change, 0)
-        ).toFixed(2),
-      );
-
-      // Inserted first, so it sorts before the imported transactions of the same date
-      if (correction !== 0) {
-        const date = imported.length ? min(imported.map((item) => item.date)) : new Date();
-        await tx.insert(schema.transactions).values({
-          amount: correction,
-          startedDate: date,
-          completedDate: date,
-          description: 'Balance correction from bank sync',
-          type: 'correction',
-          dataSource: 'integration',
-          subaccountId,
-          userId: account.userId,
-        });
-      }
+      const correctionAmount = await insertBalanceCorrection(tx, {
+        subaccountId,
+        userId: account.userId,
+        target: bankBalance,
+        pending:
+          imported.reduce((sum, item) => sum + item.amount, 0) +
+          updated.reduce((sum, item) => sum + item.change, 0),
+        date: imported.length ? min(imported.map((item) => item.date)) : new Date(),
+        description: 'Balance correction from bank sync',
+      });
 
       if (imported.length) {
         await tx
@@ -172,7 +130,7 @@ export const enableBankingProvider = {
       await linkTransactions(tx, account.userId);
       await assignMerchants(tx, account.userId);
 
-      return { importedCount: imported.length, correctionAmount: correction || null };
+      return { importedCount: imported.length, correctionAmount };
     };
   },
 } satisfies ProviderEntry;
