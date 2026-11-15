@@ -41,12 +41,15 @@ interface IntegrationCardProps {
   accounts: Account[];
   /** Subaccounts linked to any bank account */
   linkedSubaccountIds: Set<string>;
+  /** The number of correction transactions by subaccount */
+  correctionCounts: Record<string, number>;
 }
 
 export function IntegrationCard({
   integration,
   accounts,
   linkedSubaccountIds,
+  correctionCounts,
 }: IntegrationCardProps) {
   const { dailySyncLimit } = integrationProviders[integration.provider];
   const subaccounts = new Map(
@@ -151,6 +154,7 @@ export function IntegrationCard({
                     <TableCell>
                       <IntegrationAccountActions
                         integrationAccountId={account.id}
+                        provider={integration.provider}
                         currency={account.currency}
                         linkedLabel={linked?.label}
                         options={[...subaccounts]
@@ -159,7 +163,11 @@ export function IntegrationCard({
                               subaccount.currency === account.currency &&
                               !linkedSubaccountIds.has(id),
                           )
-                          .map(([id, subaccount]) => ({ label: subaccount.label, value: id }))}
+                          .map(([id, subaccount]) => ({
+                            label: subaccount.label,
+                            value: id,
+                            corrections: correctionCounts[id] ?? 0,
+                          }))}
                         canSync={
                           (integration.status === 'active' || integration.status === 'expiring') &&
                           account.syncsToday < dailySyncLimit

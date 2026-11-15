@@ -31,24 +31,26 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Selectbox } from '@/components/ui/selectbox';
 import { useActionWithToast } from '@/hooks/useActionWithToast';
-import { IntegrationSyncLog } from '@/lib/types/integrations.types';
+import { Integration, IntegrationSyncLog } from '@/lib/types/integrations.types';
 import { apiActions } from '@/server/api/actions';
 
 import { SyncHistoryDialog } from './sync-history-dialog';
 
 interface IntegrationAccountActionsProps {
   integrationAccountId: string;
+  provider: Integration['provider'];
   currency: string;
   /** Label of the linked subaccount, undefined if the bank account isn't linked */
   linkedLabel: string | undefined;
   /** Subaccounts with the same currency that aren't linked to a bank account */
-  options: { label: string; value: string }[];
+  options: { label: string; value: string; corrections: number }[];
   canSync: boolean;
   syncLogs: IntegrationSyncLog[];
 }
 
 export function IntegrationAccountActions({
   integrationAccountId,
+  provider,
   currency,
   linkedLabel,
   options,
@@ -57,6 +59,7 @@ export function IntegrationAccountActions({
 }: IntegrationAccountActionsProps) {
   const [dialog, setDialog] = useState<'link' | 'unlink' | 'history'>();
   const [subaccountId, setSubaccountId] = useState<string>();
+  const selected = options.find((option) => option.value === subaccountId);
 
   const { execute: setLink, isPending: isLinkPending } = useActionWithToast(
     apiActions.integrations.setIntegrationAccountLink,
@@ -128,9 +131,9 @@ export function IntegrationAccountActions({
           <DialogHeader>
             <DialogTitle>{linkedLabel ? 'Change subaccount' : 'Link subaccount'}</DialogTitle>
             <DialogDescription>
-              Syncing imports the bank account&apos;s booked transactions into the subaccount,
-              starting today. Older transactions aren&apos;t imported: a correction transaction sets
-              the subaccount&apos;s balance to the bank&apos;s balance instead.
+              {provider === 'ibkr_flex'
+                ? `Syncing imports the IBKR account's ${currency.toUpperCase()} history back to the account's opening, and a correction transaction sets the subaccount's cash to IBKR's.`
+                : "Syncing imports the bank account's booked transactions into the subaccount, starting today. Older transactions aren't imported: a correction transaction sets the subaccount's balance to the bank's balance instead."}
               {linkedLabel &&
                 ` The transactions already synced stay in ${linkedLabel}, which stops syncing.`}
             </DialogDescription>
@@ -150,6 +153,11 @@ export function IntegrationAccountActions({
                 net worth page
               </Link>
               .
+            </p>
+          )}
+          {provider === 'ibkr_flex' && !!selected?.corrections && (
+            <p className="text-sm text-destructive">
+              {`Saving deletes the ${selected.corrections} balance correction${selected.corrections === 1 ? '' : 's'} of ${selected.label}, because the IBKR history replaces them.`}
             </p>
           )}
           <DialogFooter>

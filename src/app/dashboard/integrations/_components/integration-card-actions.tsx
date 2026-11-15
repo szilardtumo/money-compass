@@ -16,6 +16,8 @@ import { useActionWithToast } from '@/hooks/useActionWithToast';
 import { Integration } from '@/lib/types/integrations.types';
 import { apiActions } from '@/server/api/actions';
 
+import { ConnectIbkrDialog } from './connect-ibkr-dialog';
+
 interface IntegrationCardActionsProps {
   integration: Integration;
 }
@@ -32,6 +34,17 @@ export function IntegrationCardActions({ integration }: IntegrationCardActionsPr
       onSuccess: ({ data }) => window.location.assign(data.url),
     },
   );
+  const { execute: executeCreate, isPending: isCreatePending } = useActionWithToast(
+    apiActions.integrations.createInvestmentAccounts,
+    {
+      loadingToast: 'Creating investment account...',
+      successToast: 'Investment account created!',
+      errorToast: ({ errorMessage }) => ({
+        title: 'Failed to create the investment account',
+        description: errorMessage,
+      }),
+    },
+  );
   const { execute: executeDelete } = useActionWithToast(apiActions.integrations.deleteIntegration, {
     loadingToast: 'Deleting integration...',
     successToast: 'Integration deleted!',
@@ -43,7 +56,24 @@ export function IntegrationCardActions({ integration }: IntegrationCardActionsPr
 
   return (
     <div className="w-full flex gap-4">
-      {integration.status !== 'active' && (
+      {integration.provider === 'ibkr_flex' &&
+        integration.accounts.some((account) => !account.subaccountId) && (
+          <Button
+            variant="outline"
+            isLoading={isCreatePending}
+            disabled={isCreatePending}
+            onClick={() => executeCreate(integration.id)}
+          >
+            Create investment account
+          </Button>
+        )}
+
+      {integration.status !== 'active' && integration.provider === 'ibkr_flex' && (
+        <ConnectIbkrDialog>
+          <Button>Renew access</Button>
+        </ConnectIbkrDialog>
+      )}
+      {integration.status !== 'active' && integration.provider === 'enable_banking' && (
         <Button
           isLoading={isRenewPending}
           disabled={isRenewPending}
