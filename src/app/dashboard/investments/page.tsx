@@ -14,9 +14,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { apiQueries } from '@/server/api/queries';
 
 import { AllocationCard } from './_components/allocation-card';
+import { DividendsCard } from './_components/dividends-card';
 import { HoldingsCard } from './_components/holdings-card';
 import { PortfolioHistoryCard } from './_components/portfolio-history-card';
 import { PortfolioMetrics } from './_components/portfolio-metrics';
+import { ReturnsCard } from './_components/returns-card';
 
 export default function InvestmentsPage() {
   return (
@@ -66,6 +68,14 @@ async function InvestmentsOverview() {
       <Suspense fallback={<Skeleton className="h-[400px]" />}>
         <HoldingsCard />
       </Suspense>
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <Suspense fallback={<Skeleton className="h-[480px]" />}>
+          <DividendsCard />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-[240px]" />}>
+          <ReturnsCard />
+        </Suspense>
+      </div>
       <AllocationCard summary={summary} />
     </>
   );
