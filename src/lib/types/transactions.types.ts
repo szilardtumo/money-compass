@@ -12,6 +12,16 @@ export const TRANSACTION_TYPE_OPTIONS = [
   { label: 'Fee', value: 'fee' },
   { label: 'Reward', value: 'reward' },
   { label: 'Correction', value: 'correction' },
+  { label: 'Buy', value: 'buy' },
+  { label: 'Sell', value: 'sell' },
+  { label: 'Dividend', value: 'dividend' },
+  { label: 'Interest', value: 'interest' },
+  { label: 'Withholding tax', value: 'withholding_tax' },
+  { label: 'Broker fee', value: 'broker_fee' },
+  { label: 'Deposit', value: 'deposit' },
+  { label: 'Withdrawal', value: 'withdrawal' },
+  { label: 'Split', value: 'split' },
+  { label: 'Security transfer', value: 'security_transfer' },
   { label: 'Other', value: 'other' },
 ];
 
@@ -36,7 +46,7 @@ export interface Transaction {
   /** The transaction's own category, else its trip's, else its merchant's */
   category: Category | null;
   categorySource: 'transaction' | 'trip' | 'merchant' | null;
-  /** Excluded from analytics by its category, or as an exchange, top-up or correction */
+  /** Excluded from analytics by its category, or by its type (see TYPES_WITHOUT_MERCHANT) */
   excluded: boolean;
 }
 
