@@ -1,12 +1,12 @@
 import 'server-only';
 
-import { differenceInDays, isPast } from 'date-fns';
 import { cacheLife } from 'next/cache';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import * as enableBanking from '@/lib/enable-banking';
 import { Institution, Integration } from '@/lib/types/integrations.types';
 
+import { getIntegrationStatus } from './status';
 import { getTodaySyncCount } from './sync';
 
 export const getIntegrations = createApiQuery<void, Integration[]>(async () => {
@@ -33,13 +33,7 @@ export const getIntegrations = createApiQuery<void, Integration[]>(async () => {
   // Pages can't read the current time while they are prerendered, so the query computes these
   return integrations.map(({ accounts, ...integration }) => ({
     ...integration,
-    status: integration.revokedAt
-      ? 'revoked'
-      : isPast(integration.expiresAt)
-        ? 'expired'
-        : differenceInDays(integration.expiresAt, new Date()) < 7
-          ? 'expiring'
-          : 'active',
+    status: getIntegrationStatus(integration, new Date()),
     accounts: accounts.map((account) => ({ ...account, syncsToday: getTodaySyncCount(account) })),
   }));
 });
