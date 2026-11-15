@@ -6,20 +6,21 @@ import { ComponentProps } from 'react';
 import { ProgressLink } from '@/components/navigation-progress';
 
 /**
- * A category ID or "uncategorized", a merchant ID, an account ID or a trip ID, and the period it
- * shows. A merchant's drawer can list its transactions of all time.
+ * A category ID or "uncategorized", a merchant ID, an account ID, a trip ID or a security ID, and
+ * the period it shows. A merchant's drawer can list its transactions of all time.
  */
 type DrawerTarget = (
   | { category: string }
   | { merchant: string; history?: 'all' }
   | { account: string }
   | { trip: string }
+  | { holding: string }
 ) & {
   period?: string;
 };
 
 /**
- * Returns the URL of the current page with the drawer of a category, merchant, account or trip open, or with no
+ * Returns the URL of the current page with the drawer of a category, merchant, account, trip or holding open, or with no
  * drawer for null. The page keeps its own params, like the analytics period.
  */
 export function useDrawerHref() {
@@ -33,6 +34,7 @@ export function useDrawerHref() {
     params.delete('account');
     params.delete('history');
     params.delete('trip');
+    params.delete('holding');
     for (const [key, value] of Object.entries(target ?? {})) {
       params.set(key, value);
     }

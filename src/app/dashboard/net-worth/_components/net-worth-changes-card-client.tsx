@@ -15,9 +15,11 @@ import { formatPeriodLabel, parsePeriod } from '@/lib/utils/periods';
 
 interface NetWorthChangesCardClientProps {
   /** Every month of the history, like "2026-10", the oldest first */
-  months: { month: string; saved: number; other: number }[];
+  months: { month: string; saved: number; marketGains: number; other: number }[];
   /** Of the first month of the history */
   firstDate: Date;
+  /** Shows the market gains, which are always 0 without investments */
+  hasInvestments: boolean;
   mainCurrency: string;
   className?: string;
 }
@@ -28,6 +30,7 @@ const getColor = (value: number) =>
 export function NetWorthChangesCardClient({
   months: allMonths,
   firstDate,
+  hasInvestments,
   mainCurrency,
   className,
 }: NetWorthChangesCardClientProps) {
@@ -36,28 +39,40 @@ export function NetWorthChangesCardClient({
   const months = sliceHistory(allMonths, range).slice(1);
   const format = (value: number) =>
     formatCurrency(value, mainCurrency, { maximumFractionDigits: 0, signDisplay: 'exceptZero' });
-  const saved = months.reduce((total, item) => total + item.saved, 0);
-  const other = months.reduce((total, item) => total + item.other, 0);
+  const getParts = (
+    item: Omit<(typeof months)[number], 'month'>,
+  ): (readonly [string, number])[] => [
+    ['Saved', item.saved],
+    ...(hasInvestments ? ([['Market gains', item.marketGains]] as const) : []),
+    ['Transfers and adjustments', item.other],
+  ];
+  const sum = (key: 'saved' | 'marketGains' | 'other') =>
+    months.reduce((total, item) => total + item[key], 0);
+  const totals = { saved: sum('saved'), marketGains: sum('marketGains'), other: sum('other') };
 
   return (
     <Card className={className}>
       <CardHeader>
         <CardTitle>Where the change came from</CardTitle>
         <CardDescription>
-          The change {getRangeLabel(range, firstDate)}. Saved is income minus spending. Transfers
-          and adjustments are the transactions excluded from analytics, like investments, currency
-          exchanges and balance corrections.
+          The change {getRangeLabel(range, firstDate)}. Saved is income minus spending.{' '}
+          {hasInvestments &&
+            'Market gains are the change in the value of your holdings, apart from buying and selling them. '}
+          Transfers and adjustments are the transactions excluded from analytics, like investments,
+          currency exchanges and balance corrections.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <dl className="grid grid-cols-3 gap-4">
-          {(
-            [
-              ['Net worth change', saved + other],
-              ['Saved', saved],
-              ['Transfers and adjustments', other],
-            ] as const
-          ).map(([label, value]) => (
+        <dl
+          className={cn(
+            'grid gap-4',
+            hasInvestments ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3',
+          )}
+        >
+          {[
+            ['Net worth change', totals.saved + totals.marketGains + totals.other] as const,
+            ...getParts(totals),
+          ].map(([label, value]) => (
             <div key={label}>
               <dt className="text-xs text-muted-foreground">{label}</dt>
               <dd className={cn('text-lg font-semibold', getColor(value))}>{format(value)}</dd>
@@ -67,14 +82,13 @@ export function NetWorthChangesCardClient({
         <BarChart
           className="h-56"
           data={months.map((item) => {
-            const change = item.saved + item.other;
+            const change = item.saved + item.marketGains + item.other;
             return {
               label: formatPeriodLabel(parsePeriod(item.month), 'short'),
               Increase: change > 0 ? change : null,
               Decrease: change < 0 ? change : null,
               lines: [
-                ['Saved', format(item.saved)],
-                ['Transfers and adjustments', format(item.other)],
+                ...getParts(item).map(([name, value]) => [name, format(value)]),
                 ['Net worth change', format(change)],
               ],
             };

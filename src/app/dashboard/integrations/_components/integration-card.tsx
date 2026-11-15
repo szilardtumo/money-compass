@@ -1,6 +1,8 @@
 import { cn } from 'cn';
+import { TriangleAlertIcon } from 'lucide-react';
 
 import { DrawerLink } from '@/components/drawers/drawer-link';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -23,7 +25,7 @@ import {
 import { Account } from '@/lib/types/accounts.types';
 import { Integration } from '@/lib/types/integrations.types';
 import { formatDate } from '@/lib/utils/formatters';
-import { DAILY_SYNC_LIMIT } from '@/server/api/integrations/sync';
+import { integrationProviders } from '@/server/api/integrations/providers';
 
 import { IntegrationAccountActions } from './integration-account-actions';
 import { IntegrationCardActions } from './integration-card-actions';
@@ -41,13 +43,17 @@ interface IntegrationCardProps {
   accounts: Account[];
   /** Subaccounts linked to any bank account */
   linkedSubaccountIds: Set<string>;
+  /** The number of correction transactions by subaccount */
+  correctionCounts: Record<string, number>;
 }
 
 export function IntegrationCard({
   integration,
   accounts,
   linkedSubaccountIds,
+  correctionCounts,
 }: IntegrationCardProps) {
+  const { dailySyncLimit } = integrationProviders[integration.provider];
   const subaccounts = new Map(
     accounts.flatMap((item) =>
       item.subaccounts.map((subaccount) => [
@@ -88,14 +94,35 @@ export function IntegrationCard({
           </Badge>
         </CardAction>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col gap-4">
+        {integration.provider === 'ibkr_flex' && integration.status !== 'active' && (
+          <Alert>
+            <TriangleAlertIcon />
+            <AlertTitle>Create a new Flex token</AlertTitle>
+            <AlertDescription>
+              <ol className="list-decimal space-y-1 pl-5">
+                <li>
+                  In IBKR&apos;s Client Portal, open Performance & Reports, then Flex Queries.
+                </li>
+                <li>
+                  Under Flex Web Service Configuration, create a token with a one-year lifetime and
+                  no IP restriction.
+                </li>
+                <li>
+                  Click Renew access, then enter the new token, the same query ID and the
+                  token&apos;s expiry date.
+                </li>
+              </ol>
+            </AlertDescription>
+          </Alert>
+        )}
         {integration.accounts.length ? (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Bank account</TableHead>
                 <TableHead>Subaccount</TableHead>
-                <TableHead>Last synced</TableHead>
+                <TableHead>Last successful sync</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -106,6 +133,9 @@ export function IntegrationCard({
                 const linked = account.subaccountId
                   ? subaccounts.get(account.subaccountId)
                   : undefined;
+                const [lastLog] = account.syncLogs;
+                // Of the last sync that succeeded, so a failed sync doesn't hide a mismatch
+                const lastWarning = account.syncLogs.find((log) => !log.error)?.warning;
 
                 return (
                   <TableRow key={account.id}>
@@ -137,19 +167,27 @@ export function IntegrationCard({
                             <RelativeTime date={account.lastSyncedAt} />
                           </p>
                           <p className="text-muted-foreground">
-                            {account.syncsToday} of {DAILY_SYNC_LIMIT} syncs used today
+                            {account.syncsToday} of {dailySyncLimit} syncs used today
                           </p>
                         </>
                       ) : (
                         <span className="text-muted-foreground">Never</span>
                       )}
-                      {account.syncLogs[0]?.error && (
-                        <p className="text-destructive">The last sync failed</p>
+                      {lastLog?.error && (
+                        <p className="max-w-72 whitespace-normal text-destructive">
+                          The last sync failed: {lastLog.error}
+                        </p>
+                      )}
+                      {lastWarning && (
+                        <p className="max-w-72 whitespace-normal text-amber-600 dark:text-amber-500">
+                          {lastWarning}
+                        </p>
                       )}
                     </TableCell>
                     <TableCell>
                       <IntegrationAccountActions
                         integrationAccountId={account.id}
+                        provider={integration.provider}
                         currency={account.currency}
                         linkedLabel={linked?.label}
                         options={[...subaccounts]
@@ -158,10 +196,14 @@ export function IntegrationCard({
                               subaccount.currency === account.currency &&
                               !linkedSubaccountIds.has(id),
                           )
-                          .map(([id, subaccount]) => ({ label: subaccount.label, value: id }))}
+                          .map(([id, subaccount]) => ({
+                            label: subaccount.label,
+                            value: id,
+                            corrections: correctionCounts[id] ?? 0,
+                          }))}
                         canSync={
                           (integration.status === 'active' || integration.status === 'expiring') &&
-                          account.syncsToday < DAILY_SYNC_LIMIT
+                          account.syncsToday < dailySyncLimit
                         }
                         syncLogs={account.syncLogs}
                       />

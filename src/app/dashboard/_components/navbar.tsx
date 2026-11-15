@@ -1,4 +1,5 @@
 import {
+  ChartCandlestickIcon,
   ChartColumnIcon,
   HistoryIcon,
   LayoutDashboardIcon,
@@ -47,6 +48,12 @@ function NavbarContent() {
         </NavItem>
         <NavItem href="/dashboard/net-worth" icon={<TrendingUpIcon className="size-4 mr-2" />}>
           Net worth
+        </NavItem>
+        <NavItem
+          href="/dashboard/investments"
+          icon={<ChartCandlestickIcon className="size-4 mr-2" />}
+        >
+          Investments
         </NavItem>
         <NavItem href="/dashboard/transactions" icon={<HistoryIcon className="size-4 mr-2" />}>
           Transactions

@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/sync-integrations",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/update-investments",
+      "schedule": "0 6 * * *"
     }
   ]
 }

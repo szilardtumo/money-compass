@@ -1,0 +1,36 @@
+<FlexQueryResponse queryName="Money Compass fixture" type="AF">
+  <FlexStatements count="1">
+    <FlexStatement accountId="U7000001" fromDate="20241116" toDate="20261113" period="Custom" whenGenerated="20261115;060000">
+      <AccountInformation accountId="U7000001" acctAlias="" currency="EUR" name="Test Investor" accountType="Individual" customerType="Individual" dateOpened="20241120" dateFunded="20241202" />
+      <CashReport>
+        <CashReportCurrency accountId="U7000001" currency="BASE_SUMMARY" levelOfDetail="BaseCurrency" startingCash="0" endingCash="3158.79" endingSettledCash="3158.79" />
+        <CashReportCurrency accountId="U7000001" currency="EUR" levelOfDetail="Currency" startingCash="0" endingCash="2970.12" endingSettledCash="2970.12" />
+        <CashReportCurrency accountId="U7000001" currency="USD" levelOfDetail="Currency" startingCash="0" endingCash="204.71" endingSettledCash="204.71" />
+      </CashReport>
+      <OpenPositions>
+        <OpenPosition accountId="U7000001" currency="EUR" assetCategory="STK" subCategory="ETF" symbol="VWCE" description="VANGUARD FTSE ALL-WORLD UCITS" conid="900000101" securityID="IE00BK5BQT80" securityIDType="ISIN" isin="IE00BK5BQT80" listingExchange="IBIS" reportDate="20261113" position="45" markPrice="143.56" positionValue="6460.2" levelOfDetail="SUMMARY" side="Long" />
+        <OpenPosition accountId="U7000001" currency="USD" assetCategory="STK" subCategory="COMMON" symbol="AAPL" description="APPLE INC" conid="900000102" securityID="US0378331005" securityIDType="ISIN" isin="US0378331005" listingExchange="NASDAQ" reportDate="20261113" position="20" markPrice="114.20" positionValue="2284" levelOfDetail="SUMMARY" side="Long" />
+      </OpenPositions>
+      <Trades>
+        <Trade accountId="U7000001" currency="EUR" assetCategory="STK" subCategory="ETF" symbol="VWCE" description="VANGUARD FTSE ALL-WORLD UCITS" conid="900000101" securityID="IE00BK5BQT80" securityIDType="ISIN" isin="IE00BK5BQT80" listingExchange="IBIS" tradeID="700001" transactionID="800001" tradeDate="20241205" dateTime="20241205;101502" quantity="40" tradePrice="112.30" proceeds="-4492" ibCommission="-3" ibCommissionCurrency="EUR" netCash="-4495" buySell="BUY" levelOfDetail="EXECUTION" />
+        <Trade accountId="U7000001" currency="USD" assetCategory="CASH" symbol="EUR.USD" description="EUR.USD" conid="900000201" tradeID="700002" transactionID="800002" tradeDate="20250310" dateTime="20250310;093010" quantity="-2000" tradePrice="1.085" proceeds="2170" ibCommission="-2" ibCommissionCurrency="USD" netCash="2168" buySell="SELL" levelOfDetail="EXECUTION" />
+        <Trade accountId="U7000001" currency="USD" assetCategory="STK" subCategory="COMMON" symbol="AAPL" description="APPLE INC" conid="900000102" securityID="US0378331005" securityIDType="ISIN" isin="US0378331005" listingExchange="NASDAQ" tradeID="700003" transactionID="800003" tradeDate="20250616" dateTime="20250616;154005" quantity="10" tradePrice="196.45" proceeds="-1964.5" ibCommission="-1" ibCommissionCurrency="USD" netCash="-1965.5" buySell="BUY" levelOfDetail="EXECUTION" />
+        <Trade accountId="U7000001" currency="EUR" assetCategory="STK" subCategory="ETF" symbol="VWCE" description="VANGUARD FTSE ALL-WORLD UCITS" conid="900000101" securityID="IE00BK5BQT80" securityIDType="ISIN" isin="IE00BK5BQT80" listingExchange="IBIS" tradeID="700004" transactionID="800004" tradeDate="20251103" dateTime="20251103;100211" quantity="20" tradePrice="131.80" proceeds="-2636" ibCommission="-3" ibCommissionCurrency="EUR" netCash="-2639" buySell="BUY" levelOfDetail="EXECUTION" />
+        <Trade accountId="U7000001" currency="EUR" assetCategory="STK" subCategory="ETF" symbol="VWCE" description="VANGUARD FTSE ALL-WORLD UCITS" conid="900000101" securityID="IE00BK5BQT80" securityIDType="ISIN" isin="IE00BK5BQT80" listingExchange="IBIS" tradeID="700005" transactionID="800005" tradeDate="20260211" dateTime="20260211;143355" quantity="-15" tradePrice="140.20" proceeds="2103" ibCommission="-3" ibCommissionCurrency="EUR" netCash="2100" buySell="SELL" levelOfDetail="EXECUTION" />
+      </Trades>
+      <CashTransactions>
+        <CashTransaction accountId="U7000001" currency="EUR" type="Deposits/Withdrawals" description="CASH RECEIPTS / ELECTRONIC FUND TRANSFERS" amount="10000" transactionID="900001" reportDate="20241202" dateTime="20241202" levelOfDetail="DETAIL" />
+        <CashTransaction accountId="U7000001" currency="USD" type="Dividends" description="AAPL(US0378331005) CASH DIVIDEND USD 0.26 PER SHARE (Ordinary Dividend)" amount="2.6" conid="900000102" symbol="AAPL" transactionID="900002" reportDate="20250814" dateTime="20250814" levelOfDetail="DETAIL" />
+        <CashTransaction accountId="U7000001" currency="USD" type="Withholding Tax" description="AAPL(US0378331005) CASH DIVIDEND USD 0.26 PER SHARE - US TAX" amount="-0.39" conid="900000102" symbol="AAPL" transactionID="900003" reportDate="20250814" dateTime="20250814" levelOfDetail="DETAIL" />
+        <CashTransaction accountId="U7000001" currency="EUR" type="Broker Interest Received" description="EUR CREDIT INT FOR SEP-2026" amount="4.12" transactionID="900004" reportDate="20261005" dateTime="20261005" levelOfDetail="DETAIL" />
+      </CashTransactions>
+      <CorporateActions>
+        <CorporateAction accountId="U7000001" currency="USD" assetCategory="STK" symbol="AAPL" description="AAPL(US0378331005) SPLIT 2 FOR 1 (AAPL, APPLE INC, US0378331005)" conid="900000102" isin="US0378331005" listingExchange="NASDAQ" actionID="600001" transactionID="800006" type="FS" reportDate="20260601" dateTime="20260601;202500" quantity="10" proceeds="0" value="0" levelOfDetail="DETAIL" />
+      </CorporateActions>
+      <SecuritiesInfo>
+        <SecurityInfo assetCategory="STK" subCategory="ETF" symbol="VWCE" description="VANGUARD FTSE ALL-WORLD UCITS" conid="900000101" securityID="IE00BK5BQT80" securityIDType="ISIN" isin="IE00BK5BQT80" listingExchange="IBIS" currency="EUR" />
+        <SecurityInfo assetCategory="STK" subCategory="COMMON" symbol="AAPL" description="APPLE INC" conid="900000102" securityID="US0378331005" securityIDType="ISIN" isin="US0378331005" listingExchange="NASDAQ" currency="USD" />
+      </SecuritiesInfo>
+    </FlexStatement>
+  </FlexStatements>
+</FlexQueryResponse>

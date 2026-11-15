@@ -13,7 +13,7 @@ export type IntegrationAccount = InferSelectModel<typeof schema.integrationAccou
 
 export type IntegrationSyncLog = InferSelectModel<typeof schema.integrationSyncLogs>;
 
-export type Integration = InferSelectModel<typeof schema.integrations> & {
+export type Integration = Omit<InferSelectModel<typeof schema.integrations>, 'credentials'> & {
   status: 'active' | 'expiring' | 'expired' | 'revoked';
   accounts: (IntegrationAccount & { syncsToday: number; syncLogs: IntegrationSyncLog[] })[];
 };

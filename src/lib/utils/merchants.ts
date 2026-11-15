@@ -1,6 +1,16 @@
-// Exchanges, top-ups and corrections move money between the user's own accounts or fix a balance.
+// These move money between the user's own accounts and holdings, or fix a balance.
 // They have no merchant, and don't count in analytics unless they get a category of their own.
-export const TYPES_WITHOUT_MERCHANT = ['exchange', 'topup', 'correction'];
+export const TYPES_WITHOUT_MERCHANT = [
+  'exchange',
+  'topup',
+  'correction',
+  'buy',
+  'sell',
+  'deposit',
+  'withdrawal',
+  'split',
+  'security_transfer',
+];
 
 // Legal forms and their dotted spellings split into letters ("S.r.l." -> "s r l"), and the
 // Hungarian store number suffix ("Aldi 67.sz.")

@@ -1,16 +1,20 @@
+'use client';
+
 import { cn } from 'cn';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import { buttonVariants } from '@/components/ui/button';
 
 interface NavItemProps {
   href: string;
-  isSelected?: boolean;
   icon?: React.ReactNode;
   children?: React.ReactNode;
 }
 
-export function NavItem({ href, icon: Icon, isSelected = false, children }: NavItemProps) {
+export function NavItem({ href, icon: Icon, children }: NavItemProps) {
+  const isSelected = usePathname() === href;
+
   return (
     <Link
       href={href}

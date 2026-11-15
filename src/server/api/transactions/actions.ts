@@ -7,6 +7,7 @@ import { returnValidationErrors } from 'next-safe-action';
 import { z } from 'zod';
 
 import { authenticatedActionClient } from '@/lib/api';
+import { UserError } from '@/lib/api/errors';
 import { formatDate } from '@/lib/utils/formatters';
 import { TYPES_WITHOUT_MERCHANT, getMerchantKey } from '@/lib/utils/merchants';
 import { setTransactionCategorySchema } from '@/lib/validation/categories';
@@ -50,7 +51,7 @@ export const updateBalances = authenticatedActionClient
     const newTransactions = Object.entries(balances)
       .map(([subaccountId, balance]) => ({
         subaccountId,
-        amount: balance - (subaccountBalances[subaccountId]?.balance ?? 0),
+        amount: balance - (subaccountBalances[subaccountId]?.cash ?? 0),
         type: 'correction' as const,
         description,
         startedDate: date ?? now,
@@ -100,14 +101,31 @@ export const updateTransaction = authenticatedActionClient
   .inputSchema(updateTransactionSchema)
   .action(async ({ parsedInput: params, ctx }) => {
     await ctx.db.rls(async (tx) => {
-      const [transaction] = await tx
+      const [row] = await tx
         .select()
         .from(schema.transactions)
+        .leftJoin(
+          schema.investmentTrades,
+          eq(schema.investmentTrades.transactionId, schema.transactions.id),
+        )
         .where(eq(schema.transactions.id, params.id));
-      if (!transaction) {
+      if (!row) {
         returnValidationErrors(updateTransactionSchema, {
           id: { _errors: ['Transaction not found.'] },
         });
+      }
+      const { transactions: transaction, investment_trades: trade } = row;
+
+      // The holdings are calculated from the trade, so it must stay as the broker reported it
+      if (
+        trade &&
+        (params.amount !== transaction.amount ||
+          params.type !== transaction.type ||
+          params.date.getTime() !== transaction.startedDate.getTime())
+      ) {
+        throw new UserError(
+          "The amount, type and date of a trade can't be changed. Edit the description only.",
+        );
       }
 
       // A synced transaction keeps the merchant of the bank's text, which an earlier edit may have
