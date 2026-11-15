@@ -12,3 +12,7 @@ export * from './integration-sync-logs.schema';
 export * from './categories.schema';
 export * from './merchants.schema';
 export * from './trips.schema';
+export * from './securities.schema';
+export * from './security-prices.schema';
+export * from './investment-trades.schema';
+export * from './portfolio-valuations.schema';
