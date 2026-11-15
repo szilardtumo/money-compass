@@ -98,7 +98,7 @@ export function IntegrationCard({
         {integration.provider === 'ibkr_flex' && integration.status !== 'active' && (
           <Alert>
             <TriangleAlertIcon />
-            <AlertTitle>Create a new Flex token to keep syncing</AlertTitle>
+            <AlertTitle>Create a new Flex token</AlertTitle>
             <AlertDescription>
               <ol className="list-decimal space-y-1 pl-5">
                 <li>
