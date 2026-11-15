@@ -48,15 +48,16 @@ export async function syncAccount(
       .values({ accountId: account.id, userId: account.userId, trigger, ...values });
 
   try {
+    const write = await provider.sync({ ...account, subaccountId, linkedAt });
     await transaction(async (tx) => {
-      // Waits for a concurrent sync of the account, so the provider reads its writes
+      // Waits for a concurrent sync of the account, so the writes below see its correction
       await tx
         .select({ id: schema.integrationAccounts.id })
         .from(schema.integrationAccounts)
         .where(eq(schema.integrationAccounts.id, account.id))
         .for('update');
 
-      const result = await provider.sync(tx, { ...account, subaccountId, linkedAt });
+      const result = await write(tx);
 
       await tx
         .update(schema.integrationAccounts)

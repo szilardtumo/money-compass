@@ -14,10 +14,10 @@ export interface ProviderEntry {
   label: string;
   dailySyncLimit: number;
   isRevokedError: (error: unknown) => boolean;
+  /** Fetches from the provider, then returns the writes, which run inside the sync's transaction */
   sync: (
-    tx: DbTx,
     account: LinkedIntegrationAccount,
-  ) => Promise<{ importedCount: number; correctionAmount: number | null }>;
+  ) => Promise<(tx: DbTx) => Promise<{ importedCount: number; correctionAmount: number | null }>>;
 }
 
 export const integrationProviders = {
