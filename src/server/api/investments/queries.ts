@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { subDays } from 'date-fns';
-import { and, asc, eq, gte, inArray, ne, or, sql, sum } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, ne, or, sql, sum } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { reducePortfolio } from '@/lib/investments/portfolio';
@@ -252,11 +252,34 @@ export const getPortfolioReturns = createApiQuery<void, PortfolioReturns>(async 
  */
 export const getMarketGains = createApiQuery<void, Record<string, number>>(async () => {
   'use cache: private';
-  const [subaccounts, { valuations }, { mapper }] = await Promise.all([
+  const { db } = await createApiContext();
+  const [subaccounts, { mapper }] = await Promise.all([
     getBrokerSubaccounts(),
-    getDailyRows(),
     getMainCurrencyWithMapper(),
   ]);
+  if (!subaccounts.length) {
+    return {};
+  }
+
+  const v = schema.portfolioValuations;
+  const month = sql`to_char(${v.date}, 'YYYY-MM')`;
+  // The last valuation of each month is enough, as the gains are summed by month
+  const valuations = await db.rls((tx) =>
+    tx
+      .selectDistinctOn([v.subaccountId, month], {
+        subaccountId: v.subaccountId,
+        date: v.date,
+        marketValue: v.marketValue,
+      })
+      .from(v)
+      .where(
+        inArray(
+          v.subaccountId,
+          subaccounts.map((subaccount) => subaccount.id),
+        ),
+      )
+      .orderBy(v.subaccountId, month, desc(v.date)),
+  );
 
   return sumMarketGains({ subaccounts, valuations, mapper });
 });
