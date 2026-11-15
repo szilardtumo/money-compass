@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { InferSelectModel } from 'drizzle-orm';
+import { desc, InferSelectModel } from 'drizzle-orm';
 
 import { createApiContext, createApiQuery } from '@/lib/api';
 import { MissingExchangeRateError } from '@/lib/api/errors';
@@ -16,7 +16,10 @@ type DbAccount = InferSelectModel<(typeof schema)['accounts']> & {
 type SubaccountBalances = Record<
   string,
   {
-    balance: number;
+    /** The sum of the transactions */
+    cash: number;
+    /** The holdings at the latest valuation */
+    marketValue: number;
     lastTransactionDate: Date;
   }
 >;
@@ -32,7 +35,8 @@ const mapAccountData = (
 ): Account => {
   // Map subaccounts first
   const subaccounts: Subaccount[] = account.subaccounts.map((subaccount) => {
-    const originalValue = subaccountBalances[subaccount.id]?.balance ?? 0;
+    const { cash = 0, marketValue = 0 } = subaccountBalances[subaccount.id] ?? {};
+    const originalValue = cash + marketValue;
     const exchangeRate = mainCurrencyMapper[subaccount.currency];
 
     if (!exchangeRate) {
@@ -44,6 +48,7 @@ const mapAccountData = (
       name: subaccount.name,
       originalCurrency: subaccount.currency,
       mainCurrency,
+      cash,
       balance: {
         originalValue,
         mainCurrencyValue: originalValue * exchangeRate,
@@ -64,21 +69,33 @@ const mapAccountData = (
 };
 
 /**
- * Returns the balances of all subaccounts for the user.
+ * Returns the cash and the market value of the holdings of all subaccounts for the user.
  */
 export const getSubaccountBalances = createApiQuery<void, SubaccountBalances>(async () => {
   'use cache: private';
   const { db } = await createApiContext();
+  const v = schema.portfolioValuations;
 
-  // Get all the balances
-  const balances = await db.rls((tx) => tx.select().from(schema.balances));
+  const [balances, valuations] = await Promise.all([
+    db.rls((tx) => tx.select().from(schema.balances)),
+    db.rls((tx) =>
+      tx
+        .selectDistinctOn([v.subaccountId], {
+          subaccountId: v.subaccountId,
+          marketValue: v.marketValue,
+        })
+        .from(v)
+        .orderBy(v.subaccountId, desc(v.date)),
+    ),
+  ]);
+  const marketValues = new Map(valuations.map((item) => [item.subaccountId, item.marketValue]));
 
-  // Map the balances to the desired format
   return Object.fromEntries(
     balances.map((item) => [
       item.subaccountId,
       {
-        balance: item.balance,
+        cash: item.balance,
+        marketValue: marketValues.get(item.subaccountId) ?? 0,
         lastTransactionDate: item.lastTransactionDate,
       },
     ]),

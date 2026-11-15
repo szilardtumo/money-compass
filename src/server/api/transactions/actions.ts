@@ -51,7 +51,7 @@ export const updateBalances = authenticatedActionClient
     const newTransactions = Object.entries(balances)
       .map(([subaccountId, balance]) => ({
         subaccountId,
-        amount: balance - (subaccountBalances[subaccountId]?.balance ?? 0),
+        amount: balance - (subaccountBalances[subaccountId]?.cash ?? 0),
         type: 'correction' as const,
         description,
         startedDate: date ?? now,

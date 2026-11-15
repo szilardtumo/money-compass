@@ -47,10 +47,7 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
           date: startOfDay(new Date()),
           balances: Object.fromEntries(
             accounts.flatMap((account) =>
-              account.subaccounts.map((subaccount) => [
-                subaccount.id,
-                subaccount.balance.originalValue,
-              ]),
+              account.subaccounts.map((subaccount) => [subaccount.id, subaccount.cash]),
             ),
           ),
         },
@@ -115,10 +112,7 @@ export function UpdateBalancesForm({ accounts, onSuccess }: UpdateBalancesFormPr
 
                         <FormDescription className="col-start-2 mt-1!">
                           Previous balance:{' '}
-                          {formatCurrency(
-                            subaccount.balance.originalValue,
-                            subaccount.originalCurrency,
-                          )}
+                          {formatCurrency(subaccount.cash, subaccount.originalCurrency)}
                         </FormDescription>
                         <FormMessage className="col-start-2" />
                       </FormItem>

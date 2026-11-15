@@ -7,6 +7,9 @@ export interface Subaccount {
   name: string;
   originalCurrency: string;
   mainCurrency: string;
+  /** In the original currency, without the holdings' market value */
+  cash: number;
+  /** The cash plus the holdings' market value */
   balance: CurrencyValue;
   accountId: string;
 }

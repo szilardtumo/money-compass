@@ -20,6 +20,7 @@ import {
   transactionMonth,
 } from '../categories/joins';
 import { getMainCurrencyWithMapper } from '../currencies/queries';
+import { addMarketValue, MonthlyBalances } from '../investments/valuation';
 
 type DbTransactionWithSubaccount = typeof schema.transactions.$inferSelect & {
   balance: number;
@@ -257,8 +258,10 @@ export const getTransactionHistory = createApiQuery<void, TransactionHistory[]>(
   'use cache: private';
   const { db } = await createApiContext();
   const t = schema.transactions;
+  const v = schema.portfolioValuations;
+  const valuationMonth = sql`to_char(${v.date}, 'YYYY-MM')`;
 
-  const [{ mainCurrency, mapper }, accounts, sums] = await Promise.all([
+  const [{ mainCurrency, mapper }, accounts, sums, valuations] = await Promise.all([
     getMainCurrencyWithMapper(),
     db.rls((tx) => tx.query.accounts.findMany({ with: { subaccounts: true } })),
     db.rls((tx) =>
@@ -270,6 +273,17 @@ export const getTransactionHistory = createApiQuery<void, TransactionHistory[]>(
         })
         .from(t)
         .groupBy(t.subaccountId, sql`month`),
+    ),
+    // The last valuation of each month
+    db.rls((tx) =>
+      tx
+        .selectDistinctOn([v.subaccountId, valuationMonth], {
+          subaccountId: v.subaccountId,
+          date: v.date,
+          marketValue: v.marketValue,
+        })
+        .from(v)
+        .orderBy(v.subaccountId, valuationMonth, desc(v.date)),
     ),
   ]);
   if (!sums.length) {
@@ -289,11 +303,11 @@ export const getTransactionHistory = createApiQuery<void, TransactionHistory[]>(
   };
   const sumsByMonth = groupBy(sums, (item) => item.month);
 
-  const history: TransactionHistory[] = [];
+  const monthly: MonthlyBalances[] = [];
   for (let month = parsePeriod(firstMonth); ; month = shiftPeriod(month, 1)) {
     const param = formatPeriodParam(month);
     if (param > formatPeriodParam(now)) {
-      return history;
+      break;
     }
     // The current month includes the transactions dated later
     addMonths(
@@ -301,7 +315,10 @@ export const getTransactionHistory = createApiQuery<void, TransactionHistory[]>(
         ? sums.filter((item) => item.month >= param)
         : (sumsByMonth[param] ?? []),
     );
+    monthly.push({ month: param, balances: { ...balances } });
+  }
 
+  return addMarketValue(monthly, valuations).map(({ month, balances }) => {
     const accountBalances = Object.fromEntries(
       accounts.map((account) => {
         const subaccountBalances = Object.fromEntries(
@@ -321,14 +338,14 @@ export const getTransactionHistory = createApiQuery<void, TransactionHistory[]>(
         return [account.id, { totalBalance, subaccountBalances }];
       }),
     );
-    history.push({
-      date: getPeriodRange(month).start,
+    return {
+      date: getPeriodRange(parsePeriod(month)).start,
       totalBalance: Object.values(accountBalances).reduce(
         (total, account) => total + account.totalBalance,
         0,
       ),
       accountBalances,
       mainCurrency,
-    });
-  }
+    };
+  });
 });
